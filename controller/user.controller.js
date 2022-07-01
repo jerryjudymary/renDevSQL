@@ -1,12 +1,11 @@
 const express = require("express");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");;
-const mysql = require('mysql');
 const saltRounds = 10;
 require("dotenv").config();
+
 // const dbConfig = require('../config/database.js');
 // const db = mysql.createConnection(dbConfig);
-
 const db = require("../config/database");
 
 const { 
@@ -92,8 +91,6 @@ const signUp = async (req, res) => {
 const checkUserId = (req, res) => {
   const { userId } = req.body;
   const sql2 = "SELECT * FROM users where nickname=? where userId=?";
-  // users 테이블에서 userId=?, 조건이 userId=?(변수, 아마 req.body값인)
-  // where 조건
   db.query(sql2, userId, function (err, result, fields) {
     if (result.length === 0) {
       console.log(err);
@@ -132,11 +129,6 @@ const login = async (req, res) => {
     db.query(sql1, userId, (err, data) => {
       if (data.length) {
         console.log(data);
-        console.log("ㄴㅁㅎㅁㄴㅇㅁㅈㄴㅇㄴㅁㅇㄴㅁㅇ")
-        console.log("password:", password)
-        console.log(data[0].userId)
-        console.log("datapw:", data[0].password)
-        console.log(err)
         bcrypt.compare(password, data[0].password, (err, result) => {
           if (result) {
             console.log("sadsadd",data[0].password)
