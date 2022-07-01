@@ -2,6 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const app = express();
 const helmet = require("helmet");
+const cookieParser = require("cookie-parser")
 const cors = require("cors");
 
 const usersRouter = require("./routes/users");
@@ -38,6 +39,7 @@ app.use(
 app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false, crossOriginResourcePolicy: false }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
 app.use("/api/users", [usersRouter]);
 app.use("/api/projects", [projectsRouter]);
 app.use("/api/resumes", [resumesRouter]);
