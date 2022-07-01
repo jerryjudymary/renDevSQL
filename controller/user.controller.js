@@ -3,8 +3,9 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");;
 const mysql = require('mysql');
 const saltRounds = 10;
-const config = require("../config/database")
-const db = mysql.createConnection(config);
+
+const dbConfig = require('../config/database.js');
+const db = mysql.createConnection(dbConfig);
 
 const { 
   postLoginSchema, 
