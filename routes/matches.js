@@ -8,13 +8,15 @@ const connection = mysql.createConnection(dbConfig);
 router.get("/resumes/:projectId", async (req, res) => {
   //여기에, 현재 로그인 user가 project 작성 유저인지 확인하는 부분도 만들 것.
   const { projectId } = req.params;
+  let project;
+  let FitPeriodResumes;
 
   // 파라미터로 입력받은 projectId에 해당하는 project를 MySQL에서 가져옴.
   await connection.query(
     `SELECT * FROM projects WHERE projectId = ${projectId}`,
     (error, result, fields) => {
       if (error) throw error;
-      const project = result;
+      project = result;
     }
   );
   console.log(project);
@@ -29,10 +31,10 @@ router.get("/resumes/:projectId", async (req, res) => {
         end >= ${project.end}`,
     (error, result, fields) => {
       if (error) throw error;
-      const FitPeriodResumes = result;
-      console.log(FitPeriodResumes);
+      FitPeriodResumes = result;      
     }
   );
+  console.log(FitPeriodResumes);
 
   // FitPeriodResumes 중에서, project.skills의 모든 값을 포함하는 skills를 가진 것만 필터링.
   let FitResumes = [];
@@ -52,16 +54,18 @@ router.get("/resumes/:projectId", async (req, res) => {
 router.get("/projects/:resumeId", async (req, res) => {
   //여기에, resume 작성 유저인지 확인하는 부분도 만들 것.
   const { resumeId } = req.params;
-
+  let resume;
+  let FitPeriodProjects;
+  
   // 파라미터로 입력받은 resumeId 에 해당하는 resume를 MySQL에서 가져옴.
   await connection.query(
     `SELECT * FROM resumes WHERE resumeId = ${resumeId}`,
     (error, result, fields) => {
       if (error) throw error;
-      const resume = result;
-      console.log(resume);
+      resume = result;      
     }
   );
+  console.log(resume);
 
   // MySQL DB에서, 기준이 되는 resume와 기간 조건(start, end)이 맞는 project만 가져옴.
   await connection.query(
@@ -73,10 +77,10 @@ router.get("/projects/:resumeId", async (req, res) => {
       end <= ${resume.end}`,
     (error, result, fields) => {
       if (error) throw error;
-      const FitPeriodProjects = result;
-      console.log(FitPeriodProjects);
+      FitPeriodProjects = result;      
     }
   );
+  console.log(FitPeriodProjects);
 
   // resume 입장에선, project 요구 skills 중 "자신이 갖지 않은 것이 없어야" 한다.
   // 이것을 SQL로 처리하기 애매해서, 1) DB query로 기간 조건만 필터링한 후, 2) 배열 메소드로 해결했다.
