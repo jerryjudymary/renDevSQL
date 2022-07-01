@@ -3,9 +3,11 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");;
 const mysql = require('mysql');
 const saltRounds = 10;
+require("dotenv").config();
+// const dbConfig = require('../config/database.js');
+// const db = mysql.createConnection(dbConfig);
 
-const dbConfig = require('../config/database.js');
-const db = mysql.createConnection(dbConfig);
+const db = require("../config/database");
 
 const { 
   postLoginSchema, 
@@ -41,8 +43,6 @@ const signUp = async (req, res) => {
     }
   ]);
   const myApplications = JSON.stringify([ "project1", "project2"])
-
-  policy = policy === true ? "true" : "false";
 
   if (userId && nickname && password && phone && birth && name && passwordCheck === "") {
     res.status(400).send({ errorMessage: "작성란을 모두 기입해주세요." });
@@ -132,8 +132,14 @@ const login = async (req, res) => {
     db.query(sql1, userId, (err, data) => {
       if (data.length) {
         console.log(data);
+        console.log("ㄴㅁㅎㅁㄴㅇㅁㅈㄴㅇㄴㅁㅇㄴㅁㅇ")
+        console.log("password:", password)
+        console.log(data[0].userId)
+        console.log("datapw:", data[0].password)
+        console.log(err)
         bcrypt.compare(password, data[0].password, (err, result) => {
           if (result) {
+            console.log("sadsadd",data[0].password)
             const payload = {
               userId: data[0].userId,
               nickname: data[0].nickname,

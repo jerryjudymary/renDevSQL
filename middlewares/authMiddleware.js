@@ -1,6 +1,11 @@
 const jwt = require("jsonwebtoken");
+const mysql = require("mysql");
+// const dbConfig = require('../config/database.js');
+// const db = mysql.createConnection(dbConfig);
 
 require("dotenv").config();
+
+const db = require("../config/database");
 
 module.exports = async (req, res, next) => {
   try {

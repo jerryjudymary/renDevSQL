@@ -20,7 +20,7 @@ router.post('/signup/checkNickname', checkNickname); // 닉네임 중복
 
 router.post('/login', login); // 로그인
 
-router.post('/refresh',  refresh) // 토큰 재발급
+router.post('/refresh', refresh) // 토큰 재발급
 
 router.get('/auth', authMiddleware, userInfo); // 유저 정보 조회
 

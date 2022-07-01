@@ -18,7 +18,7 @@ exports.postUsersSchema = Joi.object({
     // 19xx || 20xx년 - xx월 -- xx일
     name: Joi.string().pattern(new RegExp("^[ㄱ-ㅎ|가-힣|a-z|A-Z|]{2,10}$")).required(),
     // 한글,영어포함 가능 2~10자 (한글이름 2자, 영어이름 고려 10자)
-    policy: Joi.string()
+    policy: Joi.boolean().required()
   });
   
 exports.postLoginSchema = Joi.object({
