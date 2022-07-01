@@ -1,14 +1,15 @@
 const express = require("express");
-const db = require("../config/db");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");;
 const mysql = require('mysql');
 const saltRounds = 10;
+const config = require("../config/database")
+const db = mysql.createConnection(config);
 
 const { 
   postLoginSchema, 
   postUsersSchema 
-} = require("../controller/validation.controller.js")
+} = require("./validation.controller.js")
 
 const signUp = async (req, res) => {
   console.log(req.body);
