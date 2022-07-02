@@ -6,10 +6,7 @@ const multer = require("multer");
 const multerS3 = require("multer-s3");
 const aws = require("aws-sdk");
 const s3 = new aws.S3();
-const mysql = require("mysql");
-
-const dbConfig = require("../config/database.js");
-const connection = mysql.createConnection(dbConfig);
+const db = require("../config/database");
 
 // multer - S3 이미지 업로드 설정
 
@@ -68,33 +65,49 @@ router.post("/", authMiddleware, async (req, res) => {
       var { title, details, subscript, role, start, end, skills, email, phone, schedule, photos } = await projectPostSchema.validateAsync(req.body);
     } catch (err) {
       return res.status(400).json({ errorMessage: "작성 형식을 확인해주세요." });
-    }
+    };
 
     if (!title || !details || !subscript || !role || !start || !end || !skills || !email || !phone || !schedule) {
       res.status(400).json({ errorMessage: "작성란을 모두 기입해주세요." });
-    }
+    };
+    
+    const skillsStr = JSON.stringify(skills);
+    const photosStr = JSON.stringify(photos);
+    const scheduleStr = JSON.stringify(schedule);
 
     const sql = `INSERT INTO projects
-    (title, details, subscript, role, start, end, skills, email, phone, userId, createdAt, photos, schedule) 
+    (title, details, subscript, role, start, end, email, phone, userId, createdAt, schedule, skills, photos) 
     VALUES ('${title}', '${details}', '${subscript}', '${role}', '${start}',
-    '${end}', '${skills}', '${email}', '${phone}', '${userId}',
-    '${createdAt}', '${photos}', '${schedule}')`;
+    '${end}', '${email}', '${phone}', '${userId}',
+    '${createdAt}', '${scheduleStr}', '${skillsStr}', '${photosStr}')`
 
-    connection.query(sql, (error, rows) => {
+    await db.query(sql, (error, rows) => {
       if (error) throw error;
-      console.log("rows:", rows);
     });
-    res.status(200).json({ message: "프로젝트 게시글을 작성했습니다." });
+
+    res.status(200).json({ message : '프로젝트 게시글을 작성했습니다.' });
+
   }
 });
 
 // 프로젝트 조회
 
 router.get("/", async (req, res) => {
-  await connection.query("SELECT * FROM projects", (error, result, fields) => {
-    if (error) throw error;
-    const projects = result;
-    res.send({ projects });
+  await db.query('SELECT * FROM projects', (error, result, fields) => {
+    if (error) { throw error } else {
+      const [ projectsRaw ] = result
+      const { projectId, userId, title, details, role, email, phone, start, end, subscript, createdAt }
+      = projectsRaw;
+
+      const skills = JSON.parse(projectsRaw.skills);
+      const photos = JSON.parse(projectsRaw.photos);
+      const schedule = JSON.parse(projectsRaw.schedule);
+      
+      const projects = { projectId, userId, title, details, role, email,
+        phone, start, end, subscript, createdAt, skills, photos, schedule };
+
+      res.send({ projects: projects });
+    }
   });
 });
 
@@ -103,11 +116,23 @@ router.get("/", async (req, res) => {
 router.get("/:projectId", async (req, res) => {
   const { projectId } = req.params;
 
-  const sql = `SELECT * FROM projects WHERE projectId = ${projectId}`;
-  await connection.query(sql, (error, result, fields) => {
-    if (error) throw error;
-    const project = result;
-    res.send({ project });
+  const sql = `SELECT * FROM projects WHERE projectId = ${projectId}`
+  await db.query(sql, (error, result, fields) => {
+    if (error) { throw error } else {
+      const [ projectRaw ] = result;
+      const { projectId, userId, title, details, role, email, phone, start, end, subscript, createdAt }
+        = projectRaw;
+
+      const skills = JSON.parse(projectRaw.skills);
+      const photos = JSON.parse(projectRaw.photos);
+      const schedule = JSON.parse(projectRaw.schedule);
+      
+      const project = { projectId, userId, title, details, role, email,
+      phone, start, end, subscript, createdAt, skills, photos, schedule };  
+      
+      console.log(project)
+      res.send({ project: project });
+    }
   });
 });
 
@@ -133,24 +158,34 @@ router.put("/:projectId", authMiddleware, async (req, res) => {
 
     const selectQ = `SELECT * FROM projects WHERE userId = '${userId}'`;
 
-    await connection.query(selectQ, (error, result, fields) => {
+    await db.query(selectQ, (error, result, fields) => {
+  
       if (error) throw error;
-      const [existProject] = result;
+      const [ existProject ] = result
+  
+        if ( userId === existProject.userId) {
+          if (existProject) {
 
-      if (userId === existProject.userId) {
-        if (existProject) {
-          const putQ = `UPDATE projects SET title = '${title}', details = '${details}', 
-              subscript = '${subscript}', role = '${role}', start = '${start}', 
-              end = '${end}', skills = '${skills}', email = '${email}', 
-              phone = '${phone}', photos = '${photos}', schedule = '${schedule}'
-              WHERE projectId = ${projectId} AND userId = '${userId}'`;
+            const skillsStr = JSON.stringify(skills);
+            const photosStr = JSON.stringify(photos);
+            const scheduleStr = JSON.stringify(schedule);
 
-          connection.query(putQ, (error, result, fields) => {
-            if (error) throw error;
-            res.status(200).json({
-              message: "프로젝트 게시글을 수정했습니다.",
-            });
-          });
+            const putQ = `UPDATE projects SET title = '${title}', details = '${details}', 
+            subscript = '${subscript}', role = '${role}', start = '${start}', 
+            end = '${end}', skills = '${skillsStr}', email = '${email}', 
+            phone = '${phone}', photos = '${photosStr}', schedule = '${scheduleStr}'
+            WHERE projectId = ${projectId} AND userId = '${userId}'`
+
+            db.query(putQ, (error, result, fields) => {
+              if (error) { throw error } else {
+                res.status(200).json({
+                message: "프로젝트 게시글을 수정했습니다.",
+                });
+              }
+            });   
+          } else {
+            res.status(400).send({ errorMessage : '작성자만 삭제할 수 있습니다.' });
+          };
         } else {
           res.status(400).send({ errorMessage: "작성자만 삭제할 수 있습니다." });
         }
@@ -164,35 +199,19 @@ router.put("/:projectId", authMiddleware, async (req, res) => {
 // 프로젝트 삭제
 
 router.delete("/:projectId", authMiddleware, async (req, res) => {
-  if (!authMiddleware) {
+  if (!res.locals.user) {
     res.status(401).json({ errorMessage: "로그인 후 사용하세요." });
-  }
+  } else {
 
   const { projectId } = req.params;
   const { userId } = res.locals.user;
   const selectQ = `SELECT * FROM projects WHERE userId = '${userId}'`;
 
-  await connection.query(selectQ, (error, result, fields) => {
+  await db.query(selectQ, (error, result, fields) => {
+
     if (error) throw error;
     const [existProject] = result;
 
-    if (userId === existProject.userId) {
-      if (existProject) {
-        const deleteQ = `DELETE FROM projects WHERE projectId = ${projectId}`;
-
-        connection.query(deleteQ, (error, result, fields) => {
-          if (error) throw error;
-          res.status(200).json({
-            message: "프로젝트 게시글을 삭제했습니다.",
-          });
-        });
-      } else {
-        res.status(400).send({ errorMessage: "작성자만 삭제할 수 있습니다." });
-      }
-    } else {
-      res.status(401).send({ errorMessage: "로그인 후 사용하세요." });
-    }
-  });
 });
 
 module.exports = router;
