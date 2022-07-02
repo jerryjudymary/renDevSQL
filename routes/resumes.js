@@ -5,9 +5,9 @@ const multer = require("multer");
 const multerS3 = require("multer-s3");
 const aws = require("aws-sdk");
 const s3 = new aws.S3();
-const authMiddleware = require("../middlewares/authMiddleware");
-
+// const authMiddleware = require("../middlewares/authMiddleware");
 const mysql = require("mysql");
+
 const dbConfig = require("../config/database.js");
 const connection = mysql.createConnection(dbConfig);
 
@@ -23,7 +23,8 @@ const upload = multer({
 });
 
 // 팀원 찾기 등록
-router.post("/", authMiddleware, async (req, res) => {
+// router.post("/", authMiddleware, async (req, res) => {
+router.post("/", async (req, res) => {
   try {
     const { userId } = res.locals.user;
     const { content, email, phone, start, end, role, skills, content2, content3 } = req.body;
@@ -43,7 +44,7 @@ router.post("/", authMiddleware, async (req, res) => {
     const createdAt = moment().format("YYYY-MM-DD hh:mm:ss");
 
     const sql = `INSERT INTO resumes (userId, content, email, phone, start, end, role, skills, content2, content3, createdAt) 
-    VALUES ('${userId}', '${content}', '${email}', '${phone}', '${start}', '${end}', '${role}', '${skills}', '${content2}', '${content3}','${createdAt}')`;
+    VALUES ('${userId}', '${content}', '${email}', '${phone}', '${start}', '${end}', '${role}', '${skills}', '${content2}', '${content3}', '${createdAt}')`;
 
     connection.query(sql, (error, rows) => {
       if (error) throw error;
@@ -74,10 +75,11 @@ router.get("/", async (req, res) => {
 });
 
 // 팀원 찾기 상세조회
-router.get("/:resumeId", authMiddleware, async (req, res) => {
+// router.get("/:resumeId", authMiddleware, async (req, res) => {
+router.get("/:resumeId", async (req, res) => {
   try {
     const { resumeId } = req.params;
-    await connection.query(`SELECT * FROM resumes WHERE resumeId = ${resumeId}`, (error, result, fields) => {
+    await connection.query(`SELECT JSON_ARRAY(skills) FROM resumes WHERE resumeId = ${resumeId}`, (error, result, fields) => {
       if (error) throw error;
       const resumes = result;
       res.status(200).send({ resumes });
@@ -89,10 +91,11 @@ router.get("/:resumeId", authMiddleware, async (req, res) => {
 });
 
 // 팀원 찾기 정보 수정
-router.put("/:resumeId", authMiddleware, upload.single("resumeImage"), async (req, res) => {
+// router.put("/:resumeId", authMiddleware, upload.single("resumeImage"), async (req, res) => {
+router.put("/:resumeId", upload.single("resumeImage"), async (req, res) => {
   try {
     const { resumeId } = req.params;
-    const { userId } = res.locals.user;
+    // const { userId } = res.locals.user;
     const { content, email, phone, start, end, role, skills, content2, content3 } = req.body;
     // const existResum = await Resume.findById(resumeId);
     const existResumid = `SELECT * FROM resumes WHERE userId = '${userId}`;
@@ -134,7 +137,7 @@ router.put("/:resumeId", authMiddleware, upload.single("resumeImage"), async (re
 // });
 
 // 팀원 찾기 정보 삭제
-router.delete("/:resumeId", authMiddleware, upload.single("resumeImage"), async (req, res) => {
+router.delete("/:resumeId", upload.single("resumeImage"), async (req, res) => {
   try {
     const { resumeId } = req.params;
     const { userId } = res.locals.user;
