@@ -167,7 +167,7 @@ router.put("/:projectId", authMiddleware, async (req, res) => {
           const photosStr = JSON.stringify(photos);
           const scheduleStr = JSON.stringify(schedule);
 
-          const putQ = `UPDATE projects SET title = '${title}', details = '${details}', 
+          const putQ = `UPDATE projects SET title = '${title}', details = '${details}',
             subscript = '${subscript}', role = '${role}', start = '${start}', 
             end = '${end}', skills = '${skillsStr}', email = '${email}', 
             phone = '${phone}', photos = '${photosStr}', schedule = '${scheduleStr}'
