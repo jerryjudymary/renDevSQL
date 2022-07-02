@@ -7,9 +7,7 @@ const aws = require("aws-sdk");
 const s3 = new aws.S3();
 const authMiddleware = require("../middlewares/authMiddleware");
 
-const mysql = require("mysql");
-const dbConfig = require("../config/database.js");
-const connection = mysql.createConnection(dbConfig);
+const connection = require("../config/database");
 
 const upload = multer({
   storage: multerS3({
@@ -45,7 +43,7 @@ router.post("/", authMiddleware, async (req, res) => {
     const sql = `INSERT INTO resumes (userId, content, email, phone, start, end, role, skills, content2, content3, createdAt) 
     VALUES ('${userId}', '${content}', '${email}', '${phone}', '${start}', '${end}', '${role}', '${skills}', '${content2}', '${content3}','${createdAt}')`;
 
-    connection.query(sql, (error, rows) => {
+    await connection.query(sql, (error, rows) => {
       if (error) throw error;
       console.log("rows:", rows);
     });
