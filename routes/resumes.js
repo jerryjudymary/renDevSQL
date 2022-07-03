@@ -26,7 +26,7 @@ const upload = multer({
 router.post("/", authMiddleware, async (req, res) => {
   try {
     const { userId } = res.locals.user;
-    const { content, email, phone, start, end, role, skills, content2, content3 } = req.body;
+    const { content, email, phone, start, end, role, skills, content2, content3, resumeImage } = req.body;
     // const resumeImage = req.file.location;
 
     // 이메일 형식 제한
@@ -40,12 +40,13 @@ router.post("/", authMiddleware, async (req, res) => {
     if (phone.search(re_phone) == -1) return res.status(400).send({ errormessage: "숫자(2~3자리) - 숫자(3~4자리) - 숫자(4자리)" });
 
     const skillsStr = JSON.stringify(skills);
+    const imageStr = JSON.stringify(resumeImage);
 
     // moment 라이브러리를 활용하여 날짜 포멧 형식 지정
     const createdAt = moment().format("YYYY-MM-DD hh:mm:ss");
 
-    const sql = `INSERT INTO resumes (userId, content, email, phone, start, end, role, skills, content2, content3, createdAt) 
-    VALUES ('${userId}', '${content}', '${email}', '${phone}', '${start}', '${end}', '${role}', '${skillsStr}', '${content2}', '${content3}','${createdAt}')`;
+    const sql = `INSERT INTO resumes (userId, content, email, phone, start, end, role, skills, content2, content3, createdAt, resumeImage) 
+    VALUES ('${userId}', '${content}', '${email}', '${phone}', '${start}', '${end}', '${role}', '${skillsStr}', '${content2}', '${content3}','${createdAt}', '${imageStr}')`;
     // VALUES ('${userId}', '${content}', '${email}', '${phone}', '${start}', '${end}', '${role}', '${skillsStr}', '${content2}', '${content3}','${resumeImage},'${createdAt}')`;
 
     await db.query(sql, (error, rows) => {
@@ -62,11 +63,23 @@ router.post("/", authMiddleware, async (req, res) => {
 // 팀원 찾기 전체 조회
 router.get("/", async (req, res) => {
   try {
-    // models에 timestamps를 이용하여 생성한 시간 기준 정렬
-    // const resumes = await Resume.find({ skills, role }).sort({ createdAt: -1 });
     await db.query("SELECT * FROM resumes", (error, result, fields) => {
       if (error) throw error;
-      const resumes = result;
+
+      let resumes = [];
+
+      for (let i = 0; i < result.length; i++) {
+        const resumesRaw = result[i];
+        const { content, email, phone, start, end, role, content2, content3, userId, createdAt }
+        = resumesRaw;
+
+        const skills = JSON.parse(resumesRaw.skills);
+        const resumeImage = JSON.parse(resumesRaw.resumeImage);
+
+        const resume =
+        { content, email, phone, start, end, role, content2, content3, resumeImage, skills, userId, createdAt };
+        resumes.push(resume);
+      }
       res.status(200).send({ resumes });
     });
   } catch (error) {
@@ -81,8 +94,14 @@ router.get("/:resumeId", authMiddleware, async (req, res) => {
     const { resumeId } = req.params;
     await db.query(`SELECT * FROM resumes WHERE resumeId = ${resumeId}`, (error, result, fields) => {
       if (error) throw error;
-      const resumes = result;
-      res.status(200).send({ resumes });
+      const [ resumeRaw ] = result;
+      const { content, email, phone, start, end, role, content2, content3, userId, createdAt }
+      = resumeRaw;
+      const skills = JSON.parse(resumeRaw.skills);
+      const resumeImage = JSON.parse(resumeRaw.resumeImage);
+      const resume =
+      { content, email, phone, start, end, role, content2, content3, skills, userId, resumeImage, createdAt };
+      res.status(200).send({ resume });
     });
   } catch (error) {
     console.log(error);
@@ -96,7 +115,7 @@ router.put("/:resumeId", authMiddleware, async (req, res) => {
   try {
     const { resumeId } = req.params;
     const { userId } = res.locals.user;
-    const { content, email, phone, start, end, role, skills, content2, content3 } = req.body;
+    const { content, email, phone, start, end, role, skills, content2, content3, resumeImage } = req.body;
     // const existResum = await Resume.findById(resumeId);
     const existResumid = `SELECT * FROM resumes WHERE userId = '${userId}'`;
 
@@ -108,10 +127,11 @@ router.put("/:resumeId", authMiddleware, async (req, res) => {
         return res.status(400).send({ errormessage: "내 게시글이 아닙니다" });
       } else {
         const skillsStr = JSON.stringify(skills);
+        const imageStr = JSON.stringify(resumeImage);
         // const resumeImage = req.file.location;
 
         const Resumesput = `UPDATE resumes SET content = '${content}', email = '${email}', phone = '${phone}', start = '${start}', end = '${end}',
-        role = '${role}', skills = '${skillsStr}', content2 = '${content2}', content3 = '${content3}' WHERE resumeId = '${resumeId}' AND userId = '${userId}'`;
+        role = '${role}', skills = '${skillsStr}', content2 = '${content2}', content3 = '${content3}', resumeImage = '${imageStr}' WHERE resumeId = '${resumeId}' AND userId = '${userId}'`;
         // role='${role}', skills='${skillsStr}', content2='${content2}', content3='${content3}',resumeImage='${resumeImage}',WHERE resumeId='${resumeId} AND userId = '${userId}'`;
 
         db.query(Resumesput, (error, result, fields) => {
