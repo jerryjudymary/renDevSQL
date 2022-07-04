@@ -1,5 +1,5 @@
 const express = require("express");
-const mongoose = require("mongoose");
+// const mongoose = require("mongoose");
 const app = express();
 const helmet = require("helmet");
 const cookieParser = require("cookie-parser")
@@ -8,22 +8,23 @@ const cors = require("cors");
 const usersRouter = require("./routes/users");
 const projectsRouter = require("./routes/projects");
 const resumesRouter = require("./routes/resumes");
+const matchesRouter = require("./routes/matches");
 const port = 3000;
 require("dotenv").config();
 
-mongoose
-  .connect(process.env.MONGODB, {
-    dbName: "renDev",
-    ignoreUndefined: true,
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .catch((err) => {
-    console.error(err);
-  });
+// mongoose
+//   .connect(process.env.MONGODB, {
+//     dbName: "renDev",
+//     ignoreUndefined: true,
+//     useNewUrlParser: true,
+//     useUnifiedTopology: true,
+//   })
+//   .catch((err) => {
+//     console.error(err);
+//   });
 
-const db = mongoose.connection;
-db.on("error", console.error.bind(console, "connection error:"));
+// const db = mongoose.connection;
+// db.on("error", console.error.bind(console, "connection error:"));
 
 app.use(
   cors({
@@ -43,6 +44,7 @@ app.use(cookieParser());
 app.use("/api/users", [usersRouter]);
 app.use("/api/projects", [projectsRouter]);
 app.use("/api/resumes", [resumesRouter]);
+app.use("/api/matches", [matchesRouter]);
 
 app.listen(port, () => {
   console.log(port, "포트로 서버가 켜졌습니다.");
