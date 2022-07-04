@@ -70,14 +70,12 @@ router.get("/", async (req, res) => {
 
       for (let i = 0; i < result.length; i++) {
         const resumesRaw = result[i];
-        const { content, email, phone, start, end, role, content2, content3, userId, createdAt }
-        = resumesRaw;
+        const { content, email, phone, start, end, role, content2, content3, userId, createdAt } = resumesRaw;
 
         const skills = JSON.parse(resumesRaw.skills);
         const resumeImage = JSON.parse(resumesRaw.resumeImage);
 
-        const resume =
-        { content, email, phone, start, end, role, content2, content3, resumeImage, skills, userId, createdAt };
+        const resume = { content, email, phone, start, end, role, content2, content3, resumeImage, skills, userId, createdAt };
         resumes.push(resume);
       }
       res.status(200).send({ resumes });
@@ -94,13 +92,11 @@ router.get("/:resumeId", authMiddleware, async (req, res) => {
     const { resumeId } = req.params;
     await db.query(`SELECT * FROM resumes WHERE resumeId = ${resumeId}`, (error, result, fields) => {
       if (error) throw error;
-      const [ resumeRaw ] = result;
-      const { content, email, phone, start, end, role, content2, content3, userId, createdAt }
-      = resumeRaw;
+      const [resumeRaw] = result;
+      const { content, email, phone, start, end, role, content2, content3, userId, createdAt } = resumeRaw;
       const skills = JSON.parse(resumeRaw.skills);
       const resumeImage = JSON.parse(resumeRaw.resumeImage);
-      const resume =
-      { content, email, phone, start, end, role, content2, content3, skills, userId, resumeImage, createdAt };
+      const resume = { content, email, phone, start, end, role, content2, content3, skills, userId, resumeImage, createdAt };
       res.status(200).send({ resume });
     });
   } catch (error) {
