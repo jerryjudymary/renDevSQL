@@ -8,7 +8,7 @@ require("dotenv").config();
 // const db = mysql.createConnection(dbConfig);
 const db = require("../config/database");
 
-const { postLoginSchema, postUsersSchema } = require("./validation.controller.js");
+const { postLoginSchema, postUsersSchema, postNicknameSchema, postUserIdSchema } = require("./validation.controller.js");
 
 const signUp = async (req, res) => {
   console.log(req.body);
@@ -61,30 +61,55 @@ const signUp = async (req, res) => {
   });
 };
 
-const checkUserId = (req, res) => {
-  const { userId } = req.body;
-  const sql2 = "SELECT * FROM users where nickname=? where userId=?";
-  db.query(sql2, userId, function (err, result, fields) {
-    if (result.length === 0) {
+const checkUserId = async (req, res) => {
+  try {
+    var { userId } = await postUserIdSchema.validateAsync(req.body);
+  } catch (err) {
+    if (err) {
       console.log(err);
-      return res.send({ message: "사용 가능한 아이디 입니다." });
-    } else {
-      return res.status(400).send({ errorMessage: "중복된 아이디 입니다." });
     }
-  });
+    return res.status(400).send({ errorMessage: "이메일 형식에 맞지 않습니다." });
+  }
+  const sql2 = "SELECT * FROM users where userId=?";
+  try {
+    db.query(sql2, userId, function (err, result, fields) {
+      if (result.length === 0) {
+        console.log(result);
+        console.log(err);
+        return res.send({ message: "사용 가능한 아이디 입니다." });
+      } else {
+        return res.status(400).send({ errorMessage: "중복된 아이디 입니다." });
+      }
+    });
+  } catch (err) {
+    return res.status(400).send({ errorMessage: "다시 한 번 시도해 주세요" });
+  }
 };
 
-const checkNickname = (req, res) => {
-  const { nickname } = req.body;
-  const sql3 = "SELECT * FROM users where nickname=?";
-  db.query(sql3, nickname, function (err, result, fields) {
-    if (result.length === 0) {
+const checkNickname = async (req, res) => {
+  try {
+    var { nickname } = await postNicknameSchema.validateAsync(req.body);
+  } catch (err) {
+    if (err) {
       console.log(err);
-      return res.send({ message: "사용 가능한 닉네임 입니다." });
-    } else {
-      res.status(400).send({ errorMessage: "중복된 닉네임 입니다." });
     }
-  });
+    return res.status(400).send({ errorMessage: "한글자 이상 입력해주세요." });
+  }
+  const sql3 = "SELECT * FROM users where nickname=?";
+  try {
+    db.query(sql3, nickname, function (err, result, fields) {
+      if (result.length === 0) {
+        if (err) {
+          console.log(err);
+        }
+        return res.send({ message: "사용 가능한 닉네임 입니다." });
+      } else {
+        res.status(400).send({ errorMessage: "중복된 닉네임 입니다." });
+      }
+    });
+  } catch (err) {
+    return res.status(400).send({ errorMessage: "다시 한 번 시도해 주세요" });
+  }
 };
 
 const login = async (req, res) => {
@@ -152,44 +177,61 @@ const refresh = async (req, res) => {
 
   const userId = refreshToken;
   const sql = "SELECT * FROM users WHERE userId=?";
+  try {
+    db.query(sql, userId, (err, data) => {
+      if (err) {
+        console.log(err);
+      } else {
+        jwt.verify(refreshToken, process.env.JWT_SECRET_REFRESH, (err, data) => {
+          if (err) {
+            return res.status(403).send({ errorMessage: "refreshToken is unvalidate" });
+          } else {
+            const payload = {
+              userId: refreshToken.userId,
+              nickname: refreshToken.nickname,
+            };
+            const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
+              expiresIn: "1h",
+            });
+            res.status(200).send({
+              message: "토큰이 재발급 됐습니다.",
+              token,
+            });
+          }
+        });
+      }
+    });
 
-  db.query(sql, userId, (err, data) => {
+    jwt.verify(refreshToken, process.env.JWT_SECRET_REFRESH, (err, user) => {
+      if (err) {
+        return res.status(403).send({ errorMessage: "Token is unvalidate" });
+      } else {
+        const payload = {
+          userId: refreshToken.userId,
+          nickname: refreshToken.nickname,
+        };
+        const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
+          expiresIn: "1h",
+        });
+        res.send(token);
+      }
+    });
+  } catch (err) {
     if (err) {
-      console.log(err);
-    } else {
-      jwt.verify(refreshToken, process.env.JWT_SECRET_REFRESH, (err, data) => {
-        if (err) {
-          return res.status(403).send({ errorMessage: "Token is unvalidate" });
-        } else {
-          const payload = {
-            userId: refreshToken.userId,
-            nickname: refreshToken.nickname,
-          };
-          const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
-            expiresIn: "1h",
-          });
-          res.send(token);
-        }
-      });
+      res.status(400).send({ errorMessage: "refreshToken is unvalidate" });
     }
-  });
-
-  jwt.verify(refreshToken, process.env.JWT_SECRET_REFRESH, (err, user) => {
-    if (err) {
-      return res.status(403).send({ errorMessage: "Token is unvalidate" });
-    } else {
-    }
-  });
+  }
 };
 
-const userInfo = (req, res) => {
+const userDetail = (req, res) => {
   try {
     const user = res.locals.user;
     if (user === undefined) {
       res.status(401).send({ errorMessage: "로그인이 필요합니다." });
     } else {
+      const { nickname } = req.params;
       const sql = "SELECT * FROM users where nickname=?";
-      db.query(sql, function (err, result, fields) {
+      db.query(sql, nickname, function (err, result, fields) {
         if (err) {
           console.log(err);
         }
@@ -204,26 +246,23 @@ const userInfo = (req, res) => {
   }
 };
 
-const userDetail = (req, res) => {
+const userInfo = (req, res) => {
   try {
     const user = res.locals.user;
     if (user === undefined) {
       res.status(401).send({ errorMessage: "로그인이 필요합니다." });
     } else {
-      const sql = "SELECT * FROM users where nickname=?";
-      const { nickname } = req.params;
-      db.query(sql, nickname, function (err, result, fields) {
+      const { userId } = res.locals.user;
+      const sql = "SELECT * FROM users where userId=?";
+      db.query(sql, userId, function (err, result, fields) {
         if (err) {
           console.log(err);
         }
-        res.send(result);
+        res.status(200).send({ userId: result[0].userId, nickname: result[0].nickname });
       });
     }
   } catch (err) {
-    if (err) {
-      console.log(err);
-      res.status(400).send({ errorMessage: "유저 정보를 찾을 수 없습니다." });
-    }
+    res.status(400).send({ errorMessage: "유저 정보를 찾을 수 없습니다." });
   }
 };
 
