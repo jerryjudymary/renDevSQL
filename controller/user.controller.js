@@ -293,10 +293,7 @@ const userInfo = (req, res) => {
       });
     }
   } catch (err) {
-    if (err) {
-      console.log(err);
       res.status(400).send({ errorMessage: "유저 정보를 찾을 수 없습니다." });
-    }
   }
 };
 
