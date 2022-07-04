@@ -10,7 +10,9 @@ const db = require("../config/database");
 
 const { 
   postLoginSchema, 
-  postUsersSchema 
+  postUsersSchema,
+  postNicknameSchema,
+  postUserIdSchema 
 } = require("./validation.controller.js")
 
 const signUp = async (req, res) => {
@@ -88,30 +90,55 @@ const signUp = async (req, res) => {
   });
 };
 
-const checkUserId = (req, res) => {
-  const { userId } = req.body;
-  const sql2 = "SELECT * FROM users where nickname=? where userId=?";
-  db.query(sql2, userId, function (err, result, fields) {
-    if (result.length === 0) {
+const checkUserId = async (req, res) => {
+  try{
+  var { userId } = await postUserIdSchema.validateAsync(req.body);
+  } catch(err){
+    if(err){
       console.log(err);
-      return res.send({ message: "사용 가능한 아이디 입니다." });
-    } else {
-      return res.status(400).send({ errorMessage: "중복된 아이디 입니다." });
     }
-  });
+    return res.status(400).send({ errorMessage: "이메일 형식에 맞지 않습니다."});
+  }
+  const sql2 = "SELECT * FROM users where userId=?";
+  try{
+      db.query(sql2, userId, function (err, result, fields) {
+        if (result.length === 0) {
+          console.log(result)
+          console.log(err);
+          return res.send({ message: "사용 가능한 아이디 입니다." });
+        } else {
+          return res.status(400).send({ errorMessage: "중복된 아이디 입니다." });
+        }
+      });
+    }catch(err) {
+    return res.status(400).send({ errorMessage: "다시 한 번 시도해 주세요"})
+  }
 };
 
-const checkNickname = (req, res) => {
-  const { nickname } = req.body;
-  const sql3 = "SELECT * FROM users where nickname=?";
-  db.query(sql3, nickname, function (err, result, fields) {
-    if (result.length === 0) {
-      console.log(err);
-      return res.send({ message: "사용 가능한 닉네임 입니다." });
-    } else {
-      res.status(400).send({ errorMessage: "중복된 닉네임 입니다." });
+const checkNickname = async (req, res) => {
+  try{
+  var { nickname } = await postNicknameSchema.validateAsync(req.body);
+  } catch(err) {
+    if(err) {
+      console.log(err)
     }
-  });
+    return res.status(400).send({ errorMessage: "한글자 이상 입력해주세요."})
+  }
+  const sql3 = "SELECT * FROM users where nickname=?";
+  try{
+      db.query(sql3, nickname, function (err, result, fields) {
+        if (result.length === 0) {
+          if(err){
+          console.log(err);
+          }
+          return res.send({ message: "사용 가능한 닉네임 입니다." });
+        } else {
+          res.status(400).send({ errorMessage: "중복된 닉네임 입니다." });
+        }
+      });
+    } catch (err) {
+    return res.status(400).send({ errorMessage: "다시 한 번 시도해 주세요"});
+  }
 };
 
 const login = async (req, res) => {
@@ -202,7 +229,10 @@ const refresh = async(req, res) => {
                       const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
                         expiresIn: "1h",
                       });
-                      res.send(token)
+                      res.status(200).send({
+                        message: "토큰이 재발급 됐습니다.",
+                        token
+                      })
                 }
             })
         
@@ -219,14 +249,15 @@ const refresh = async(req, res) => {
     })
 }
 
-const userInfo = (req, res) => {
+const userDetail = (req, res) => {
   try {
     const user = res.locals.user;
     if (user === undefined) {
       res.status(401).send({ errorMessage: "로그인이 필요합니다." });
     } else {
+      const { nickname } = req.params;
       const sql = "SELECT * FROM users where nickname=?";
-      db.query(sql, function (err, result, fields) {
+      db.query(sql, nickname, function (err, result, fields) {
         if (err) {
           console.log(err);
         }
@@ -241,15 +272,14 @@ const userInfo = (req, res) => {
   }
 };
 
-const userDetail = (req, res) => {
+const userInfo = (req, res) => {
   try {
     const user = res.locals.user;
     if (user === undefined) {
       res.status(401).send({ errorMessage: "로그인이 필요합니다." });
     } else {
-      const sql = "SELECT * FROM users where nickname=?";
-      const { nickname } = req.params;
-      db.query(sql, nickname, function (err, result, fields) {
+      const sql = "SELECT * FROM users";
+      db.query(sql, function (err, result, fields) {
         if (err) {
           console.log(err);
         }
