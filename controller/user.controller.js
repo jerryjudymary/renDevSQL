@@ -214,13 +214,13 @@ const refresh = async(req, res) => {
 
     const userId = refreshToken
     const sql = "SELECT * FROM users WHERE userId=?"
-
+  try{
     db.query(sql, userId, (err, data) => {
         if(err){
         console.log(err)} else {
             jwt.verify(refreshToken, process.env.JWT_SECRET_REFRESH, (err, data) => {
                 if(err){
-                    return res.status(403).send({ errorMessage: "Token is unvalidate"});
+                    return res.status(403).send({ errorMessage: "refreshToken is unvalidate"});
                 } else {
                     const payload = {
                         userId: refreshToken.userId,
@@ -247,6 +247,11 @@ const refresh = async(req, res) => {
 
         }
     })
+  }catch(err){
+    if(err){
+      res.status(400).send({ errorMessage: "refreshToken is unvalidate"})
+    }
+  }
 }
 
 const userDetail = (req, res) => {
@@ -278,12 +283,14 @@ const userInfo = (req, res) => {
     if (user === undefined) {
       res.status(401).send({ errorMessage: "로그인이 필요합니다." });
     } else {
-      const sql = "SELECT * FROM users";
-      db.query(sql, function (err, result, fields) {
+      const { userId } = res.locals.user
+      const sql = "SELECT * FROM users where userId=?";
+      db.query(sql, userId, function (err, result, fields) {
         if (err) {
           console.log(err);
+          res.statu(400).send({ errorMessage: "유저 정보를 찾을 수 없습니다."})
         }
-        res.send(result);
+        res.status(200).send({userId : result[0].userId , nickname: result[0].nickname});
       });
     }
   } catch (err) {
