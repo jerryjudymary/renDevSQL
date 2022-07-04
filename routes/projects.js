@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const authMiddleware = require("../middlewares/authMiddleware");
-const { Project, projectPostSchema } = require("../models/project");
+const { projectPostSchema } = require("../models/project");
 const multer = require("multer");
 const multerS3 = require("multer-s3");
 const aws = require("aws-sdk");
@@ -72,24 +72,25 @@ router.post("/", authMiddleware, async (req, res) => {
     if (!title || !details || !subscript || !role || !start
     || !end || !skills || !email || !phone || !schedule) {
       res.status(400).json({ errorMessage: "작성란을 모두 기입해주세요." });
-    };
+    } else {
     
-    const skillsStr = JSON.stringify(skills);
-    const photosStr = JSON.stringify(photos);
-    const scheduleStr = JSON.stringify(schedule);
+      const skillsStr = JSON.stringify(skills);
+      const photosStr = JSON.stringify(photos);
+      const scheduleStr = JSON.stringify(schedule);
 
-    const sql = `INSERT INTO projects
-    (title, details, subscript, role, start, end, email, phone, userId, createdAt, schedule, skills, photos) 
-    VALUES ('${title}', '${details}', '${subscript}', '${role}', '${start}',
-    '${end}', '${email}', '${phone}', '${userId}',
-    '${createdAt}', '${scheduleStr}', '${skillsStr}', '${photosStr}')`
+      const sql = `INSERT INTO projects
+      (title, details, subscript, role, start, end, email, phone, userId, createdAt, schedule, skills, photos) 
+      VALUES ('${title}', '${details}', '${subscript}', '${role}', '${start}',
+      '${end}', '${email}', '${phone}', '${userId}',
+      '${createdAt}', '${scheduleStr}', '${skillsStr}', '${photosStr}')`
 
-    await db.query(sql, (error, rows) => {
-      if (error) throw error;
-    });
+      await db.query(sql, (error, rows) => {
+        if (error) throw error;
+      });
 
-    res.status(200).json({ message : '프로젝트 게시글을 작성했습니다.' });
+      res.status(200).json({ message : '프로젝트 게시글을 작성했습니다.' });
 
+    }
   }
 });
 
@@ -116,7 +117,6 @@ router.get("/", async (req, res) => {
         projects.push(project)
       }
       
-
       res.send({ projects });
     }
   });
@@ -154,7 +154,6 @@ router.put("/:projectId", authMiddleware, async (req, res) => {
   } else {
     const { userId } = res.locals.user;
     const { projectId } = req.params;
-    const existProject = await Project.findOne({ projectId: projectId });
 
     try {
       var { title, details, subscript, role, start, end, skills, email, phone, schedule, photos }
@@ -165,44 +164,45 @@ router.put("/:projectId", authMiddleware, async (req, res) => {
 
     if (!title || !details || !subscript || !role || !start || !end || !skills || !email || !phone) {
       res.status(400).json({ errorMessage: "작성란을 모두 기입해주세요." });
-    }
+    } else {
 
-    const selectQ = `SELECT * FROM projects WHERE userId = '${userId}'`
+      const selectQ = `SELECT * FROM projects WHERE userId = '${userId}'`
 
-    await db.query(selectQ, (error, result, fields) => {
-  
-      if (error) throw error;
-      const [ existProject ] = result
-  
-        if ( userId === existProject.userId) {
-          if (existProject) {
+      await db.query(selectQ, (error, result, fields) => {
+    
+        if (error) throw error;
+        const [ existProject ] = result
+    
+          if ( userId === existProject.userId) {
+            if (existProject) {
 
-            const skillsStr = JSON.stringify(skills);
-            const photosStr = JSON.stringify(photos);
-            const scheduleStr = JSON.stringify(schedule);
+              const skillsStr = JSON.stringify(skills);
+              const photosStr = JSON.stringify(photos);
+              const scheduleStr = JSON.stringify(schedule);
 
-            const putQ = `UPDATE projects SET title = '${title}', details = '${details}', 
-            subscript = '${subscript}', role = '${role}', start = '${start}', 
-            end = '${end}', skills = '${skillsStr}', email = '${email}', 
-            phone = '${phone}', photos = '${photosStr}', schedule = '${scheduleStr}'
-            WHERE projectId = ${projectId} AND userId = '${userId}'`
+              const putQ = `UPDATE projects SET title = '${title}', details = '${details}', 
+              subscript = '${subscript}', role = '${role}', start = '${start}', 
+              end = '${end}', skills = '${skillsStr}', email = '${email}', 
+              phone = '${phone}', photos = '${photosStr}', schedule = '${scheduleStr}'
+              WHERE projectId = ${projectId} AND userId = '${userId}'`
 
-            db.query(putQ, (error, result, fields) => {
-              if (error) { throw error } else {
-                res.status(200).json({
-                message: "프로젝트 게시글을 수정했습니다.",
-                });
-              }
-            });
+              db.query(putQ, (error, result, fields) => {
+                if (error) { throw error } else {
+                  res.status(200).json({
+                  message: "프로젝트 게시글을 수정했습니다.",
+                  });
+                }
+              });
 
+            } else {
+              res.status(400).send({ errorMessage : '작성자만 삭제할 수 있습니다.' });
+            };
           } else {
-            res.status(400).send({ errorMessage : '작성자만 삭제할 수 있습니다.' });
-          };
-        } else {
-          res.status(401).send({ errorMessage : '로그인 후 사용하세요.' });
-      };
-  
-    });
+            res.status(401).send({ errorMessage : '로그인 후 사용하세요.' });
+        };
+    
+      });
+    }
   };
 });
 
