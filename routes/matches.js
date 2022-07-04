@@ -1,6 +1,9 @@
+const express = require("express");
+const router = express.Router();
+
 // MySQL DB import, config, connection
 const mysql = require("mysql");
-const dbConfig = require("../config/database.js");
+const dbConfig = require("../config/database");
 const connection = mysql.createConnection(dbConfig);
 
 
@@ -17,9 +20,10 @@ router.get("/resumes/:projectId", async (req, res) => {
     (error, result, fields) => {
       if (error) throw error;
       project = result;
+      console.log(project, result);
     }
   );
-  console.log(project);
+  // console.log(project);
 
   // MySQL DB에서, 기준이 되는 project와 기간 조건(start, end)이 맞는 Resume만 가져옴.
   await connection.query(
@@ -95,3 +99,5 @@ router.get("/projects/:resumeId", async (req, res) => {
 
   return res.json({ FitProjects });
 });
+
+module.exports = router;
