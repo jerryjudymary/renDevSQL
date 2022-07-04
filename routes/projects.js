@@ -195,14 +195,6 @@ router.put("/:projectId", authMiddleware, async (req, res) => {
               }
             });
 
-            s3.deleteObject({
-              Bucket: 'jerryjudymary',
-              Key: 'image/helloworld.jpeg'
-            }, (err, data) => {
-              if (err) { throw err; }
-              console.log('s3 deleteObject ', data)
-            })
-            
           } else {
             res.status(400).send({ errorMessage : '작성자만 삭제할 수 있습니다.' });
           };
