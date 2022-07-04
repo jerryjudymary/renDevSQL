@@ -5,6 +5,7 @@ const router = express.Router();
 const mysql = require("mysql");
 const dbConfig = require("../config/database");
 const connection = mysql.createConnection(dbConfig);
+const { Sequelize } = require('sequelize');
 
 
 // 매칭기능 1) 프로젝트에 맞는 이력서를 조회
