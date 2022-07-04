@@ -21,19 +21,19 @@ module.exports = async (req, res, next) => {
     }
 
     const { userId } = jwt.verify(tokenValue, process.env.JWT_SECRET_KEY);
-    
-    const sql = 'SELECT * FROM users where userId=?'
-    db.query(sql, userId, (err, data) => {
-      if(err) console.log(err);
-      if(data.length){
+
+    const sql = "SELECT * FROM users where userId=?";
+    await db.query(sql, userId, (err, data) => {
+      if (err) console.log(err);
+      if (data.length) {
         res.locals.user = data[0];
-        next()
+        next();
       }
-    })
-  } catch(err){
-    if(err){
-      console.log(err)
-      res.status(401).send({ errorMessage: "토큰 유효성 검증에 실패했습니다." })
+    });
+  } catch (err) {
+    if (err) {
+      console.log(err);
+      res.status(401).send({ errorMessage: "토큰 유효성 검증에 실패했습니다." });
     }
   }
 };
