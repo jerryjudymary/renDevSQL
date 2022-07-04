@@ -288,7 +288,6 @@ const userInfo = (req, res) => {
       db.query(sql, userId, function (err, result, fields) {
         if (err) {
           console.log(err);
-          res.statu(400).send({ errorMessage: "유저 정보를 찾을 수 없습니다."})
         }
         res.status(200).send({userId : result[0].userId , nickname: result[0].nickname});
       });
