@@ -5,8 +5,7 @@ const router = express.Router();
 const mysql = require("mysql");
 const dbConfig = require("../config/database");
 const connection = mysql.createConnection(dbConfig);
-const { Sequelize } = require('sequelize');
-
+const { Sequelize } = require("sequelize");
 
 // 매칭기능 1) 프로젝트에 맞는 이력서를 조회
 router.get("/resumes/:projectId", async (req, res) => {
@@ -16,14 +15,11 @@ router.get("/resumes/:projectId", async (req, res) => {
   let FitPeriodResumes;
 
   // 파라미터로 입력받은 projectId에 해당하는 project를 MySQL에서 가져옴.
-  await connection.query(
-    `SELECT * FROM projects WHERE projectId = ${projectId}`,
-    (error, result, fields) => {
-      if (error) throw error;
-      project = result;
-      console.log(project, result);
-    }
-  );
+  await connection.query(`SELECT * FROM projects WHERE projectId = ${projectId}`, (error, result, fields) => {
+    if (error) throw error;
+    project = result;
+    console.log(project, result);
+  });
   // console.log(project);
 
   // MySQL DB에서, 기준이 되는 project와 기간 조건(start, end)이 맞는 Resume만 가져옴.
@@ -36,7 +32,7 @@ router.get("/resumes/:projectId", async (req, res) => {
         end >= ${project.end}`,
     (error, result, fields) => {
       if (error) throw error;
-      FitPeriodResumes = result;      
+      FitPeriodResumes = result;
     }
   );
   console.log(FitPeriodResumes);
@@ -46,9 +42,7 @@ router.get("/resumes/:projectId", async (req, res) => {
   let allSkill;
 
   FitPeriodResumes.forEach((resume, index) => {
-    allSkill = project.skills.every((skill) =>
-      resume["skills"].includes(skill)
-    );
+    allSkill = project.skills.every((skill) => resume["skills"].includes(skill));
     if (allSkill) FitResumes.push(resume);
   });
 
@@ -61,15 +55,12 @@ router.get("/projects/:resumeId", async (req, res) => {
   const { resumeId } = req.params;
   let resume;
   let FitPeriodProjects;
-  
+
   // 파라미터로 입력받은 resumeId 에 해당하는 resume를 MySQL에서 가져옴.
-  await connection.query(
-    `SELECT * FROM resumes WHERE resumeId = ${resumeId}`,
-    (error, result, fields) => {
-      if (error) throw error;
-      resume = result;      
-    }
-  );
+  await connection.query(`SELECT * FROM resumes WHERE resumeId = ${resumeId}`, (error, result, fields) => {
+    if (error) throw error;
+    resume = result;
+  });
   console.log(resume);
 
   // MySQL DB에서, 기준이 되는 resume와 기간 조건(start, end)이 맞는 project만 가져옴.
@@ -82,7 +73,7 @@ router.get("/projects/:resumeId", async (req, res) => {
       end <= ${resume.end}`,
     (error, result, fields) => {
       if (error) throw error;
-      FitPeriodProjects = result;      
+      FitPeriodProjects = result;
     }
   );
   console.log(FitPeriodProjects);
@@ -92,9 +83,7 @@ router.get("/projects/:resumeId", async (req, res) => {
   let FitProjects = [];
   let allSkill;
   FitPeriodProjects.forEach((project, index) => {
-    allSkill = project["skills"].every((skill, skillIndex) =>
-      resume.skills.includes(skill)
-    );
+    allSkill = project["skills"].every((skill, skillIndex) => resume.skills.includes(skill));
     if (allSkill) FitProjects.push(project);
   });
 
