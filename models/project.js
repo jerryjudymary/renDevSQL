@@ -53,7 +53,7 @@ const projectSchema = new mongoose.Schema({
   },
   schedule: {
     type: Object,
-  }
+  },
 });
 
 const projectPostSchema = Joi.object({
@@ -63,7 +63,7 @@ const projectPostSchema = Joi.object({
   // 최소 1자 이상 제한
   subscript: Joi.string().min(1).max(300).required(),
   // 1 ~ 300자 제한
-  role: Joi.string().pattern(new RegExp("^[a-zA-Z0-9ㄱ-ㅎㅏ-ㅣ가-힣]{1,50}$")).required(),
+  role: Joi.string().pattern(new RegExp("^[a-zA-Z0-9ㄱ-ㅎㅏ-ㅣ가-힣 ]{1,50}$")).required(),
   // 한글,영어,숫자포함 가능 1~50자
   skills: Joi.array().required(),
   // 배열
@@ -86,7 +86,7 @@ const projectPostSchema = Joi.object({
   photos: Joi.array(),
   // 배열
   createdAt: Joi.string(),
-  schedule: Joi.object()
+  schedule: Joi.object(),
 });
 
 module.exports = {

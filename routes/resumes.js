@@ -21,6 +21,17 @@ const upload = multer({
   }),
 });
 
+// 이미지 업로드
+router.post("/photos", authMiddleware, upload.single("resumeImage"), async (req, res) => {
+  try {
+    const resumeImage = req.file.location;
+
+    res.status(200).json({ message: "사진을 업로드 했습니다.", resumeImage });
+  } catch (err) {
+    res.status(400).send({ errorMessage: "사진업로드 실패-파일 형식과 크기(1.5Mb 이하) 를 확인해주세요." });
+  }
+});
+
 // 팀원 찾기 등록
 // router.post("/", authMiddleware, upload.single("resumeImage"), async (req, res) => {
 router.post("/", authMiddleware, async (req, res) => {
@@ -33,8 +44,6 @@ router.post("/", authMiddleware, async (req, res) => {
     const re_email = /^[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*\.[a-zA-Z]{2,3}$/i;
     // 숫자(2~3자리) - 숫자(3~4자리) - 숫자(4자리)
     const re_phone = /^[0-9]{2,3}-[0-9]{3,4}-[0-9]{4}/;
-    // const start_date = moment(start).format("YYYY년 MM월 DD일");
-    // const end_date = moment(end).format("YYYY년 MM월 DD일");
 
     if (email.search(re_email) == -1) return res.status(400).send({ errormessage: "이메일 형식이 아닙니다." });
     if (phone.search(re_phone) == -1) return res.status(400).send({ errormessage: "숫자(2~3자리) - 숫자(3~4자리) - 숫자(4자리)" });
@@ -42,12 +51,9 @@ router.post("/", authMiddleware, async (req, res) => {
     const skillsStr = JSON.stringify(skills);
     const imageStr = JSON.stringify(resumeImage);
 
-    // moment 라이브러리를 활용하여 날짜 포멧 형식 지정
-    const createdAt = moment().format("YYYY-MM-DD hh:mm:ss");
-
-    const sql = `INSERT INTO resumes (userId, content, email, phone, start, end, role, skills, content2, content3, createdAt, resumeImage) 
-    VALUES ('${userId}', '${content}', '${email}', '${phone}', '${start}', '${end}', '${role}', '${skillsStr}', '${content2}', '${content3}','${createdAt}', '${imageStr}')`;
-    // VALUES ('${userId}', '${content}', '${email}', '${phone}', '${start}', '${end}', '${role}', '${skillsStr}', '${content2}', '${content3}','${resumeImage},'${createdAt}')`;
+    const sql = `INSERT INTO resumes (userId, content, email, phone, start, end, role, skills, content2, content3, createdAt, imageStr) 
+    VALUES ('${userId}', '${content}', '${email}', '${phone}', '${start}', '${end}', '${role}', '${skillsStr}', '${content2}', '${content3}','${imageStr},'${createdAt}')`;
+    // VALUES ('${userId}', '${content}', '${email}', '${phone}', '${start}', '${end}', '${role}', '${skillsStr}', '${content2}', '${content3}','${createdAt}', '${imageStr}')`;
 
     await db.query(sql, (error, rows) => {
       if (error) throw error;
@@ -70,12 +76,18 @@ router.get("/", async (req, res) => {
 
       for (let i = 0; i < result.length; i++) {
         const resumesRaw = result[i];
-        const { content, email, phone, start, end, role, content2, content3, userId, createdAt } = resumesRaw;
+        const { content, start, end, role } = resumesRaw;
+
+        // moment 라이브러리를 활용하여 날짜 포멧 형식 지정
+        const start_moment = moment(start).format("YYYY-MM-DD");
+        const end_moment = moment(end).format("YYYY-MM-DD");
+        const createdAt_moment = moment(createdAt).format("YYYY-MM-DD hh:mm:ss");
 
         const skills = JSON.parse(resumesRaw.skills);
-        const resumeImage = JSON.parse(resumesRaw.resumeImage);
+        // const resumeImage = JSON.parse(resumesRaw.resumeImage);
 
-        const resume = { content, email, phone, start, end, role, content2, content3, resumeImage, skills, userId, createdAt };
+        const resume = { content, start_moment, end_moment, role, content2, content3, skills, userId, createdAt_moment };
+        // const resume = { content, email, phone, start_moment, end_moment, role, content2, content3, skills, userId, createdAt_moment };
         resumes.push(resume);
       }
       res.status(200).send({ resumes });
@@ -93,10 +105,17 @@ router.get("/:resumeId", authMiddleware, async (req, res) => {
     await db.query(`SELECT * FROM resumes WHERE resumeId = ${resumeId}`, (error, result, fields) => {
       if (error) throw error;
       const [resumeRaw] = result;
-      const { content, email, phone, start, end, role, content2, content3, userId, createdAt } = resumeRaw;
+      const { content, email, phone, start, end, role, content2, content3 } = resumeRaw;
+
+      // moment 라이브러리를 활용하여 날짜 Format 형식
+      const start_moment = moment(start).format("YYYY-MM-DD");
+      const end_moment = moment(end).format("YYYY-MM-DD");
+
       const skills = JSON.parse(resumeRaw.skills);
       const resumeImage = JSON.parse(resumeRaw.resumeImage);
-      const resume = { content, email, phone, start, end, role, content2, content3, skills, userId, resumeImage, createdAt };
+
+      // const resume = { content, email, phone, start_moment, end_moment, role, content2, content3, skills, userId, createdAt_moment };
+      const resume = { content, email, phone, start_moment, end_moment, role, content2, content3, skills, resumeImage };
       res.status(200).send({ resume });
     });
   } catch (error) {
@@ -106,8 +125,8 @@ router.get("/:resumeId", authMiddleware, async (req, res) => {
 });
 
 // 팀원 찾기 정보 수정
-// router.put("/:resumeId", authMiddleware, upload.single("resumeImage"), async (req, res) => {
-router.put("/:resumeId", authMiddleware, async (req, res) => {
+router.put("/:resumeId", authMiddleware, upload.single("resumeImage"), async (req, res) => {
+  // router.put("/:resumeId", authMiddleware, async (req, res) => {
   try {
     const { resumeId } = req.params;
     const { userId } = res.locals.user;
@@ -127,8 +146,8 @@ router.put("/:resumeId", authMiddleware, async (req, res) => {
         // const resumeImage = req.file.location;
 
         const Resumesput = `UPDATE resumes SET content = '${content}', email = '${email}', phone = '${phone}', start = '${start}', end = '${end}',
-        role = '${role}', skills = '${skillsStr}', content2 = '${content2}', content3 = '${content3}', resumeImage = '${imageStr}' WHERE resumeId = '${resumeId}' AND userId = '${userId}'`;
-        // role='${role}', skills='${skillsStr}', content2='${content2}', content3='${content3}',resumeImage='${resumeImage}',WHERE resumeId='${resumeId} AND userId = '${userId}'`;
+        role='${role}', skills='${skillsStr}', content2='${content2}', content3='${content3}',resumeImage='${imageStr}',WHERE resumeId='${resumeId} AND userId = '${userId}'`;
+        // role = '${role}', skills = '${skillsStr}', content2 = '${content2}', content3 = '${content3}', resumeImage = '${imageStr}' WHERE resumeId = '${resumeId}' AND userId = '${userId}'`;
 
         db.query(Resumesput, (error, result, fields) => {
           if (error) throw error;
