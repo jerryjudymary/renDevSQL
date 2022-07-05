@@ -1,63 +1,95 @@
-const mongoose = require("mongoose");
-
-const ResumeSchema = new mongoose.Schema(
-  {
-    // resumeId: {
-    //   type: String,
-    //   required: true
-    // },
-    userId: {
-      type: String,
-      required: true,
+'use strict';
+const {
+  Model
+} = require('sequelize');
+module.exports = (sequelize, DataTypes) => {
+  class Resume extends Model {
+    static associate(models) {
+      Resume.belongsTo(models.User);
+      Resume.hasMany(
+        models.ResumeSkill, {
+        foreignKey: 'resumeId'
+      }
+    );
+    }
+  }
+  Resume.init({
+    resumeId: {
+      autoIncrement: true,
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      primaryKey: true
     },
-    title: {
-      type: String,
-      required: true,
+    id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    nickname: {
+      type: DataTypes.STRING(30),
+      allowNull: false
     },
     content: {
-      type: String,
-      required: true,
-    },
-    content2: {
-      type: String,
-      required: true,
-    },
-    content3: {
-      type: String,
-      required: true,
-    },
-    start: {
-      type: Date,
-      required: true,
-    },
-    end: {
-      type: Date,
-      required: true,
-    },
-    role: {
-      type: String,
-      required: true,
-    },
-    skills: {
-      type: Array,
-      required: true,
-      default: [],
+      type: DataTypes.STRING(255),
+      allowNull: false
     },
     email: {
-      type: String,
-      required: true,
+      type: DataTypes.STRING(50),
+      allowNull: true
     },
     phone: {
-      type: String,
-      required: true,
+      type: DataTypes.STRING(20),
+      allowNull: true
     },
-  },
-  { timestamps: true }
-);
-ResumeSchema.virtual("resumeId").get(function () {
-  return this._id.toHexString();
-});
-ResumeSchema.set("toJSON", {
-  virtuals: true,
-});
-module.exports = mongoose.model("Resume", ResumeSchema);
+    resumeImage: {
+      type: DataTypes.STRING(255),
+      allowNull: true
+    },
+    start: {
+      type: DataTypes.DATEONLY,
+      allowNull: true
+    },
+    end: {
+      type: DataTypes.DATEONLY,
+      allowNull: true
+    },
+    role: {
+      type: DataTypes.STRING(30),
+      allowNull: false
+    },
+    content2: {
+      type: DataTypes.STRING(255),
+      allowNull: false
+    },
+    content3: {
+      type: DataTypes.STRING(255),
+      allowNull: false
+    },
+    createdAt: {
+      type: DataTypes.DATE,
+      allowNull: false
+    },
+    exposeEmail: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false
+    },
+    exposePhone: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false
+    }
+  }, {
+    sequelize,
+    tableName: 'resume',
+    timestamps: false,
+    indexes: [
+      {
+        name: "PRIMARY",
+        unique: true,
+        using: "BTREE",
+        fields: [
+          { name: "resumeId" },
+        ]
+      },
+    ]
+  });
+  return Resume;
+};
