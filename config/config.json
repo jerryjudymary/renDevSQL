@@ -2,7 +2,7 @@
   "development": {
     "username": "root",
     "password": "judymary",
-    "database": "rendevSQLize",
+    "database": "rendevSQL",
     "host": "3.34.200.72",
     "dialect": "mysql"
   },
