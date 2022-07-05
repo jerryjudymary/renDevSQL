@@ -5,18 +5,18 @@ const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const db = require("./models/index.js");
 const { sequelize } = require("./models");
-// const sequelize = db.sequelize;
+const sequelize = db.sequelize;
 
-// (async () => {
-//   await sequelize
-//     .sync()
-//     .then(() => {
-//       console.log("sequlize 연결");
-//     })
-//     .catch((error) => {
-//       console.error(error);
-//     });
-// })();
+(async () => {
+  await sequelize
+    .sync()
+    .then(() => {
+      console.log("sequlize 연결");
+    })
+    .catch((error) => {
+      console.error(error);
+    });
+})();
 
 const usersRouter = require("./routes/users");
 const projectsRouter = require("./routes/projects");
