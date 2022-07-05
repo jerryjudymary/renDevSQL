@@ -3,7 +3,7 @@ const router = express.Router();
 const moment = require("moment");
 const multer = require("multer");
 const { Op } = require("sequelize");
-const { resumes } = require("../models/resumes");
+const { resumes } = require("../models");
 const multerS3 = require("multer-s3");
 const aws = require("aws-sdk");
 const s3 = new aws.S3();
@@ -59,7 +59,7 @@ router.post("/", authMiddleware, async (req, res) => {
     // console.log(imageStr);
     if (typeof imageStr == "undefined") throw error; // type이 undefined 시 error 예외 처리
 
-    await resumes.create({ userId, nickname, content, phone, start, end, role, skillsStr, content2, content3, imageStr, createdAt });
+    await resumes.create({ userId, nickname, phone, content, start, end, role, skillsStr, content2, content3, imageStr, createdAt });
 
     res.status(200).send({ message: "나의 정보를 등록 했습니다." });
   } catch (error) {

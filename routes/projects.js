@@ -75,7 +75,7 @@ router.post("/", authMiddleware, async (req, res) => {
       const scheduleStr = JSON.stringify(schedule);
 
       const sql = `INSERT INTO projects
-      (title, details, subscript, role, start, end, email, phone, userId, createdAt, schedule, skills, photos) 
+      (title, details, subscript, role, start, end, email, phone, userId, createdAt, schedule, skills, photos)
       VALUES ('${title}', '${details}', '${subscript}', '${role}', '${start}',
       '${end}', '${email}', '${phone}', '${userId}',
       '${createdAt}', '${scheduleStr}', '${skillsStr}', '${photosStr}')`;
@@ -170,9 +170,9 @@ router.put("/:projectId", authMiddleware, async (req, res) => {
             const photosStr = JSON.stringify(photos);
             const scheduleStr = JSON.stringify(schedule);
 
-            const putQ = `UPDATE projects SET title = '${title}', details = '${details}', 
-              subscript = '${subscript}', role = '${role}', start = '${start}', 
-              end = '${end}', skills = '${skillsStr}', email = '${email}', 
+            const putQ = `UPDATE projects SET title = '${title}', details = '${details}',
+              subscript = '${subscript}', role = '${role}', start = '${start}',
+              end = '${end}', skills = '${skillsStr}', email = '${email}',
               phone = '${phone}', photos = '${photosStr}', schedule = '${scheduleStr}'
               WHERE projectId = ${projectId} AND userId = '${userId}'`;
 
