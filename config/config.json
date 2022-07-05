@@ -1,0 +1,23 @@
+{
+  "development": {
+    "username": "root",
+    "password": "judymary",
+    "database": "rendevSQL",
+    "host": "3.34.200.72",
+    "dialect": "mysql"
+  },
+  "test": {
+    "username": "root",
+    "password": "judymary",
+    "database": "rendevSQL",
+    "host": "3.34.200.72",
+    "dialect": "mysql"
+  },
+  "production": {
+    "username": "root",
+    "password": "judymary",
+    "database": "rendevSQL",
+    "host": "3.34.200.72",
+    "dialect": "mysql"
+  }
+}
