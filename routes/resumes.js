@@ -37,7 +37,7 @@ router.post("/image", authMiddleware, upload.single("resumeImage"), async (req, 
 router.post("/", authMiddleware, async (req, res) => {
   try {
     const { userId } = res.locals.user;
-    const { name, content, email, phone, start, end, role, skills, content2, content3, resumeImage } = req.body;
+    const { nickname, content, email, phone, start, end, role, skills, content2, content3, resumeImage } = req.body;
     if (!res.locals.user) return res.status(401).json({ errorMessage: "로그인 후 사용하세요." });
 
     // const resumeImage = req.file.location;
@@ -57,8 +57,8 @@ router.post("/", authMiddleware, async (req, res) => {
     // console.log(imageStr);
     if (typeof imageStr == "undefined") throw error; // type이 undefined 시 error 예외 처리
 
-    const sql = `INSERT INTO resumes (userId, name ,content, email, phone, start, end, role, skills, content2, content3, resumeImage, createdAt) 
-      VALUES ('${userId}','${name}','${content}', '${email}', '${phone}', '${start}', '${end}', '${role}', '${skillsStr}', '${content2}', '${content3}','${imageStr}','${createdAt}')`; // typeof를 이용한 예외 처리
+    const sql = `INSERT INTO resumes (userId, nickname ,content, email, phone, start, end, role, skills, content2, content3, resumeImage, createdAt) 
+      VALUES ('${userId}','${nickname}','${content}', '${email}', '${phone}', '${start}', '${end}', '${role}', '${skillsStr}', '${content2}', '${content3}','${imageStr}','${createdAt}')`; // typeof를 이용한 예외 처리
     // VALUES ('${userId}','${name}','${content}', '${email}', '${phone}', '${start}', '${end}', '${role}', '${skillsStr}', '${content2}', '${content3}','${null}','${createdAt}')`; // null로 처리
     await db.query(sql, (error, rows) => {
       if (error) throw error;
@@ -138,7 +138,7 @@ router.get("/:resumeId", authMiddleware, async (req, res) => {
 router.put("/:resumeId", authMiddleware, async (req, res) => {
   try {
     const { resumeId } = req.params;
-    const { name, content, email, phone, start, end, role, skills, content2, content3, resumeImage } = req.body;
+    const { nickname, content, email, phone, start, end, role, skills, content2, content3, resumeImage } = req.body;
 
     if (!res.locals.user) return res.status(401).json({ errorMessage: "로그인 후 사용하세요." });
     // const existResum = await Resume.findById(resumeId);
@@ -155,7 +155,7 @@ router.put("/:resumeId", authMiddleware, async (req, res) => {
         const skillsStr = JSON.stringify(skills);
         const imageStr = JSON.stringify(resumeImage);
 
-        const Resumesput = `UPDATE resumes SET name = '${name}', content = '${content}', email = '${email}', phone = '${phone}', start = '${start}', end = '${end}',
+        const Resumesput = `UPDATE resumes SET name = '${nickname}', content = '${content}', email = '${email}', phone = '${phone}', start = '${start}', end = '${end}',
         role='${role}', skills='${skillsStr}', content2='${content2}', content3='${content3}',resumeImage='${imageStr}',WHERE resumeId = '${resumeId}' AND userId = '${userId}'`;
         // role = '${role}', skills = '${skillsStr}', content2 = '${content2}', content3 = '${content3}', resumeImage = '${null}' WHERE resumeId = '${resumeId}' AND userId = '${userId}'`;
 
