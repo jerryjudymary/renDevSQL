@@ -13,10 +13,11 @@ const { postLoginSchema, postUsersSchema, postNicknameSchema, postUserIdSchema }
 const signUp = async (req, res) => {
   console.log(req.body);
   try {
-    var { userId, nickname, password, passwordCheck, name, birth, phone, policy } = await postUsersSchema.validateAsync(req.body);
+    var { password, passwordCheck, name, birth, phone, policy } = await postUsersSchema.validateAsync(req.body);
   } catch (err) {
     return res.status(400).send({ errorMessage: "작성 형식을 확인해주세요" });
   }
+  var { userId, nickname } = req.body;
   const profileImage = "";
   const refreshToken = "";
   const projects = JSON.stringify(["project1", "project2"]);
@@ -51,7 +52,7 @@ const signUp = async (req, res) => {
       db.query(users, sql, (err, result) => {
         if (err) {
           console.log(err);
-          res.status(400).send({ errorMessage: "중복된 아이디 또는 닉네임 입니다." });
+          res.status(400).send({ errorMessage: "중복 검사가 필요합니다." });
         } else {
           console.log(result);
           res.status(200).send({ message: "회원가입을 축하합니다." });
@@ -266,6 +267,95 @@ const userInfo = (req, res) => {
   }
 };
 
+const updatePw = async (req, res) => {
+  try {
+    const { userId } = res.locals.user;
+    if (userId === undefined) {
+      return res.status(401).send({ errorMessage: "로그인이 필요합니다." });
+    }
+    let { password, newPassword } = req.body;
+    bcrypt.hash(newPassword, saltRounds, (err, hash) => {
+      if (err) {
+        console.log(err);
+        return res.stauts(400).send({ errorMessage: "hash에 실패했습니다." });
+      } else {
+        newPassword = hash;
+      }
+    });
+    const sql = "SELECT * FROM users where userId=?";
+    db.query(sql, userId, (err, data) => {
+      if (err) {
+        console.log(err);
+        return res
+          .status(401)
+          .send({ errorMessage: "비밀번호를 확인해 주세요" });
+      } else {
+        console.log("data입니디:", data);
+        if (data) {
+          bcrypt.compare(password, data[0].password, (err, result) => {
+            if (err) {
+              console.log(err);
+              return res
+                .status(401)
+                .send({ errorMessage: "비밀번호가 일치하지 않습니다." });
+            } else {
+              const sql2 = "UPDATE users SET password=? where userId=?";
+              db.query(sql2, [newPassword, userId], (err, data_1) => {
+                if (err) {
+                  console.log(err);
+                  return res
+                    .status(401)
+                    .send({ errorMessage: "비밀번호 변경에 실패했습니다." });
+                } else {
+                  return res
+                    .status(200)
+                    .send({ message: "비밀번호 변경에 성공했습니다." });
+                }
+              });
+            }
+          });
+        }
+      }
+    });
+  } catch (err) {
+    if (err) {
+      console.log(err);
+      res.status(400).send({
+        errorMessage: "비밀번호를 확인해 주세요",
+      });
+    }
+  }
+};
+
+// const userProject = (req, res) => {
+//   try {
+//     const user = res.locals.user;
+//     if (user === undefined) {
+//       res.status(400).send({ errorMessage: "로그인이 필요합니다." });
+//     } else {
+//       const { userId } = res.locals.user;
+//       // FROM users A INNER JOIN projects B와 같이 A, B 잡아주는걸 가상 테이블 가상 칼럼 잡아준다고 한다.
+//       // const sql = 'SELECT A.userId, B.projectId FROM users A INNER JOIN projects B on A.userId = B.userId where A.userId=?; '; + 'SELECT C.userId, D.resumeId FROM users C INNER JOIN resumes D on C.userID = D.userId where C.userId=?; ';
+//       const sql =
+//         "SELECT B.projectId FROM users A INNER JOIN projects B on A.userId = B.userId where A.userId=?; ";
+//       const sql2 =
+//         "SELECT C.resumeId FROM users A INNER JOIN resumes C on A.userID = C.userId where A.userId=?";
+//       const sql_2 = mysql.format(sql2, userId);
+//       db.query(sql + sql_2, userId, (err, result) => {
+//         if (err) {
+//           console.log(err);
+//         }
+//         res.status(200).send({ Projects: result[0], Resumes: result[1] });
+//       });
+//     }
+//   } catch (err) {
+//     console.log(err);
+//     return res
+//       .status(400)
+//       .send({ errorMessage: "유저 정보를 찾을 수 없습니다." });
+//   }
+// };
+
 module.exports = {
   signUp,
   checkUserId,
@@ -274,4 +364,5 @@ module.exports = {
   refresh,
   userInfo,
   userDetail,
+  updatePw
 };
