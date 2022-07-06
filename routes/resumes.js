@@ -3,12 +3,14 @@ const router = express.Router();
 const moment = require("moment");
 const multer = require("multer");
 const { Op } = require("sequelize");
-const { resumes } = require("../models");
+const { Resume, ResumeSkill } = require("../models");
 const multerS3 = require("multer-s3");
 const aws = require("aws-sdk");
 const s3 = new aws.S3();
 const authMiddleware = require("../middlewares/authMiddleware");
-const db = require("../config/database");
+const { resume } = require("../config/database");
+const resumeskill = require("../models/resumeskill");
+// const db = require("../config/database");?
 
 // multer - S3 이미지 업로드 설정
 
@@ -24,7 +26,8 @@ const upload = multer({
 });
 
 // 이미지 업로드
-router.post("/image", authMiddleware, upload.single("resumeImage"), async (req, res) => {
+// router.post("/image", authMiddleware, upload.single("resumeImage"), async (req, res) => {
+router.post("/image", upload.single("resumeImage"), async (req, res) => {
   try {
     const resumeImage = req.file.location;
     return res.status(200).json({ message: "사진을 업로드 했습니다.", resumeImage });
@@ -36,13 +39,14 @@ router.post("/image", authMiddleware, upload.single("resumeImage"), async (req, 
 
 // 팀원 찾기 등록
 // router.post("/", authMiddleware, upload.single("resumeImage"), async (req, res) => {
-router.post("/", authMiddleware, async (req, res) => {
+router.post("/", async (req, res) => {
   try {
-    const { userId } = res.locals.user;
-    const { nickname, content, email, phone, start, end, role, skills, content2, content3, resumeImage } = req.body;
-    if (!res.locals.user) return res.status(401).json({ errorMessage: "로그인 후 사용하세요." });
-
+    // const { id, nickname } = res.locals.user;
+    // const { content, email, phone, start, end, role, skill, content2, content3, resumeImage, exposeEmail, exposePhone } = req.body;
+    const { content, email, phone, start, end, role, skill, content2, content3, resumeImage, exposeEmail, exposePhone } = req.body;
+    // if (!id) return res.status(401).json({ errorMessage: "로그인 후 사용하세요." });
     // const resumeImage = req.file.location;
+
     // 이메일 형식 제한
     const re_email = /^[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*\.[a-zA-Z]{2,3}$/i;
     // 숫자(2~3자리) - 숫자(3~4자리) - 숫자(4자리)
@@ -53,22 +57,34 @@ router.post("/", authMiddleware, async (req, res) => {
 
     const createdAt = moment().format("YYYY-MM-DD hh:mm:ss");
 
-    const skillsStr = JSON.stringify(skills);
-    const imageStr = JSON.stringify(resumeImage);
-
     // console.log(imageStr);
-    if (typeof imageStr == "undefined") throw error; // type이 undefined 시 error 예외 처리
+    // if (typeof resumeImage == "undefined") throw error; // type이 undefined 시 error 예외 처리
 
-    const sql = `INSERT INTO resumes (userId, nickname ,content, email, phone, start, end, role, skills, content2, content3, resumeImage, createdAt) 
-      VALUES ('${userId}','${nickname}','${content}', '${email}', '${phone}', '${start}', '${end}', '${role}', '${skillsStr}', '${content2}', '${content3}','${imageStr}','${createdAt}')`; // typeof를 이용한 예외 처리
-    // VALUES ('${userId}','${name}','${content}', '${email}', '${phone}', '${start}', '${end}', '${role}', '${skillsStr}', '${content2}', '${content3}','${null}','${createdAt}')`; // null로 처리
-    await db.query(sql, (error, rows) => {
-      if (error) throw error;
+    // 관계 쿼리 추가
+    // const resume = await Resume.findOne({ resumeId });
+    // console.log(resume);
+    // const resumeskill = await ResumeSkill.create({ skill });
+
+    // await resume.addResumeSkills([resumeskill]);
+
+    // await resume.addResumeSkill(resumeskill.resumeId);
+
+    const id = 1; // 테스트용
+    const nickname = "JUADA"; // 테스트용
+
+    // await ResumeSkill.create([skill]);
+    await Resume.create({ id, nickname, content, email, phone, start, end, role, content2, content3, resumeImage, exposeEmail, exposePhone, createdAt }).then((result) => {
+      for (let i = 0; i < skill.length; i++) {
+        ResumeSkill.create({ resumeId: result.resumeId, skill: skill[i] });
+      }
     });
-
-    res.status(200).send({ message: "나의 정보를 등록 했습니다." });
-  } catch (error) {
-    console.log(error);
+    // await Project.create({ title, details, subscript, role, start, end, email, phone, id, nickname, createdAt })
+    // .then(result => {for (let i = 0; i < schedule.length; i++) {
+    //   Application.create({ projectId: result.projectId, schedule : schedule[i], available });
+    // }});
+    res.status(200).send({ Resume, message: "나의 정보를 등록 했습니다." });
+  } catch (err) {
+    console.log(err);
     res.status(400).send({ errormessage: "작성란을 모두 기입해주세요." });
   }
 });
