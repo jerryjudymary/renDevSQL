@@ -2,11 +2,6 @@ const express = require("express");
 const Joi = require("joi");
 
 exports.postUsersSchema = Joi.object({
-  userId: Joi.string()
-    .email({ minDomainSegments: 2, tlds: { allow: ["com", "net"] } })
-    .required(),
-  nickname: Joi.string().pattern(new RegExp("^[a-zA-Z0-9ㄱ-ㅎㅏ-ㅣ가-힣]{2,8}$")).required(),
-  // 한글,영어,숫자포함 가능 2~8자
   password: Joi.string()
     .pattern(new RegExp(/^(?=.*[a-zA-z])(?=.*[0-9])(?=.*[$`~!@$!%*#^?&\\(\\)\-_=+]).{4,16}$/))
     .required(),
@@ -26,7 +21,7 @@ exports.postUsersSchema = Joi.object({
   name: Joi.string().pattern(new RegExp("^[ㄱ-ㅎ|가-힣|a-z|A-Z|]{2,10}$")).required(),
   // 한글,영어포함 가능 2~10자 (한글이름 2자, 영어이름 고려 10자)
   policy: Joi.boolean().required(),
-});
+}).unknown(true);
 
 exports.postLoginSchema = Joi.object({
   userId: Joi.string()
