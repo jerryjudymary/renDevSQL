@@ -40,9 +40,9 @@ const signUp = async (req, res) => {
         
         res.status(200).send({ "users" : users , message: "회원가입을 축하합니다." });
       } else if(idExist) {
-        return res.status(400).send({ errorMessage: "중복된 아이디 입니다."});
+        return res.status(400).send({ errorMessage: "중복 검사가 필요합니다."});
       } else if(nickExist) {
-        return res.status(400).send({ errorMessage: "중복된 닉네임 입니다."})
+        return res.status(400).send({ errorMessage: "중복 검사가 필요합니다."})
       }
     } else {
       res.status(400).send({ errorMessage: "비밀번호가 일치하지 않습니다." });
