@@ -3,7 +3,7 @@ const router = express.Router();
 const moment = require("moment");
 const multer = require("multer");
 const { Op } = require("sequelize");
-const { Resume, ResumeSkill, sequelize } = require("../models");
+const { User, Resume, ResumeSkill, sequelize } = require("../models");
 const multerS3 = require("multer-s3");
 const aws = require("aws-sdk");
 const s3 = new aws.S3();
@@ -39,7 +39,7 @@ router.post("/image", upload.single("resumeImage"), async (req, res) => {
 // router.post("/", async (req, res) => {
 router.post("/", authMiddleware, upload.single("resumeImage"), async (req, res) => {
   try {
-    const { nickname } = res.locals.user;
+    const { id, nickname } = res.locals.user;
     const { content, email, phone, start, end, role, skill, content2, content3, resumeImage, exposeEmail, exposePhone } = req.body;
     if (!nickname) return res.status(401).json({ errorMessage: "로그인 후 사용하세요." });
     // const resumeImage = req.file.location;
@@ -78,13 +78,17 @@ router.post("/", authMiddleware, upload.single("resumeImage"), async (req, res) 
 // 팀원 찾기 전체 조회
 router.get("/", async (req, res) => {
   try {
+    const { skill, start, end } = req.query;
+    // ResumeSkill 모델에서 skill를 찾은 후 resumes 에 담음
     const resumes = await Resume.findAll({
       include: [{ model: ResumeSkill, attributes: ["skill"] }],
+      // where: { [Op.in]: skill, start, end },
       attributes: ["nickname", "resumeImage", "content", "start", "end", "role", "createdAt"],
       order: [["createdAt", "DESC"]],
       // offset: 3,
-      // limit: 10,
+      limit: 9, // 하나의 페이지 9개 조회
     });
+    // console.log(resumes);
 
     // moment 라이브러리를 활용하여 날짜 포멧 형식 지정
     // const start_moment = moment(start).format("YYYY-MM-DD");
@@ -104,11 +108,13 @@ router.get("/:resumeId", authMiddleware, async (req, res) => {
   try {
     const { nickname } = res.locals.user;
     const { resumeId } = req.params;
-    if (!nickname) return res.status(401).send({ errorMessage: "로그인 후 사용하세요." });
+
     const resume = await Resume.findOne({
       include: [{ model: ResumeSkill, attributes: ["skill"] }],
       where: { resumeId },
     });
+
+    if (!nickname) return res.status(401).send({ errorMessage: "로그인 후 사용하세요." });
 
     // moment 라이브러리를 활용하여 날짜 Format 형식
     // const start_moment = moment(start).format("YYYY-MM-DD");
@@ -117,7 +123,7 @@ router.get("/:resumeId", authMiddleware, async (req, res) => {
     res.status(200).send({ resume });
   } catch (error) {
     console.log(error);
-    res.status(400).send({});
+    res.status(400).send({ errorMessage: "로그인 후 사용하세요" });
   }
 });
 
@@ -126,15 +132,13 @@ router.get("/:resumeId", authMiddleware, async (req, res) => {
 // router.put("/:resumeId", authMiddleware, upload.single("resumeImage"), async (req, res) => {
 router.put("/:resumeId", authMiddleware, async (req, res) => {
   try {
-    const { nickname } = res.locals.user;
+    const { id } = res.locals.user;
     const { resumeId } = req.params;
     const { content, email, phone, start, end, role, skill, content2, content3, resumeImage } = req.body;
 
-    // const existResume = await Resume.findOne({ include: [{ model: ResumeSkill, attributes: ["skill"], where: { resumeId } }] }, { where: { resumeId } });
+    const existResume = await Resume.findOne({ where: { resumeId, id } });
 
-    // const existResume = await Resume.findOne({where:{nickname}})
-
-    if (nickname !== existResume.nickname) {
+    if (id !== existResume.id) {
       return res.status(400).send({ errormessage: "내 게시글이 아닙니다" });
     } else {
       const tran = await sequelize.transaction(); // 트랙잭션 시작
@@ -151,9 +155,8 @@ router.put("/:resumeId", authMiddleware, async (req, res) => {
       } catch (error) {
         await tran.rollback(); // 트랜젝션 실패시 시작부분까지 되돌리기
       }
-      // }
-      res.status(200).send({ message: "나의 정보를 수정했습니다." });
     }
+    res.status(200).send({ message: "나의 정보를 수정했습니다." });
   } catch (error) {
     console.log(error);
     res.status(401).send({ errormessage: "작성란을 모두 기입해주세요." });
@@ -164,13 +167,13 @@ router.put("/:resumeId", authMiddleware, async (req, res) => {
 // router.delete("/:resumeId", async (req, res) => {
 router.delete("/:resumeId", authMiddleware, async (req, res) => {
   try {
-    const { nickname } = res.locals.user;
+    const { id } = res.locals.user;
     const { resumeId } = req.params;
     if (!res.locals.user) return res.status(401).json({ errorMessage: "로그인 후 사용하세요." });
 
-    const existResume = await Resume.findOne({ include: [{ model: ResumeSkill, where: { resumeId } }] }, { where: { resumeId } });
+    const existResume = await Resume.findOne({ include: [{ model: ResumeSkill, where: { resumeId } }] }, { where: { resumeId, id } });
 
-    if (nickname !== existResum.nickname) {
+    if (id !== existResume.id) {
       return res.status(400).send({ errormessage: "내 게시글이 아닙니다" });
     } else {
       // if (existResume.resumeImage === resumeImage) {

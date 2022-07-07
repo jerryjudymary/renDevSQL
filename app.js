@@ -19,6 +19,7 @@ const usersRouter = require("./routes/users");
 const projectsRouter = require("./routes/projects");
 const resumesRouter = require("./routes/resumes");
 const matchesRouter = require("./routes/matches");
+const searchRouter = require("./routes/search");
 const applicationsRouter = require("./routes/applications");
 const port = 3000;
 require("dotenv").config();
@@ -42,8 +43,8 @@ app.use("/api/users", [usersRouter]);
 app.use("/api/projects", [projectsRouter]);
 app.use("/api/resumes", [resumesRouter]);
 app.use("/api/matches", [matchesRouter]);
-app.use("/api/projects", [applicationsRouter]);
-
+app.use("/api/search", [searchRouter]);
+// app.use("/api/projects", [applicationsRouter]);
 app.listen(port, () => {
   console.log(port, "포트로 서버가 켜졌습니다.");
 });
