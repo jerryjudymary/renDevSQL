@@ -6,8 +6,8 @@ module.exports = (sequelize, DataTypes) => {
       ResumeSkill.belongsTo(models.Resume, {
         foreignKey: "resumeId",
         targetKey: "resumeId",
-        onDelete: "cascade",
-        onUpdate: "cascade",
+        onDelete: "CASCADE",
+        onUpdate: "CASCADE",
       });
     }
   }

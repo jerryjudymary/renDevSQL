@@ -1,9 +1,10 @@
 const express = require("express");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const { User } = require("../models");
 const saltRounds = 10;
 require("dotenv").config();
+
+const { User } = require("../models");
 
 const db = require("../config/database");
 
@@ -102,17 +103,6 @@ const checkNickname = async (req, res) => {
 const login = async (req, res) => {
   try {
     var { userId, password } = await postLoginSchema.validateAsync(req.body);
-    const user = await User.findOne({ where: { userId, password } });
-
-    if (!user) {
-      res.status(400).send({
-        errorMessage: "이메일 또는 패스워드가 잘못됐습니다.",
-      });
-      return;
-    }
-
-    const token = jwt.sign({ id: user.id, nickname: user.nickname }, "secret-key");
-    res.send({ token });
   } catch (err) {
     return res.status(400).send({ errorMessage: "아이디 또는 패스워드가 유효하지 않습니다." });
   }

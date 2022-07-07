@@ -9,8 +9,8 @@ module.exports = (sequelize, DataTypes) => {
       Resume.hasMany(models.ResumeSkill, {
         foreignKey: "resumeId",
         sourceKey: "resumeId",
-        onDelete: "cascade",
-        onUpdate: "cascade",
+        onDelete: "CASCADE",
+        onUpdate: "CASCADE",
       });
     }
   }
