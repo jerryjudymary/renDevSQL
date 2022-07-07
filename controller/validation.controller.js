@@ -5,11 +5,11 @@ exports.postUsersSchema = Joi.object({
   password: Joi.string()
     .pattern(new RegExp(/^(?=.*[a-zA-z])(?=.*[0-9])(?=.*[$`~!@$!%*#^?&\\(\\)\-_=+]).{4,16}$/))
     .required(),
-  // 한글,영어,숫자, 특수문자 포함 4~16자
+  // 한글,영어,숫자, 특수문자 포함 가능 4~16자
   passwordCheck: Joi.string()
     .pattern(new RegExp(/^(?=.*[a-zA-z])(?=.*[0-9])(?=.*[$`~!@$!%*#^?&\\(\\)\-_=+]).{4,16}$/))
     .required(),
-  // 한글,영어,숫자, 특수문자 포함 4~16자
+  // 한글,영어,숫자, 특수문자 포함 가능 4~16자
   phone: Joi.string()
     .pattern(new RegExp(/^[0-9]{3}-[0-9]{4}-[0-9]{4}/))
     .required(),
