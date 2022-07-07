@@ -4,7 +4,7 @@ require("dotenv").config();
 
 const db = require("../config/database");
 
-const { User } = require("../models")
+const { User } = require("../models");
 
 module.exports = async (req, res, next) => {
   try {
@@ -23,13 +23,13 @@ module.exports = async (req, res, next) => {
     }
 
     const { userId } = jwt.verify(tokenValue, process.env.JWT_SECRET_KEY);
-    
+
     //   await User.findOne({ where : { userId } }).then((user) => {
     //   res.locals.user = user;
     //   next();
     // })
     const sql = "SELECT * FROM user where userId=?";
-      db.query(sql, userId, (err, data) => {
+    db.query(sql, userId, (err, data) => {
       if (err) console.log(err);
       if (data.length) {
         res.locals.user = data[0];
