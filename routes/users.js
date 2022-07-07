@@ -18,7 +18,7 @@ router.get("/auth", authMiddleware, userInfo); // 유저 정보 조회
 
 router.get("/details/:nickname", authMiddleware, userDetail); // 상세 정보 조회
 
-router.put('/details/:nickname/updatepw', authMiddleware, updatePw)
+router.put("/details/:nickname/updatepw", authMiddleware, updatePw);
 
 // router.delete('/details/:nickname/delete',  authMiddleware, deleteUser);
 
