@@ -78,16 +78,16 @@ router.post("/", authMiddleware, upload.single("resumeImage"), async (req, res) 
 // 팀원 찾기 전체 조회
 router.get("/", async (req, res) => {
   try {
-    const { skill, start, end } = req.query;
     // ResumeSkill 모델에서 skill를 찾은 후 resumes 에 담음
-    const resumes = await Resume.findAll({
-      include: [{ model: ResumeSkill, attributes: ["skill"] }],
-      // where: { [Op.in]: skill, start, end },
-      attributes: ["nickname", "resumeImage", "content", "start", "end", "role", "createdAt"],
-      order: [["createdAt", "DESC"]],
+    const resumes = await Resume.findAll(
+      {
+        include: [{ model: ResumeSkill, attributes: ["skill"] }],
+      },
+      { attributes: ["nickname", "resumeImage", "content", "start", "end", "role", "createdAt"] },
+      { order: [["createdAt", "DESC"]] },
       // offset: 3,
-      limit: 9, // 하나의 페이지 9개 조회
-    });
+      { limit: 9 } // 하나의 페이지 9개 조회
+    );
     // console.log(resumes);
 
     // moment 라이브러리를 활용하여 날짜 포멧 형식 지정
