@@ -130,9 +130,9 @@ async function sendNotice (receiver, subject, content) {
 
     const mailOptions = {
         from: 'rendev-notice@naver.com',  // 네이버 아이디 process.env.NODEMAILER_USER,
-        to: noticeReceiver,  // 수신자 아이디
-        subject: emailSubject,
-        html: emailTemplate,
+        to: receiver,  // 수신자 아이디
+        subject: subject,
+        html: content,
     };
 
     // 두번째 인자로 콜백 함수를 넣어주면 await x
