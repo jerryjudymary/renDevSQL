@@ -11,8 +11,6 @@ const db = require("../config/database");
 const { postLoginSchema, postUsersSchema, postNicknameSchema, postUserIdSchema } = require("./validation.controller.js");
 
 const signUp = async (req, res) => {
-  console.log(req.body);
-
   try {
     var { password, passwordCheck, name, birth, phone, policy } = await postUsersSchema.validateAsync(req.body);
   } catch (err) {
@@ -110,7 +108,6 @@ const login = async (req, res) => {
   try {
     const users = await User.findOne({ where: { userId } });
     if (users) {
-      console.log(users);
       const hashed = bcrypt.compareSync(password, users.password);
 
       if (!hashed) {
@@ -248,7 +245,6 @@ const updatePw = async (req, res) => {
     if (!users) {
       return res.status(401).send({ errorMessage: "비밀번호를 확인해 주세요" });
     } else {
-      console.log(users);
       const hashed = bcrypt.compareSync(password, users.password);
       if (!hashed) {
         return res.status(401).send({ errorMessage: "비밀번호가 일치하지 않습니다." });

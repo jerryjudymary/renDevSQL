@@ -131,8 +131,12 @@ router.get("/:projectId", async (req, res) => {
       },
       {
         model: Application,
-        attributes:['schedule','available','status','interviewcode'],
+        attributes:['applicationId', 'schedule','available','status','interviewcode'],
         // 가져오는 값 형태가 API 명세랑은 차이가 있어 둘 중 하나는 수정을 고려중입니다
+      },
+      {
+        model: Resume
+        // 일단 모든 컬럼 다 보내주는데, 추후 프론트와 협의
       }
     ]
   });
