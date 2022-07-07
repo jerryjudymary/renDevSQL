@@ -8,11 +8,15 @@ module.exports = (sequelize, DataTypes) => {
         User.hasMany(
           models.Project, {
           foreignKey: 'id'
-        },
+        }),
+        User.hasMany(
           models.Resume, {
           foreignKey: 'id'
-        }
-      );
+        }),
+        User.hasMany(
+          models.Application, {
+          foreignKey: 'id'
+        });
     }
   }
   User.init({
@@ -68,7 +72,6 @@ module.exports = (sequelize, DataTypes) => {
     sequelize,
     modelName: 'User',
     tableName: 'user',
-    timestamps: false,
     indexes: [
       {
         name: "PRIMARY",

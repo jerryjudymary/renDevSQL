@@ -5,7 +5,7 @@ const {
 module.exports = (sequelize, DataTypes) => {
   class ProjectSkill extends Model {
     static associate(models) {
-      ProjectSkill.belongsTo(models.Project)
+      ProjectSkill.belongsTo(models.Project, { foreignKey : 'projectId' })
     }
   }
   ProjectSkill.init({
@@ -18,6 +18,11 @@ module.exports = (sequelize, DataTypes) => {
     projectId: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      references: {
+        model: 'Project',
+        key: 'projectId'
+      },
+      onDelete: 'CASCADE'
     },
     skill: {
       type: DataTypes.STRING(20),

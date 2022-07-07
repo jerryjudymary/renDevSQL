@@ -5,12 +5,12 @@ const {
 module.exports = (sequelize, DataTypes) => {
   class Application extends Model {
     static associate(models) {
-      Application.belongsTo(models.User),
-      Application.belongsTo(models.Project);
+      Application.belongsTo(models.User, { foreignKey : 'id' }),
+      Application.belongsTo(models.Project, { foreignKey : 'projectId' });
     }
   }
   Application.init({
-    scheduleId: {
+    applicationId: {
       autoIncrement: true,
       type: DataTypes.INTEGER,
       allowNull: false,
@@ -18,27 +18,37 @@ module.exports = (sequelize, DataTypes) => {
     },
     projectId: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
+      references: {
+        model: 'Project',
+        key: 'projectId'
+      },
+      onDelete: 'CASCADE'
     },
     id: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
+      references: {
+        model: 'User',
+        key: 'id'
+      },
+      onDelete: 'CASCADE'
     },
     schedule: {
       type: DataTypes.DATE,
-      allowNull: false
+      allowNull: true,
     },
     available: {
       type: DataTypes.BOOLEAN,
-      allowNull: false
+      allowNull: true,
     },
     status: {
       type: DataTypes.STRING(8),
-      allowNull: false
+      allowNull: true,
     },
     interviewCode: {
       type: DataTypes.STRING(6),
-      allowNull: false
+      allowNull: true,
     }
   }, {
     sequelize,
