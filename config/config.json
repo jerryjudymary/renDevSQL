@@ -4,7 +4,8 @@
     "password": "judymary",
     "database": "rendevSQL",
     "host": "3.34.200.72",
-    "dialect": "mysql"
+    "dialect": "mysql",
+    "logging": false
   },
   "test": {
     "username": "root",
