@@ -5,18 +5,19 @@ const {
 module.exports = (sequelize, DataTypes) => {
   class Project extends Model {
     static associate(models) {
-      Project.belongsTo(models.User);
       Project.hasMany(
         models.Application, {
         foreignKey: 'projectId'
-      },
+      });
+      Project.hasMany(
         models.ProjectSkill, {
         foreignKey: 'projectId'
-      },
+      });
+      Project.hasMany(
         models.ProjectPhoto, {
         foreignKey: 'projectId'
-      }
-    );
+      });
+      Project.belongsTo(models.User, { foreignKey : 'id' });
     }
   }
   Project.init({
