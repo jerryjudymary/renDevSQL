@@ -7,6 +7,7 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       Application.belongsTo(models.User, { foreignKey : 'id' }),
       Application.belongsTo(models.Project, { foreignKey : 'projectId' });
+      Application.belongsTo(models.Resume, { foreignKey : 'resumeId' });
     }
   }
   Application.init({
@@ -24,6 +25,14 @@ module.exports = (sequelize, DataTypes) => {
         key: 'projectId'
       },
       onDelete: 'CASCADE'
+    },
+    resumeId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'Resume',
+        key: 'resumeId'
+      }
     },
     id: {
       type: DataTypes.INTEGER,
