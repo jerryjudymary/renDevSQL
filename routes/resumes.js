@@ -3,13 +3,11 @@ const router = express.Router();
 const moment = require("moment");
 const multer = require("multer");
 const { Op } = require("sequelize");
-const { Resume, ResumeSkill } = require("../models");
+const { Resume, ResumeSkill, sequelize } = require("../models");
 const multerS3 = require("multer-s3");
 const aws = require("aws-sdk");
 const s3 = new aws.S3();
 const authMiddleware = require("../middlewares/authMiddleware");
-const { resume } = require("../config/database");
-const resumeskill = require("../models/resumeskill");
 // const db = require("../config/database");?
 
 // multer - S3 이미지 업로드 설정
@@ -42,7 +40,6 @@ router.post("/image", upload.single("resumeImage"), async (req, res) => {
 router.post("/", async (req, res) => {
   try {
     // const { id, nickname } = res.locals.user;
-    // const { content, email, phone, start, end, role, skill, content2, content3, resumeImage, exposeEmail, exposePhone } = req.body;
     const { content, email, phone, start, end, role, skill, content2, content3, resumeImage, exposeEmail, exposePhone } = req.body;
     // if (!id) return res.status(401).json({ errorMessage: "로그인 후 사용하세요." });
     // const resumeImage = req.file.location;
@@ -57,31 +54,24 @@ router.post("/", async (req, res) => {
 
     const createdAt = moment().format("YYYY-MM-DD hh:mm:ss");
 
-    // console.log(imageStr);
-    // if (typeof resumeImage == "undefined") throw error; // type이 undefined 시 error 예외 처리
-
-    // 관계 쿼리 추가
-    // const resume = await Resume.findOne({ resumeId });
-    // console.log(resume);
-    // const resumeskill = await ResumeSkill.create({ skill });
-
-    // await resume.addResumeSkills([resumeskill]);
-
-    // await resume.addResumeSkill(resumeskill.resumeId);
-
     const id = 1; // 테스트용
     const nickname = "JUADA"; // 테스트용
 
-    // await ResumeSkill.create([skill]);
+    // 임시 작성
     await Resume.create({ id, nickname, content, email, phone, start, end, role, content2, content3, resumeImage, exposeEmail, exposePhone, createdAt }).then((result) => {
       for (let i = 0; i < skill.length; i++) {
         ResumeSkill.create({ resumeId: result.resumeId, skill: skill[i] });
       }
     });
-    // await Project.create({ title, details, subscript, role, start, end, email, phone, id, nickname, createdAt })
-    // .then(result => {for (let i = 0; i < schedule.length; i++) {
-    //   Application.create({ projectId: result.projectId, schedule : schedule[i], available });
-    // }});
+
+    // // 임시보류
+    // await Resume.create({ id, nickname, content, email, phone, start, end, role, content2, content3, resumeImage, exposeEmail, exposePhone, createdAt });
+    // // 관계 쿼리로 추가 테스트 중
+    // const resume = await Resume.findOne({});
+    // const resumeskill = await ResumeSkill.create(skill);
+
+    // await resume.addResumeSkill([resumeskill]);
+
     res.status(200).send({ Resume, message: "나의 정보를 등록 했습니다." });
   } catch (err) {
     console.log(err);
@@ -92,31 +82,20 @@ router.post("/", async (req, res) => {
 // 팀원 찾기 전체 조회
 router.get("/", async (req, res) => {
   try {
-    await db.query("SELECT * FROM resumes", (error, result, fields) => {
-      if (error) {
-        throw error;
-      } else {
-        let resumes = [];
-
-        for (let i = 0; i < result.length; i++) {
-          const resumesRaw = result[i];
-          const { name, resumeImage, content, start, end, role, createdAt } = resumesRaw;
-
-          // moment 라이브러리를 활용하여 날짜 포멧 형식 지정
-          const start_moment = moment(start).format("YYYY-MM-DD");
-          const end_moment = moment(end).format("YYYY-MM-DD");
-          const createdAt_moment = moment(createdAt).format("YYYY-MM-DD hh:mm:ss");
-
-          const skills = JSON.parse(resumesRaw.skills);
-          // const resumeImage = JSON.parse(resumesRaw.resumeImage);
-
-          const resume = { name, resumeImage, content, start_moment, end_moment, role, skills, createdAt_moment };
-          // const resume = { content, email, phone, start_moment, end_moment, role, content2, content3, skills, userId, createdAt_moment };
-          resumes.push(resume);
-        }
-        res.status(200).send({ resumes });
-      }
+    const resumes = await Resume.findAll({
+      include: [{ model: ResumeSkill, attributes: ["skill"] }],
+      attributes: ["nickname", "resumeImage", "content", "start", "end", "role", "createdAt"],
+      order: [["createdAt", "DESC"]],
+      // offset: 3,
+      // limit: 10,
     });
+
+    // moment 라이브러리를 활용하여 날짜 포멧 형식 지정
+    // const start_moment = moment(start).format("YYYY-MM-DD");
+    // const end_moment = moment(end).format("YYYY-MM-DD");
+    // const createdAt_moment = moment(createdAt).format("YYYY-MM-DD hh:mm:ss");
+
+    res.status(200).send({ resumes });
   } catch (error) {
     console.log(error);
     res.status(400).send({});
@@ -124,27 +103,22 @@ router.get("/", async (req, res) => {
 });
 
 // 팀원 찾기 상세조회
-router.get("/:resumeId", authMiddleware, async (req, res) => {
+// router.get("/:resumeId", authMiddleware, async (req, res) => {
+router.get("/:resumeId", async (req, res) => {
   try {
+    // const {nickname}=res.locals.user
     const { resumeId } = req.params;
-    if (!res.locals.user) return res.status(401).send({ errorMessage: "로그인 후 사용하세요." });
-
-    await db.query(`SELECT * FROM resumes WHERE resumeId = ${resumeId}`, (error, result, fields) => {
-      if (error) throw error;
-      const [resumeRaw] = result;
-      const { name, content, email, phone, start, end, role, content2, content3 } = resumeRaw;
-
-      // moment 라이브러리를 활용하여 날짜 Format 형식
-      const start_moment = moment(start).format("YYYY-MM-DD");
-      const end_moment = moment(end).format("YYYY-MM-DD");
-
-      const skills = JSON.parse(resumeRaw.skills);
-      const resumeImages = JSON.parse(resumeRaw.resumeImage);
-
-      // const resume = { content, email, phone, start_moment, end_moment, role, content2, content3, skills, userId, createdAt_moment };
-      const resume = { name, resumeImages, content, email, phone, start_moment, end_moment, role, content2, content3, skills };
-      res.status(200).send({ resume });
+    // if (!res.locals.user) return res.status(401).send({ errorMessage: "로그인 후 사용하세요." });
+    const resume = await Resume.findOne({
+      include: [{ model: ResumeSkill, attributes: ["skill"] }],
+      where: { resumeId },
     });
+
+    // moment 라이브러리를 활용하여 날짜 Format 형식
+    // const start_moment = moment(start).format("YYYY-MM-DD");
+    // const end_moment = moment(end).format("YYYY-MM-DD");
+
+    res.status(200).send({ resume });
   } catch (error) {
     console.log(error);
     res.status(400).send({});
@@ -153,87 +127,64 @@ router.get("/:resumeId", authMiddleware, async (req, res) => {
 
 // 팀원 찾기 정보 수정
 // router.put("/:resumeId", authMiddleware, upload.single("resumeImage"), async (req, res) => {
-router.put("/:resumeId", authMiddleware, async (req, res) => {
+// router.put("/:resumeId", authMiddleware, async (req, res) => {
+router.put("/:resumeId", async (req, res) => {
   try {
+    // const {nickname} = res.locals.user
     const { resumeId } = req.params;
-    const { nickname, content, email, phone, start, end, role, skills, content2, content3, resumeImage } = req.body;
+    const { content, email, phone, start, end, role, skill, content2, content3, resumeImage } = req.body;
 
-    if (!res.locals.user) return res.status(401).send({ errorMessage: "로그인 후 사용하세요." });
-    // const existResum = await Resume.findById(resumeId);
+    // const existResume = await Resume.findOne({ include: [{ model: ResumeSkill, attributes: ["skill"], where: { resumeId } }] }, { where: { resumeId } });
 
-    const existResumid = `SELECT * FROM resumes WHERE userId = '${userId}'`;
+    // const existResume = await Resume.findOne({where:{nickname}})
 
-    await db.query(existResumid, (error, result, fields) => {
-      if (error) throw error;
-      const [existResume] = result;
-
-      if (userId !== existResume.userId) {
-        return res.status(400).send({ errormessage: "내 게시글이 아닙니다" });
-      } else {
-        const skillsStr = JSON.stringify(skills);
-        const imageStr = JSON.stringify(resumeImage);
-
-        const Resumesput = `UPDATE resumes SET name = '${nickname}', content = '${content}', email = '${email}', phone = '${phone}', start = '${start}', end = '${end}',
-        role='${role}', skills='${skillsStr}', content2='${content2}', content3='${content3}',resumeImage='${imageStr}',WHERE resumeId = '${resumeId}' AND userId = '${userId}'`;
-        // role = '${role}', skills = '${skillsStr}', content2 = '${content2}', content3 = '${content3}', resumeImage = '${null}' WHERE resumeId = '${resumeId}' AND userId = '${userId}'`;
-
-        db.query(Resumesput, (error, result, fields) => {
-          if (error) throw error;
-          res.status(200).send({ message: "나의 정보를 수정했습니다." });
-        });
-        // await Resume.findByIdAndUpdate(resumeId, { $set: { nickname, name, content, email, phone, start_date, end_date, role, skills, content2, content3, resumeImage } });
+    // if (nickname !== existResume.nickname) {
+    //   return res.status(400).send({ errormessage: "내 게시글이 아닙니다" });
+    // } else {
+    const tran = await sequelize.transaction(); // 트랙잭션 시작
+    try {
+      Resume.update({ content, email, phone, start, end, role, content2, content3, resumeImage }, { where: { resumeId } });
+      // 등록 당시의 개수와 수정 당시의 개수가 다르면 update 사용 곤란으로 삭제 후 재등록 처리
+      if (skill.length) {
+        await ResumeSkill.destroy({ where: { resumeId }, transaction: tran });
+        for (let i = 0; i < skill.length; i++) {
+          await ResumeSkill.create({ resumeId, skill: skill[i] }, { transaction: tran });
+        }
       }
-    });
+      await tran.commit();
+    } catch (error) {
+      await tran.rollback(); // 트랜젝션 실패시 시작부분까지 되돌리기
+    }
+    // }
+    res.status(200).send({ message: "나의 정보를 수정했습니다." });
   } catch (error) {
     console.log(error);
     res.status(401).send({ errormessage: "작성란을 모두 기입해주세요." });
   }
 });
 
-// // 팀원 찾기 정보 프로필 이미지 수정
-// router.put("/:resumeId/profileImage", authMiddleware, upload.single("profileImage"), async (req, res) => {
-//   try {
-//   } catch (error) {}
-// });
-// // 팀원 찾기 정보 프로필 이미지 삭제
-// router.delete("/:resumeId/profileImage", authMiddleware, async (req, res) => {
-//   try {
-//   } catch (error) {}
-// });
-
 // 팀원 찾기 정보 삭제
-router.delete("/:resumeId", authMiddleware, async (req, res) => {
+// router.delete("/:resumeId", authMiddleware, async (req, res) => {
+router.delete("/:resumeId", async (req, res) => {
   try {
+    // const { userId } = res.locals.user;
     const { resumeId } = req.params;
-    const { userId } = res.locals.user;
-    const existResumid = `SELECT * FROM resumes WHERE userId = '${userId}'`;
+    // if (!res.locals.user) return res.status(401).json({ errorMessage: "로그인 후 사용하세요." });
 
-    if (!res.locals.user) return res.status(401).json({ errorMessage: "로그인 후 사용하세요." });
-
-    await db.query(existResumid, (error, result, fields) => {
-      if (error) throw error;
-      const [existResum] = result;
-
-      if (userId !== existResum.userId) {
-        return res.status(400).send({ errormessage: "내 게시글이 아닙니다" });
-      } else {
-        const existResumdel = `DELETE FROM resumes WHERE resumeId = ${resumeId}`;
-
-        // if (existResum.resumeImage === resumeImage) {
-        //   s3.deleteObject({
-        //     bucket: "jerryjudymary",
-        //     Key: existResum.resumeImage,
-        //   });
-        //   const resumeImage = `DELETE FROM resumes WHERE resumeImage = ${resumeImage}`;
-        // }
-
-        db.query(existResumdel, (error, result, fields) => {
-          if (error) throw error;
-          res.status(200).send({ message: "나의 정보를 삭제했습니다." });
-        });
-        // await Resume.findByIdAndDelete(resumeId);
-      }
-    });
+    // if (userId !== existResum.userId) {
+    //   return res.status(400).send({ errormessage: "내 게시글이 아닙니다" });
+    // } else {
+    //   await Resume.destory({ where: { resumeId } });
+    // }
+    const existResume = await Resume.findOne({ include: [{ model: ResumeSkill, where: { resumeId } }] }, { where: { resumeId } });
+    if (existResume.resumeImage === resumeImage) {
+      s3.deleteObject({
+        bucket: "jerryjudymary",
+        Key: existResume.resumeImage,
+      });
+      await existResume.destroy({});
+    }
+    res.status(200).send({ message: "나의 정보를 삭제했습니다." });
   } catch (error) {
     console.log(error);
     res.status(401).send({ errormessage: "작성자만 삭제할 수 있습니다." });

@@ -5,8 +5,6 @@ const { User } = require("../models");
 const saltRounds = 10;
 require("dotenv").config();
 
-const { User } = require("../models");
-
 const db = require("../config/database");
 
 const { postLoginSchema, postUsersSchema, postNicknameSchema, postUserIdSchema } = require("./validation.controller.js");
