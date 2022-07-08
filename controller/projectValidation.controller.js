@@ -11,14 +11,14 @@ const projectPostSchema = Joi.object({
   // 한글,영어,숫자포함 가능 1~50자
   skills: Joi.array().required(),
   // 배열
-  email: Joi.string()
-    .email({ minDomainSegments: 2, tlds: { allow: ["com", "net"] } })
-    .required(),
-  // 이메일 형식 제한
-  phone: Joi.string()
-    .pattern(new RegExp(/^[0-9]{2,3}-[0-9]{3,4}-[0-9]{4}/))
-    .required(),
-  // 숫자(2~3자리) - 숫자(3~4자리) - 숫자(4자리)
+  // email: Joi.string()
+  //   .email({ minDomainSegments: 2, tlds: { allow: ["com", "net"] } })
+  //   .required(),
+  // // 이메일 형식 제한
+  // phone: Joi.string()
+  //   .pattern(new RegExp(/^[0-9]{2,3}-[0-9]{3,4}-[0-9]{4}/))
+  //   .required(),
+  // // 숫자(2~3자리) - 숫자(3~4자리) - 숫자(4자리)
   start: Joi.string()
     .pattern(new RegExp(/^(19[0-9][0-9]|20\d{2})-(0[0-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/))
     .required(),
