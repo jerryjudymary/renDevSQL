@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const authMiddleware = require("../middlewares/authMiddleware");
-const { Project, ProjectSkill, ProjectPhoto, Application, sequelize } = require("../models");
+const { Project, ProjectSkill, ProjectPhoto, Application, Resume, sequelize } = require("../models");
 const { projectPostSchema } = require("../controller/projectValidation.controller.js");
 const multer = require("multer");
 const multerS3 = require("multer-s3");
@@ -63,7 +63,7 @@ router.post("/", authMiddleware, async (req, res) => {
     res.status(401).json({ errorMessage: "로그인 후 사용하세요." });
     } else {
     const { id, nickname } = res.locals.user;
-    try {
+    try { // role, skills, schedule 1차엔 없음, email phone 삭제
       var { title, details, subscript, role, start, end, skills, email, phone, schedule, photos }
       = await projectPostSchema.validateAsync(req.body);
     } catch (err) {
@@ -132,11 +132,6 @@ router.get("/:projectId", async (req, res) => {
       {
         model: Application,
         attributes:['applicationId', 'schedule','available','status','interviewcode'],
-        // 가져오는 값 형태가 API 명세랑은 차이가 있어 둘 중 하나는 수정을 고려중입니다
-      },
-      {
-        model: Resume
-        // 일단 모든 컬럼 다 보내주는데, 추후 프론트와 협의
       }
     ]
   });
