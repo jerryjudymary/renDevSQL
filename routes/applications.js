@@ -20,7 +20,9 @@ router.put("/:projectId/:applicationId", authMiddleware, async (req, res) => {
       const { projectId, applicationId } = req.params;
       const { resumeId } = req.body;
       const status = 'reserved' // => '지원서 접수' 단계에 해당
-      const interviewCode = '765432' // 6자리 유니크 난수
+      const interviewCode = Math.floor(100000 + Math.random() * 900000); // 6자리 난수
+      // 이 부분을 DB단에서 생성하거나 중복 방지 처리하는 것에 대해서 많이 시간을 쏟았는데,
+      // UPDATE에선 메서드가 제한적이라, 0.000001 % 이하의 확률은 일단 나중에 고려하는 걸로 하겠습니다.
 
       const existProject = await Project.findOne({
         where: { projectId } 
@@ -54,4 +56,6 @@ router.put("/:projectId/:applicationId", authMiddleware, async (req, res) => {
     };
   });
 
+
+  // 상세페이지 면접관련 정보 조회
 module.exports = router;
