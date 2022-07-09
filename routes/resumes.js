@@ -55,11 +55,13 @@ router.post("/", authMiddleware, async (req, res) => {
 
     const createdAt = moment().format("YYYY-MM-DD hh:mm:ss");
 
-    await Resume.create({ id, nickname, content, email, phone, start, end, role, content2, content3, resumeImage, exposeEmail, exposePhone, createdAt }).then((result) => {
-      for (let i = 0; i < skill.length; i++) {
-        ResumeSkill.create({ resumeId: result.resumeId, skill: skill[i] });
+    await Resume.create({ id, nickname, content, email, phone, start, end, role, content2, content3, resumeImage, exposeEmail, exposePhone, createdAt }).then(
+      (result) => {
+        for (let i = 0; i < skill.length; i++) {
+          ResumeSkill.create({ resumeId: result.resumeId, skill: skill[i] });
+        }
       }
-    });
+    );
 
     res.status(200).send({ Resume, message: "나의 정보를 등록 했습니다." });
   } catch (err) {
