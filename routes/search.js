@@ -9,13 +9,23 @@ router.get("/project", async (req, res) => {
     console.log(typeof start);
     console.log(typeof end);
     console.log(typeof skill);
-    const projects = await Project.findAll({
-      include: [{ model: ProjectSkill, attributes: ["skill"] }],
-      where: { start: { [Op.lte]: end }, end: { [Op.gte]: start }, skill: { [Op.like]: `'%${skill}'` } },
+
+    const projectskill = await Project.findAll({ include: [{ model: ProjectSkill, attribute: ["skill"] }] });
+
+    const projectserch = await Project.findAll({
+      where: {
+        [Op.and]: {
+          start: { [Op.lte]: end },
+          end: { [Op.gte]: start },
+          skill: projectskill.map((skills) => skills.skill),
+        },
+      },
       order: [["createdAt", "DESC"]],
     });
-    console.log(projects);
-    res.status(200).send({ projects });
+
+    console.log(projectserch);
+
+    res.status(200).send({ projectserch });
   } catch (error) {
     console.log(error);
     res.status(400).send({});

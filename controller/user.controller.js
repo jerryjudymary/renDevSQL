@@ -242,6 +242,7 @@ const userDelete = async(req, res) => {
   
   if(users){
     
+
     if(!password && password === "" && password === undefined ){
       return res.status(401).send({ errorMessage: "비밀번호를 입력해 주세요"})
     }
@@ -265,7 +266,6 @@ const userDelete = async(req, res) => {
         refreshToken: refreshTokens, password: passwords, passwordCheck: passwordChecks },
         { where : { nickname : user.nickname }
       });
-      
       return res.status(200).send({ message: "정상적으로 회원 탈퇴 됐습니다."})
     } else {
       return res.status(401).send({ errorMessage: "비밀번호가 일치하지 않습니다."})
