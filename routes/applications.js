@@ -3,7 +3,7 @@ const router = express.Router();
 const authMiddleware = require("../middlewares/authMiddleware");
 const { Project, ProjectSkill, ProjectPhoto, Application, Resume, sequelize } = require("../models");
 const { QueryTypes } = require("sequelize");
-const { noteProjectOwner, noteApplicant, sendNotice } = require("./notices");
+const { noteProjectOwner, noteApplicant } = require("./notices");
 
 // 필요시 유효성 검사 관련 import 추가 예정
 

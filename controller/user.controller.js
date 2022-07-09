@@ -12,7 +12,7 @@ const { postLoginSchema, postUsersSchema, postNicknameSchema, postUserIdSchema }
 
 const signUp = async (req, res) => {
   try {
-    var { password, passwordCheck, name, birth, phone, policy } = await postUsersSchema.validateAsync(req.body);
+    var { password, passwordCheck, name, birth, policy } = await postUsersSchema.validateAsync(req.body);
   } catch (err) {
     return res.status(400).send({ errorMessage: "작성 형식을 확인해주세요" });
   }
@@ -20,7 +20,7 @@ const signUp = async (req, res) => {
   const profileImage = "";
   const refreshToken = "";
 
-  if (userId && nickname && password && phone && birth && name && passwordCheck === "") {
+  if (userId && nickname && password && birth && name && passwordCheck === "") {
     res.status(400).send({ errorMessage: "작성란을 모두 기입해주세요." });
   }
 
@@ -29,7 +29,7 @@ const signUp = async (req, res) => {
       const [bcryptPw, idExist, nickExist] = await Promise.all([(password = bcrypt.hashSync(password, saltRounds)), User.findOne({ where: { userId } }), User.findOne({ where: { nickname } })]);
 
       if (!idExist && !nickExist) {
-        const users = await User.create({ userId, nickname, password: bcryptPw, passwordCheck, name, birth, phone, policy, profileImage, refreshToken });
+        const users = await User.create({ userId, nickname, password: bcryptPw, name, birth, policy, profileImage, refreshToken });
 
         res.status(200).send({ users: users, message: "회원가입을 축하합니다." });
       } else if (idExist) {
@@ -68,7 +68,7 @@ const checkUserId = async (req, res) => {
   } catch (err) {
     if (err) {
       console.log(err);
-      return res.status(400).send({ errorMessage: "중복된 아이디 입니다." });
+      return res.status(400).send({ errorMessage: "다시 한 번 시도해 주세요" });
     }
   }
 };
@@ -93,7 +93,7 @@ const checkNickname = async (req, res) => {
   } catch (err) {
     if (err) {
       console.log(err);
-      return res.status(400).send({ errorMessage: "중복된 닉네임 입니다." });
+      return res.status(400).send({ errorMessage: "다시 한 번 시도해 주세요" });
     }
   }
 };
@@ -118,7 +118,7 @@ const login = async (req, res) => {
       if (!hashed) {
         return res.status(400).send({ errorMessage: "아이디 또는 비밀번호가 일치하지 않습니다." });
       } else if (!users) {
-        return res.status(400).send({ errorMessage: "존재하지 않는 유저입니다." });
+        return res.status(401).send({ errorMessage: "존재하지 않는 유저입니다." });
       } else {
         const payload = {
           userId: users.userId,
@@ -136,8 +136,10 @@ const login = async (req, res) => {
 
         res.cookie("refreshToken", refreshToken, {
           httpOnly: true,
+          sameSite: 'None',
+          expires: new Date(Date.now() + 3600000 * 2)
         });
-        return res.status(200).send({ message: "로그인 하셨습니다.", token, refreshToken });
+        return res.status(200).send({ message: "로그인 하셨습니다.", token });
       }
     }
   } catch (err) {
@@ -175,7 +177,7 @@ const refresh = async (req, res) => {
           const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
             expiresIn: "1h",
           });
-          return res.status(200).send({ message: "토큰이 재발급 됐습니다.", token, refreshToken });
+          return res.status(200).send({ message: "토큰이 재발급 됐습니다.", token});
         }
       });
     }
@@ -194,16 +196,15 @@ const updatePw = async (req, res) => {
       return res.status(401).send({ errorMessage: "로그인이 필요합니다." });
     }
     let { password, newPassword } = req.body;
-    bcrypt.hash(newPassword, saltRounds, (err, hash) => {
-      if (err) {
-        console.log(err);
-        return res.stauts(400).send({ errorMessage: "hash에 실패했습니다." });
-      } else {
-        newPassword = hash;
-      }
-    });
+    const newHash = bcrypt.hashSync(newPassword, saltRounds)
+    
+    if(!newHash){
+      return res.status(400).send({ errorMessage: "비밀번호 암호화에 실패했습니다."})
+    }
 
-    const users = await User.findOne({ where: { userId } });
+    const { nickname } = req.params
+
+    const users = await User.findOne({ where: { nickname } });
     if (!users) {
       return res.status(401).send({ errorMessage: "비밀번호를 확인해 주세요" });
     } else {
@@ -211,8 +212,8 @@ const updatePw = async (req, res) => {
       if (!hashed) {
         return res.status(401).send({ errorMessage: "비밀번호가 일치하지 않습니다." });
       } else {
-        const updatePw = await User.update({ password: newPassword }, { where: { userId } });
-        return res.status(200).send({ message: "비밀번호 변경에 성공했습니다.", updatePw });
+        await User.update({ password: newHash }, { where: { nickname } });
+        return res.status(200).send({ message: "비밀번호 변경에 성공했습니다." });
       }
     }
   } catch (err) {
@@ -241,7 +242,8 @@ const userDelete = async(req, res) => {
   
   if(users){
     
-    if(!password){
+
+    if(!password && password === "" && password === undefined ){
       return res.status(401).send({ errorMessage: "비밀번호를 입력해 주세요"})
     }
     
@@ -251,7 +253,6 @@ const userDelete = async(req, res) => {
       const ids = Math.random().toString(36).slice(-3) + "id";
       const nicks = Math.random().toString(36).slice(-3) + "nick";
       const names = ""
-      const phones = ""
       const births = ""
       const profileImages = "" 
       const refreshTokens = ""
@@ -260,12 +261,11 @@ const userDelete = async(req, res) => {
       
       await User.update
       ({
-        userId: ids, nickname:nicks, name: names, phone: phones,
+        userId: ids, nickname:nicks, name: names,
         birth: births, profileImage: profileImages,
         refreshToken: refreshTokens, password: passwords, passwordCheck: passwordChecks },
         { where : { nickname : user.nickname }
       });
-      
       return res.status(200).send({ message: "정상적으로 회원 탈퇴 됐습니다."})
     } else {
       return res.status(401).send({ errorMessage: "비밀번호가 일치하지 않습니다."})

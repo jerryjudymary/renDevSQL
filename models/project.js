@@ -47,10 +47,6 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING(50),
       allowNull: true
     },
-    phone: {
-      type: DataTypes.STRING(20),
-      allowNull: true
-    },
     start: {
       type: DataTypes.DATEONLY,
       allowNull: false
