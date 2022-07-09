@@ -132,7 +132,7 @@ const login = async (req, res) => {
         res.cookie("refreshToken", refreshToken, {
           httpOnly: true,
         });
-        return res.status(200).send({ message: "로그인 하셨습니다.", token });
+        return res.status(200).send({ message: "로그인 하셨습니다.", token, refreshToken });
       }
     }
   } catch (err) {
@@ -170,7 +170,7 @@ const refresh = async (req, res) => {
           const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
             expiresIn: "1h",
           });
-          return res.status(200).send({ message: "토큰이 재발급 됐습니다.", token });
+          return res.status(200).send({ message: "토큰이 재발급 됐습니다.", token, refreshToken });
         }
       });
     }
