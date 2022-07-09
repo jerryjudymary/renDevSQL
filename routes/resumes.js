@@ -8,10 +8,11 @@ const multerS3 = require("multer-s3");
 const aws = require("aws-sdk");
 const s3 = new aws.S3();
 const authMiddleware = require("../middlewares/authMiddleware");
-// const db = require("../config/database");?
+
+// const moments = require("moment-timezone");
+// const moments.tz.setDefault("Asia/Seoul");
 
 // multer - S3 이미지 업로드 설정
-
 const upload = multer({
   storage: multerS3({
     s3: s3,
@@ -70,19 +71,22 @@ router.post("/", authMiddleware, async (req, res) => {
 // 팀원 찾기 전체 조회
 router.get("/", async (req, res) => {
   try {
+    const resumes = await Resume.findAll(
+      {
+        // ResumeSkill 모델에서 skill를 찾은 후 resumes 에 담음
+        include: [{ model: ResumeSkill, attributes: ["skill"] }],
+        attributes: ["nickname", "resumeImage", "content", "start", "end", "role", "createdAt"],
+        order: [["createdAt", "DESC"]],
+        // offset: 3,
+        limit: 9,
+      } // 하나의 페이지 9개 조회
+    );
+    // console.log(resumes);
+
     // moment 라이브러리를 활용하여 날짜 포멧 형식 지정
     // const start_moment = moment(start).format("YYYY-MM-DD");
     // const end_moment = moment(end).format("YYYY-MM-DD");
     // const createdAt_moment = moment(createdAt).format("YYYY-MM-DD hh:mm:ss");
-    // console.log(resumes);
-
-    const resumes = await Resume.findAll({
-      include: [{ model: ResumeSkill, attributes: ["skill"] }],
-      attributes: ["nickname", "resumeImage", "content", "start", "end", "role", "createdAt"],
-      order: [["createdAt", "DESC"]],
-      // offset: 3,
-      limit: 9, // 하나의 페이지 9개 조회
-    });
 
     res.status(200).send({ resumes });
   } catch (error) {
