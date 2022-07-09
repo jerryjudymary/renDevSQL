@@ -109,7 +109,7 @@ router.get("/:resumeId", async (req, res) => {
   try {
     const { resumeId } = req.params;
 
-    const resumes = await Resume.findOne({
+    const existresumes = await Resume.findOne({
       include: [
         {
           model: ResumeSkill,
@@ -118,32 +118,28 @@ router.get("/:resumeId", async (req, res) => {
       ],
       where: { resumeId },
     });
+    // const skills = projectQuery.ProjectSkills.map(eachSkill => eachSkill.skill);
+    const resumeskills = existresumes.ResumeSkills.map((skills) => skills.skill);
 
-    const resumeskills = resumes.map((resume) => resume.ResumeSkills.map((skill) => skill["skill"]));
+    const resumes = {
+      resumeId: existresumes.resumeId,
+      userId: existresumes.userId,
+      nickname: existresumes.nickname,
+      content: existresumes.content,
+      start: existresumes.start,
+      end: existresumes.end,
+      role: existresumes.role,
+      content2: existresumes.content2,
+      content3: existresumes.content3,
+      resumeImage: existresumes.resumeImage,
+      resumeskills,
+    };
 
-    let existResume = [];
-
-    resumes.forEach((resume, index) => {
-      let a_resume = {};
-      a_resume.resumeId = resume.resumeId;
-      a_resume.userId = resume.userId;
-      a_resume.nickname = resume.nickname;
-      a_resume.resumeImage = resume.resumeImage;
-      a_resume.content = resume.content;
-      a_resume.start = resume.start;
-      a_resume.end = resume.end;
-      a_resume.role = resume.role;
-      a_resume.resumeskills = resumeskills[index];
-      a_resume.content2 = resume.content2;
-      a_resume.content3 = resume.content3;
-      a_resume.createdAt = resume.createdAt;
-
-      existResume.push(a_resume);
-    });
+    console.log(resumes);
     console.log(resumeskills);
-    console.log(existResume);
+    // console.log(existResume);
 
-    res.status(200).send({ existResume });
+    res.status(200).send({ resumes });
   } catch (error) {
     console.log(error);
     res.status(400).send({ errorMessage: "잠시만요" });
