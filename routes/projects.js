@@ -49,9 +49,9 @@ router.post("/", authMiddleware, async (req, res) => {
     return res.status(401).json({ errorMessage: "로그인 후 사용하세요." });
   };
 
-  const { id, nickname, userId, phone } = res.locals.user;
+  const { id, nickname, userId } = res.locals.user;
 
-  if (!id || !nickname || !userId || !phone) {
+  if (!id || !nickname || !userId ) {
     return res.status(404).json({ errorMessage: "회원정보가 올바르지 않습니다." });
   }
 
@@ -72,7 +72,7 @@ router.post("/", authMiddleware, async (req, res) => {
   const email = userId;
 
   // 시퀄라이즈 쿼리의 반환값은 promise로 반환되므로 .then을 붙여 이용해 줍니다
-  await Project.create({ title, details, subscript, role, start, end, email, phone, id, nickname, createdAt })
+  await Project.create({ title, details, subscript, role, start, end, email, id, nickname, createdAt })
   .then(result => {
 
     schedule.forEach(
@@ -94,21 +94,44 @@ router.post("/", authMiddleware, async (req, res) => {
 // 프로젝트 조회
 
 router.get("/", async (req, res) => {
-  const projects = await Project.findAll({
+  const projectsQuery = await Project.findAll({
     include: {
       model: ProjectSkill,
       attributes:['skill'],
       required: true // 자식 테이블로 ProjectSkill row가 존재하는 projects만 불러옵니다
     }
   });
-  res.send( projects );
+
+  const projectSkills = projectsQuery.map(project => project.ProjectSkills.map( skill => skill["skill"] ));
+
+  let projects = [];
+
+  projectsQuery.forEach((project, index) => {
+    let createdAt = moment(project.createdAt).format("YYYY-MM-DD hh:mm:ss");
+    let projectArray = {};
+
+    projectArray.projectid = project.projectId;
+    projectArray.nickname = project.nickname;
+    projectArray.title = project.title;
+    projectArray.subscript = project.subscript;
+    projectArray.role = project.role;
+    projectArray.start = project.start;
+    projectArray.end = project.end;
+    projectArray.createdAt = createdAt; 
+    projectArray.skills = projectSkills[index];
+
+    projects.push(projectArray);
+    }
+  );
+      
+  res.send({ projects });
 });
 
 // 프로젝트 상세 조회
 
 router.get("/:projectId", async (req, res) => {
   const { projectId } = req.params;
-  const project = await Project.findOne({
+  const projectQuery = await Project.findOne({
 
     where: {
       projectId
@@ -124,12 +147,50 @@ router.get("/:projectId", async (req, res) => {
       },
       {
         model: Application,
-        attributes:['applicationId', 'schedule','available','status','interviewcode'],
+        attributes:['applicationId', 'schedule','available','status','interviewCode'],
       }
     ]
   });
-  
-  if (!project) { 
+
+  const skills = projectQuery.ProjectSkills.map(eachSkill => eachSkill.skill);
+  const photos = projectQuery.ProjectPhotos.map(eachPhoto => eachPhoto.photo);
+
+  const createdAt = moment(projectQuery.createdAt).format("YYYY-MM-DD hh:mm:ss");
+
+  let applications = [];
+
+  projectQuery.Applications.forEach((eachApp, index) => {
+    let schedule = moment(eachApp.schedule).format("YYYY-MM-DD hh:mm:ss");
+    let application = {};
+
+    application.applicationId = eachApp.applicationId;
+    application.schedule = schedule;
+    application.available = eachApp.available;
+    application.status = eachApp.status;
+    application.interviewCode = eachApp.interviewCode;
+
+    applications.push(application);
+    }
+  )
+
+  const project = {
+    projectId: projectQuery.projectId,
+    id: projectQuery.id,
+    title: projectQuery.title,
+    details: projectQuery.details,
+    role: projectQuery.role,
+    email: projectQuery.email,
+    start: projectQuery.start,
+    end: projectQuery.end,
+    subscript: projectQuery.end,
+    nickname: projectQuery.nickname,
+    createdAt,
+    applications,
+    photos,
+    skills
+  }
+
+  if (!projectQuery) { 
     res.status(404).json({ errorMessage: "프로젝트 정보가 존재하지 않습니다." });
   } else {
     res.send({ project });
