@@ -10,10 +10,6 @@ exports.postUsersSchema = Joi.object({
     .pattern(new RegExp(/^(?=.*[a-zA-z])(?=.*[0-9])(?=.*[$`~!@$!%*#^?&\\(\\)\-_=+]).{4,16}$/))
     .required(),
   // 한글,영어,숫자, 특수문자 포함 가능 4~16자
-  phone: Joi.string()
-    .pattern(new RegExp(/^[0-9]{3}-[0-9]{4}-[0-9]{4}/))
-    .required(),
-  // 숫자(2~3자리) - 숫자(3~4자리) - 숫자(4자리)
   birth: Joi.string()
     .pattern(new RegExp(/^(19[0-9][0-9]|20\d{2})-(0[0-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/))
     .required(),

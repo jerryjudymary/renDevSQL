@@ -7,7 +7,8 @@ const {
     Project,
     Application,
     ProjectSkill,
-    Resume
+    Resume,
+    ProjectPhoto
 }
 = require("../models");
 
@@ -70,8 +71,15 @@ const userDetail = async (req, res) => {
           return res.status(401).send({ errorMessage: "존재하지 않는 유저입니다."}); 
         };
   
-        const project = await Project.findAll({ where : { id: user.id } })
-  
+        const project = await Project.findAll({ where : { id: user.id }, include : [
+        {
+            model:ProjectSkill
+        },
+        {
+            model:ProjectPhoto
+        }
+        ] })
+
         if(!project){
           return res.status(401).send({ errorMessage: "내가 작성한 Project가 없습니다."})
         }
@@ -157,7 +165,18 @@ const userDetail = async (req, res) => {
               attributes:['skill', 'projectId']
             }
           ]})
-  
+          
+          const mapProject = project.map( data => [data.projectId, data.id, data.Applications.map(result => result.schedule)]) //() => {
+        //     const appSchedule = data.Applications.map(result => result.schedule)
+        //     const delArray = appSchedule.reduce(( acc, cur) => [...acc, ...cur], []);
+        //     return delArray
+        // }])
+          const mapPro = mapProject.reduce(( acc, cur) => [...acc, ...cur], []);
+          const mapProject2 = project.map( data => data.id)
+          const mapApp = project.map(data => data.Applications.map(result => result.schedule))
+          console.log("배열제거:" , mapPro)
+          console.log({projectId : mapProject, id : mapProject2})
+          
         if(!apply){
           return res.status(401).send({ errorMessage: "지원한 프로젝트가 없습니다."})
         }
@@ -188,7 +207,7 @@ const userDetail = async (req, res) => {
       if(!project){
         return res.status(401).send({ errorMessage: "내 Project를 찾을 수 없습니다."})
       }
-      
+
       const proId = project.map(data => data.projectId)
       console.log("Id입니다" , proId)
   
