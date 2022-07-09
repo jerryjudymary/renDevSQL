@@ -5,7 +5,16 @@
     "database": "rendevSQL",
     "host": "3.34.200.72",
     "dialect": "mysql",
-    "logging": false
+    "logging": false,
+    "timezone":"+09:00",            
+      "dialectOptions":{
+        "dateStrings":true,           
+        "typeCast":true,
+        "timezone":"+09:00"
+      },
+      "define":{
+        "timestamps":true
+      }
   },
   "test": {
     "username": "root",

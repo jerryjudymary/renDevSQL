@@ -3,9 +3,8 @@ const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
   class Resume extends Model {
     static associate(models) {
-      Resume.hasMany(
-        models.Application, {
-        foreignKey: 'resumeId'
+      Resume.hasMany(models.Application, {
+        foreignKey: "resumeId",
       });
       Resume.hasMany(models.ResumeSkill, {
         foreignKey: "resumeId",
@@ -30,6 +29,10 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.INTEGER,
         allowNull: false,
       },
+      userId: {
+        type: DataTypes.STRING(50),
+        allowNull: true,
+      },
       nickname: {
         type: DataTypes.STRING(30),
         allowNull: false,
@@ -37,14 +40,6 @@ module.exports = (sequelize, DataTypes) => {
       content: {
         type: DataTypes.STRING(255),
         allowNull: false,
-      },
-      email: {
-        type: DataTypes.STRING(50),
-        allowNull: true,
-      },
-      phone: {
-        type: DataTypes.STRING(20),
-        allowNull: true,
       },
       resumeImage: {
         type: DataTypes.STRING(255),
@@ -72,14 +67,6 @@ module.exports = (sequelize, DataTypes) => {
       },
       createdAt: {
         type: DataTypes.DATE,
-        allowNull: false,
-      },
-      exposeEmail: {
-        type: DataTypes.BOOLEAN,
-        allowNull: false,
-      },
-      exposePhone: {
-        type: DataTypes.BOOLEAN,
         allowNull: false,
       },
     },
