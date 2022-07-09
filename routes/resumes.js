@@ -8,10 +8,11 @@ const multerS3 = require("multer-s3");
 const aws = require("aws-sdk");
 const s3 = new aws.S3();
 const authMiddleware = require("../middlewares/authMiddleware");
-// const db = require("../config/database");?
+
+// const moments = require("moment-timezone");
+// const moments.tz.setDefault("Asia/Seoul");
 
 // multer - S3 이미지 업로드 설정
-
 const upload = multer({
   storage: multerS3({
     s3: s3,
@@ -82,11 +83,11 @@ router.get("/", async (req, res) => {
     const resumes = await Resume.findAll(
       {
         include: [{ model: ResumeSkill, attributes: ["skill"] }],
-      },
-      { attributes: ["nickname", "resumeImage", "content", "start", "end", "role", "createdAt"] },
-      { order: [["createdAt", "DESC"]] },
-      // offset: 3,
-      { limit: 9 } // 하나의 페이지 9개 조회
+        attributes: ["nickname", "resumeImage", "content", "start", "end", "role", "createdAt"],
+        order: [["createdAt", "DESC"]],
+        // offset: 3,
+        limit: 9,
+      } // 하나의 페이지 9개 조회
     );
     // console.log(resumes);
 
