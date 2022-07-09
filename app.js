@@ -44,7 +44,7 @@ app.use("/api/projects", [projectsRouter]);
 app.use("/api/resumes", [resumesRouter]);
 app.use("/api/matches", [matchesRouter]);
 app.use("/api/search", [searchRouter]);
-app.use("/api/projects", [applicationsRouter]);
+app.use("/api/applications", [applicationsRouter]);
 app.listen(port, () => {
   console.log(port, "포트로 서버가 켜졌습니다.");
 });
