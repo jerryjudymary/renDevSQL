@@ -8,10 +8,11 @@ const multerS3 = require("multer-s3");
 const aws = require("aws-sdk");
 const s3 = new aws.S3();
 const authMiddleware = require("../middlewares/authMiddleware");
-// const db = require("../config/database");?
+
+// const moments = require("moment-timezone");
+// const moments.tz.setDefault("Asia/Seoul");
 
 // multer - S3 이미지 업로드 설정
-
 const upload = multer({
   storage: multerS3({
     s3: s3,
@@ -24,8 +25,8 @@ const upload = multer({
 });
 
 // 이미지 업로드
-// router.post("/image", authMiddleware, upload.single("resumeImage"), async (req, res) => {
-router.post("/image", upload.single("resumeImage"), async (req, res) => {
+// router.post("/image", upload.single("resumeImage"), async (req, res) => {
+router.post("/image", authMiddleware, upload.single("resumeImage"), async (req, res) => {
   try {
     const resumeImage = req.file.location;
     return res.status(200).json({ message: "사진을 업로드 했습니다.", resumeImage });
@@ -36,8 +37,8 @@ router.post("/image", upload.single("resumeImage"), async (req, res) => {
 });
 
 // 팀원 찾기 등록
-// router.post("/", async (req, res) => {
-router.post("/", authMiddleware, upload.single("resumeImage"), async (req, res) => {
+// router.post("/", authMiddleware, upload.single("resumeImage"), async (req, res) => {
+router.post("/", authMiddleware, async (req, res) => {
   try {
     const { id, nickname } = res.locals.user;
     const { content, email, phone, start, end, role, skill, content2, content3, resumeImage, exposeEmail, exposePhone } = req.body;
@@ -60,14 +61,6 @@ router.post("/", authMiddleware, upload.single("resumeImage"), async (req, res) 
       }
     });
 
-    // // 임시보류
-    // await Resume.create({ id, nickname, content, email, phone, start, end, role, content2, content3, resumeImage, exposeEmail, exposePhone, createdAt });
-    // // 관계 쿼리로 추가 테스트 중
-    // const resume = await Resume.findOne({});
-    // const resumeskill = await ResumeSkill.create(skill);
-
-    // await resume.addResumeSkill([resumeskill]);
-
     res.status(200).send({ Resume, message: "나의 정보를 등록 했습니다." });
   } catch (err) {
     console.log(err);
@@ -78,15 +71,15 @@ router.post("/", authMiddleware, upload.single("resumeImage"), async (req, res) 
 // 팀원 찾기 전체 조회
 router.get("/", async (req, res) => {
   try {
-    // ResumeSkill 모델에서 skill를 찾은 후 resumes 에 담음
     const resumes = await Resume.findAll(
       {
+        // ResumeSkill 모델에서 skill를 찾은 후 resumes 에 담음
         include: [{ model: ResumeSkill, attributes: ["skill"] }],
-      },
-      { attributes: ["nickname", "resumeImage", "content", "start", "end", "role", "createdAt"] },
-      { order: [["createdAt", "DESC"]] },
-      // offset: 3,
-      { limit: 9 } // 하나의 페이지 9개 조회
+        attributes: ["nickname", "resumeImage", "content", "start", "end", "role", "createdAt"],
+        order: [["createdAt", "DESC"]],
+        // offset: 3,
+        limit: 9,
+      } // 하나의 페이지 9개 조회
     );
     // console.log(resumes);
 
@@ -103,7 +96,6 @@ router.get("/", async (req, res) => {
 });
 
 // 팀원 찾기 상세조회
-// router.get("/:resumeId", async (req, res) => {
 router.get("/:resumeId", authMiddleware, async (req, res) => {
   try {
     const { nickname } = res.locals.user;
@@ -128,22 +120,21 @@ router.get("/:resumeId", authMiddleware, async (req, res) => {
 });
 
 // 팀원 찾기 정보 수정
-// router.put("/:resumeId", async (req, res) => {
 // router.put("/:resumeId", authMiddleware, upload.single("resumeImage"), async (req, res) => {
 router.put("/:resumeId", authMiddleware, async (req, res) => {
   try {
-    const { id } = res.locals.user;
+    const { id, nickname } = res.locals.user;
     const { resumeId } = req.params;
     const { content, email, phone, start, end, role, skill, content2, content3, resumeImage } = req.body;
 
-    const existResume = await Resume.findOne({ where: { resumeId, id } });
+    const existResume = await Resume.findOne({ where: { resumeId, nickname } });
 
-    if (id !== existResume.id) {
+    if (nickname !== existResume.nickname) {
       return res.status(400).send({ errormessage: "내 게시글이 아닙니다" });
     } else {
       const tran = await sequelize.transaction(); // 트랙잭션 시작
       try {
-        Resume.update({ nickname, content, email, phone, start, end, role, content2, content3, resumeImage }, { where: { resumeId } });
+        Resume.update({ nickname, content, email, phone, start, end, role, content2, content3, resumeImage }, { where: { resumeId, nickname } });
         // 등록 당시의 개수와 수정 당시의 개수가 다르면 update 사용 곤란으로 삭제 후 재등록 처리
         if (skill.length) {
           await ResumeSkill.destroy({ where: { resumeId }, transaction: tran });
@@ -164,7 +155,6 @@ router.put("/:resumeId", authMiddleware, async (req, res) => {
 });
 
 // 팀원 찾기 정보 삭제
-// router.delete("/:resumeId", async (req, res) => {
 router.delete("/:resumeId", authMiddleware, async (req, res) => {
   try {
     const { id } = res.locals.user;

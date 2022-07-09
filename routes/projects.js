@@ -194,6 +194,36 @@ router.put("/:projectId", authMiddleware, async (req, res) => {
       await ProjectPhoto.create({ projectId, photo : photos[i] },  { transaction: t });
     };
 
+    // --- 기존 이미지 다중 삭제
+
+    const existPhotos = await ProjectPhoto.findAll({
+      where: { projectId }
+    });
+
+    let deletePhotos = [];
+
+    existPhotos.forEach((item) => {
+      let photoUrl = item.dataValues.photo; // DB에 저장되어있는 URL에서 키값만 추출
+      const photo = photoUrl.split('.com/')[1];
+      console.log(photo)
+      deletePhotos.push({ Key: photo }); // [{키: 밸류},{키: 밸류}] 형태로 전달해 줍니다
+    });
+    
+    const params = {
+      Bucket: 'jerryjudymary', 
+      Delete: {
+        Objects: deletePhotos, 
+        Quiet: false
+      }
+    };
+
+    s3.deleteObjects(params, function(err, data) {
+      if (err) return(err)     
+      else console.log("버킷의 이미지들이 삭제 - 수정되었습니다.");   
+    });
+
+    // ---
+
     res.status(200).json({
       message: "프로젝트 게시글을 수정했습니다.",
     });
@@ -207,7 +237,13 @@ router.put("/:projectId", authMiddleware, async (req, res) => {
 // 프로젝트 삭제
 
 router.delete("/:projectId", authMiddleware, async (req, res) => {
-  const { projectId } = req.params;
+  if (!res.locals.user) {
+    return res.status(401).json({ errorMessage: "로그인 후 사용하세요." });
+  };
+
+  const { id } = res.locals.user;
+  const { projectId  } = req.params;
+
   const existProject = await Project.findOne({
     where: { projectId, id }
   })
@@ -216,19 +252,44 @@ router.delete("/:projectId", authMiddleware, async (req, res) => {
     return res.status(404).json({ errorMessage: "프로젝트 정보가 존재하지 않습니다." });
   };
 
-  if (!res.locals.user) {
-    return res.status(401).json({ errorMessage: "로그인 후 사용하세요." });
-  };
-
-  const { id } = res.locals.user;
-
   if (id !== existProject.id) {
     return res.status(401).send({ errorMessage : '작성자만 삭제할 수 있습니다.' });
   };
-    
+  
+  // --- 기존 이미지 다중 삭제
+
+  const existPhotos = await ProjectPhoto.findAll({
+    where: { projectId }
+  });
+
+  let deletePhotos = [];
+
+  existPhotos.forEach((item) => {
+    let photoUrl = item.dataValues.photo; // DB에 저장되어있는 URL에서 키값만 추출
+    const photo = photoUrl.split('.com/')[1];
+    console.log(photo)
+    deletePhotos.push({ Key: photo }); // [{키: 밸류},{키: 밸류}] 형태로 전달해 줍니다
+  });
+  
+  const params = {
+    Bucket: 'jerryjudymary', 
+    Delete: {
+      Objects: deletePhotos, 
+      Quiet: false
+    }
+  };
+
+  s3.deleteObjects(params, function(err, data) {
+    if (err) return(err)     
+    else console.log("버킷의 이미지들이 삭제되었습니다.");   
+  });
+
+  // ---
+
   Project.destroy({ // ON DELETE CASCADE 적용으로 자식 테이블의 데이터도 지워집니다
     where: { projectId, id },
   });
+
   res.status(200).json({
     message: "프로젝트 게시글을 삭제했습니다.",
   });
