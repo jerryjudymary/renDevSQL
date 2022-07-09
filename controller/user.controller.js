@@ -132,7 +132,7 @@ const login = async (req, res) => {
         res.cookie("refreshToken", refreshToken, {
           httpOnly: true,
         });
-        return res.status(200).send({ message: "로그인 하셨습니다.", token });
+        return res.status(200).send({ message: "로그인 하셨습니다.", token, refreshToken });
       }
     }
   } catch (err) {
@@ -182,49 +182,6 @@ const refresh = async (req, res) => {
   }
 };
 
-const userDetail = async (req, res) => {
-  try {
-    const user = res.locals.user;
-    if (user === undefined) {
-      return res.status(401).send({ errorMessage: "로그인이 필요합니다." });
-    } else {
-      const { nickname } = req.params;
-
-      const nickInfo = await User.findOne({ where: { nickname } });
-      if (!nickInfo) {
-        return res.status(401).send({ errorMessage: "로그인이 필요합니다." });
-      } else {
-        return res.status(200).send(nickInfo);
-      }
-    }
-  } catch (err) {
-    if (err) {
-      console.log(err);
-      res.status(400).send({ errorMessage: "유저 정보를 찾을 수 없습니다." });
-    }
-  }
-};
-
-const userInfo = async (req, res) => {
-  try {
-    const user = res.locals.user;
-    if (user === undefined) {
-      return res.status(401).send({ errorMessage: "로그인이 필요합니다." });
-    } else {
-      const { userId } = res.locals.user;
-
-      const users = await User.findOne({ where: { userId } });
-      if (!users) {
-        return res.status(401).send({ errorMessage: "로그인이 필요합니다." });
-      } else {
-        return res.status(200).send({ userId: users.userId, nickname: users.nickname });
-      }
-    }
-  } catch (err) {
-    res.status(400).send({ errorMessage: "유저 정보를 찾을 수 없습니다." });
-  }
-};
-
 const updatePw = async (req, res) => {
   try {
     const { userId } = res.locals.user;
@@ -261,34 +218,42 @@ const updatePw = async (req, res) => {
   }
 };
 
-// const userProject = (req, res) => {
-//   try {
-//     const user = res.locals.user;
-//     if (user === undefined) {
-//       res.status(400).send({ errorMessage: "로그인이 필요합니다." });
-//     } else {
-//       const { userId } = res.locals.user;
-//       // FROM users A INNER JOIN projects B와 같이 A, B 잡아주는걸 가상 테이블 가상 칼럼 잡아준다고 한다.
-//       // const sql = 'SELECT A.userId, B.projectId FROM users A INNER JOIN projects B on A.userId = B.userId where A.userId=?; '; + 'SELECT C.userId, D.resumeId FROM users C INNER JOIN resumes D on C.userID = D.userId where C.userId=?; ';
-//       const sql =
-//         "SELECT B.projectId FROM users A INNER JOIN projects B on A.userId = B.userId where A.userId=?; ";
-//       const sql2 =
-//         "SELECT C.resumeId FROM users A INNER JOIN resumes C on A.userID = C.userId where A.userId=?";
-//       const sql_2 = mysql.format(sql2, userId);
-//       db.query(sql + sql_2, userId, (err, result) => {
-//         if (err) {
-//           console.log(err);
-//         }
-//         res.status(200).send({ Projects: result[0], Resumes: result[1] });
-//       });
-//     }
-//   } catch (err) {
-//     console.log(err);
-//     return res
-//       .status(400)
-//       .send({ errorMessage: "유저 정보를 찾을 수 없습니다." });
-//   }
-// };
+const userDelete = async(req, res) => {
+
+  const user = res.locals.user;
+  const { nickname } = req.params
+  var { password } = req.body;
+  console.log(user.nickname)
+  console.log(nickname)
+
+  if(user === undefined){
+    return res.status(401).send({ errorMessage: "로그인이 필요한 기능입니다."})
+  } else if(user.nickname !== nickname ){
+    return res.status(401).send({ errorMessage: "본인만 탈퇴할 수 있습니다."})
+  }
+
+  const users = await User.findOne({ where : { nickname } });
+
+  if(users){
+    const hashed = bcrypt.compareSync(password, users.password);
+    if(hashed){
+      const sql = "SELECT * INTO virtual FROM user;";
+      const sql2 = "ALTER TABLE virtual DROP COLUMN id;";
+      const sql3 = "DELETE FROM virtual where nickname=?;";
+      const sql4 = "DROP TABLE virtual;";
+      db.query(sql + sql2 + sql3 + sql4, nickname, (err, data) => {
+        if(err){
+          console.log(err)
+          return res.status(400).send({ errorMessage : "회원탈퇴에 실패했습니다."})
+        } else {
+          res.status(200).send({ message: "정상적으로 회원 탈퇴 됐습니다."})
+        }
+      })
+    } else {
+      return res.status(401).send({ errorMessage: "비밀번호가 일치하지 않습니다."})
+    }
+  }
+}
 
 module.exports = {
   signUp,
@@ -296,7 +261,6 @@ module.exports = {
   checkNickname,
   login,
   refresh,
-  userInfo,
-  userDetail,
   updatePw,
+  userDelete
 };
