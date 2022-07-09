@@ -107,6 +107,11 @@ const login = async (req, res) => {
 
   try {
     const users = await User.findOne({ where: { userId } });
+
+    if( userId !== users.userId){
+      return res.status(400).send({ errorMessage: "아이디 또는 비밀번호가 일치하지 않습니다. "})
+    }
+    
     if (users) {
       const hashed = bcrypt.compareSync(password, users.password);
 
@@ -170,7 +175,7 @@ const refresh = async (req, res) => {
           const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
             expiresIn: "1h",
           });
-          return res.status(200).send({ message: "토큰이 재발급 됐습니다.", token });
+          return res.status(200).send({ message: "토큰이 재발급 됐습니다.", token, refreshToken });
         }
       });
     }
@@ -219,7 +224,7 @@ const updatePw = async (req, res) => {
 };
 
 const userDelete = async(req, res) => {
-
+  
   const user = res.locals.user;
   const { nickname } = req.params
   var { password } = req.body;
@@ -231,24 +236,37 @@ const userDelete = async(req, res) => {
   } else if(user.nickname !== nickname ){
     return res.status(401).send({ errorMessage: "본인만 탈퇴할 수 있습니다."})
   }
-
+  
   const users = await User.findOne({ where : { nickname } });
-
+  
   if(users){
+    
+    if(!password){
+      return res.status(401).send({ errorMessage: "비밀번호를 입력해 주세요"})
+    }
+    
     const hashed = bcrypt.compareSync(password, users.password);
     if(hashed){
-      const sql = "SELECT * INTO virtual FROM user;";
-      const sql2 = "ALTER TABLE virtual DROP COLUMN id;";
-      const sql3 = "DELETE FROM virtual where nickname=?;";
-      const sql4 = "DROP TABLE virtual;";
-      db.query(sql + sql2 + sql3 + sql4, nickname, (err, data) => {
-        if(err){
-          console.log(err)
-          return res.status(400).send({ errorMessage : "회원탈퇴에 실패했습니다."})
-        } else {
-          res.status(200).send({ message: "정상적으로 회원 탈퇴 됐습니다."})
-        }
-      })
+      
+      const ids = Math.random().toString(36).slice(-3) + "id";
+      const nicks = Math.random().toString(36).slice(-3) + "nick";
+      const names = ""
+      const phones = ""
+      const births = ""
+      const profileImages = "" 
+      const refreshTokens = ""
+      const passwords = ""
+      const passwordChecks  = ""
+      
+      await User.update
+      ({
+        userId: ids, nickname:nicks, name: names, phone: phones,
+        birth: births, profileImage: profileImages,
+        refreshToken: refreshTokens, password: passwords, passwordCheck: passwordChecks },
+        { where : { nickname : user.nickname }
+      });
+      
+      return res.status(200).send({ message: "정상적으로 회원 탈퇴 됐습니다."})
     } else {
       return res.status(401).send({ errorMessage: "비밀번호가 일치하지 않습니다."})
     }
