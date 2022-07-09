@@ -14,13 +14,12 @@ router.get("/project", async (req, res) => {
 
     const projectserch = await Project.findAll({
       where: {
-        [Op.and]: {
-          start: { [Op.lte]: end },
-          end: { [Op.gte]: start },
-          skill: projectskill.map((skills) => skills.skill),
-        },
+        start: { [Op.lte]: end },
+        end: { [Op.gte]: start },
+        skill: { projectskill: skill },
+
+        order: [["createdAt", "DESC"]],
       },
-      order: [["createdAt", "DESC"]],
     });
 
     console.log(projectserch);
