@@ -155,13 +155,13 @@ router.put("/:projectId", authMiddleware, async (req, res) => {
   };
 
   try {
-    var { title, details, subscript, role, start, end, skills, email, phone, schedule, photos }
+    var { title, details, subscript, role, start, end, skills, schedule, photos }
     = await projectPostSchema.validateAsync(req.body);
   } catch (err) {
     return res.status(400).json({ errorMessage: "작성 형식을 확인해주세요." });
   };
 
-  if (!title || !details || !subscript || !role || !start || !end || !skills || !email || !phone || !schedule) {
+  if (!title || !details || !subscript || !role || !start || !end || !skills || !schedule) {
     return res.status(400).json({ errorMessage: "작성란을 모두 기입해주세요." });
   };
 
@@ -172,8 +172,8 @@ router.put("/:projectId", authMiddleware, async (req, res) => {
   const t = await sequelize.transaction(); //이하 쿼리들 트랜잭션 처리
 
   try {
-    Project.update({ title, details, subscript, role, start, end, email, phone, nickname },
-    { where: { projectId: projectId } });
+    Project.update({ title, details, subscript, role, start, end, nickname },
+    { where: { projectId } });
 
     // 등록 당시의 개수와 수정 당시의 개수가 다르면 update 사용 곤란으로 삭제 후 재등록 처리
     //현재 스케쥴을 등록하면 이전 스케쥴은 무조건 사라지는 문제 해결해야 함( 프론트에서 해결 가능..? )
