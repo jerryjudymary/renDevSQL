@@ -40,14 +40,6 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING(200),
         allowNull: false,
       },
-      passwordCheck: {
-        type: DataTypes.STRING(200),
-        allowNull: true,
-      },
-      phone: {
-        type: DataTypes.STRING(30),
-        allowNull: false,
-      },
       birth: {
         type: DataTypes.STRING(30),
         allowNull: false,
