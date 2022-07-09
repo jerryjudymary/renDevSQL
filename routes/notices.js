@@ -22,7 +22,7 @@ async function noteProjectOwner (projectId, resumeId, applicationId) {
     // 이메일 받는이 / 제목 / 내용을 설정한다 
     const project = await Project.findOne({ where: { projectId } })
     const resume = await Resume.findOne({ where: { resumeId } })
-    const application = await Application.findone({ where: { applicationId } })
+    const application = await Application.findOne({ where: { applicationId } })
     
     const noticeReceiver = project.email;
     const emailSubject = '[renDev] 회원님의 프로젝트에 참가하고 싶은 크루원이 있습니다.'
@@ -57,7 +57,7 @@ async function noteApplicant (projectId, resumeId, applicationId) {
     // 이메일 받는이 / 제목 / 내용을 설정한다 
     const project = await Project.findOne({ where: { projectId } })
     const resume = await Resume.findOne({ where: { resumeId } })
-    const application = await Application.findone({ where: { applicationId } })
+    const application = await Application.findOne({ where: { applicationId } })
     
     const noticeReceiver = resume.email;
     const emailSubject = '[renDev] 프로젝트 기획자에게 인터뷰 요청을 하셨습니다.'
@@ -116,42 +116,6 @@ async function InterviewProposal (projectId, resumeId, applicationId) {
 }
 
 
-// -------------------(시작) 이메일 발송 테스트용 template-------------------
-
-const project_title = 'renDev: 개발자 커뮤니티 개발 프로젝트'
-const application_schedule = new Date();
-const project_nickname = '알파플라이'
-const projectId = 789
-const project_email = 'placetobe0807@gmail.com' 
-const application_interviewCode = '494855'
-
-const temp_receiver='placetobe@naver.com'
-const temp_subject='[renDev] 프로젝트 기획자에게 인터뷰 요청을 하셨습니다.'
-const temp_emailTemplate =  `
-    축하합니다. 관심 가는 프로젝트를 찾으셨군요! 아래와 같이 인터뷰를 예약하셨습니다.<br>
-    <br>
-    프로젝트 : ${project_title}<br>
-    <br>
-    인터뷰 일정 : ${application_schedule}<br>
-    프로젝트 기획자 : ${project_nickname}<br>
-    프로젝트 소개 : <a href="http://rendev.도메인/projects/${projectId}">http://rendev.도메인/projects/${projectId}</a><br>
-    기획자 연락 : <a href="mailto:${project_email}">${project_email}</a><br>
-    <br>
-    인터뷰 코드 : ${application_interviewCode}<br>
-    <br>
-    예약된 일시에 사이트 내의 "인터뷰 보기" 링크 또는 <a href="https://rendev.click">https://rendev.click</a>으로 접속하시어<br>
-    인터뷰코드를 입력하시고 입장해주세요.<br>
-    <br>
-    인터뷰 시간에는 배려와 존중! 웃음이 있는 인터뷰가 되시길 기원합니다.<br>
-    <br>
-    좋은 팀원을 만날 거에요,<br>
-    renDev 드림.
-    `
-console.log(temp_emailTemplate);
-sendNotice(temp_receiver,temp_subject,temp_emailTemplate);
-
-// -------------------( 끝 ) 이메일 발송 테스트용 template-------------------
-
 // 이메일 보내기 함수
 async function sendNotice (receiver, subject, content) {
 
@@ -183,9 +147,48 @@ async function sendNotice (receiver, subject, content) {
     });
 }
 
+
+// -------------------(시작) 이메일 발송 테스트용 template-------------------
+
+// const project_title = 'renDev: 개발자 커뮤니티 개발 프로젝트'
+// const application_schedule = new Date();
+// const project_nickname = '알파플라이'
+// const projectId = 789
+// const project_email = 'placetobe0807@gmail.com' 
+// const application_interviewCode = '494855'
+
+// const temp_receiver='placetobe@naver.com'
+// const temp_subject='[renDev] 프로젝트 기획자에게 인터뷰 요청을 하셨습니다.'
+// const temp_emailTemplate =  `
+//     축하합니다. 관심 가는 프로젝트를 찾으셨군요! 아래와 같이 인터뷰를 예약하셨습니다.<br>
+//     <br>
+//     프로젝트 : ${project_title}<br>
+//     <br>
+//     인터뷰 일정 : ${application_schedule}<br>
+//     프로젝트 기획자 : ${project_nickname}<br>
+//     프로젝트 소개 : <a href="http://rendev.도메인/projects/${projectId}">http://rendev.도메인/projects/${projectId}</a><br>
+//     기획자 연락 : <a href="mailto:${project_email}">${project_email}</a><br>
+//     <br>
+//     인터뷰 코드 : ${application_interviewCode}<br>
+//     <br>
+//     예약된 일시에 사이트 내의 "인터뷰 보기" 링크 또는 <a href="https://rendev.click">https://rendev.click</a>으로 접속하시어<br>
+//     인터뷰코드를 입력하시고 입장해주세요.<br>
+//     <br>
+//     인터뷰 시간에는 배려와 존중! 웃음이 있는 인터뷰가 되시길 기원합니다.<br>
+//     <br>
+//     좋은 팀원을 만날 거에요,<br>
+//     renDev 드림.
+//     `
+// console.log(temp_emailTemplate);
+// sendNotice(temp_receiver,temp_subject,temp_emailTemplate);
+
+// -------------------( 끝 ) 이메일 발송 테스트용 template-------------------
+
 module.exports = {
     noteProjectOwner, 
     noteApplicant, 
     InterviewProposal, 
     sendNotice
 };
+
+
