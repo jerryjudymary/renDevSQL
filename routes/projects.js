@@ -1,14 +1,13 @@
 const express = require("express");
 const router = express.Router();
 const authMiddleware = require("../middlewares/authMiddleware");
-const { Project, ProjectSkill, ProjectPhoto, Application, Resume, sequelize } = require("../models");
+const { Project, ProjectSkill, ProjectPhoto, Application, sequelize } = require("../models");
 const { projectPostSchema } = require("../controller/projectValidation.controller.js");
 const multer = require("multer");
 const multerS3 = require("multer-s3");
 const aws = require("aws-sdk");
 const s3 = new aws.S3();
 const moment = require("moment");
-const db = require("../config/database");
 
 // multer - S3 이미지 업로드 설정
 
@@ -17,8 +16,8 @@ const upload = multer({
     s3: s3,
     bucket: "jerryjudymary",
     acl: "public-read",
-    key: function (req, file, cb) {
-      cb(null, "projectImage/" + Date.now() + "." + file.originalname.split(".").pop()); // 이름 설정
+    key: function (req, file, cb) {  // 이름 설정
+      cb(null, "projectImage/" + Date.now() + "." + file.originalname.split(".").pop());
     },
   }),
 });
@@ -27,15 +26,7 @@ const upload = multer({
 
 router.post('/photos', authMiddleware, upload.array('photos'), async (req, res) => {
   try {
-    const imageReq = req.files;
-    let imageArray = [];
-    
-    function LocationPusher() {
-      imageReq.forEach((image) => imageArray.push(image.location))
-      return imageArray;
-    };
-
-    const photos = LocationPusher();
+    const photos = req.files.map(image => image.location);
     res.status(200).json({ message : '사진을 업로드 했습니다.', photos });
   } catch (err) {
     return res.status(400).send({ errorMessage : '사진업로드 실패-파일 형식과 크기(1.5Mb 이하) 를 확인해주세요.' });
@@ -66,29 +57,37 @@ router.post("/", authMiddleware, async (req, res) => {
   || !end || !skills || !schedule) {
     return res.status(400).json({ errorMessage: "작성란을 모두 기입해주세요." });
   };
+
+  if (start >= end) return res.status(400).json({ errorMessage: "날짜 형식이 잘못되었습니다." });
   
   const available = true;
   const createdAt = moment().format("YYYY-MM-DD hh:mm:ss");
   const email = userId;
 
   // 시퀄라이즈 쿼리의 반환값은 promise로 반환되므로 .then을 붙여 이용해 줍니다
-  await Project.create({ title, details, subscript, role, start, end, email, id, nickname, createdAt })
-  .then(result => {
 
-    schedule.forEach(
-      (time) => Application.create({ projectId: result.projectId, schedule : time, available})
-    );
+  try {
+    await Project.create({ title, details, subscript, role, start, end, email, id, nickname, createdAt })
+    .then(result => {
 
-    skills.forEach(
-      (skill) => ProjectSkill.create({ projectId: result.projectId, skill })
-    );
+      schedule.forEach(
+        (time) => Application.create({ projectId: result.projectId, schedule : time, available})
+      );
 
-    photos.forEach(
-      (photo) => ProjectPhoto.create({ projectId: result.projectId, photo })
-    );
+      skills.forEach(
+        (skill) => ProjectSkill.create({ projectId: result.projectId, skill })
+      );
 
-  });
-    res.status(200).json({ message : '프로젝트 게시글을 작성했습니다.' });
+      if (photos || photos.length) {
+        photos.forEach(
+          (photo) => ProjectPhoto.create({ projectId: result.projectId, photo })
+        );
+      };
+    });
+      res.status(200).json({ message : '프로젝트 게시글을 작성했습니다.' });
+  } catch (error) {
+    return res.status(400).json({ errorMessage: "게시글 등록 실패" });
+  }
 });
 
 // 프로젝트 조회
@@ -152,9 +151,12 @@ router.get("/:projectId", async (req, res) => {
     ]
   });
 
+  if (!projectQuery) { 
+    return res.status(404).json({ errorMessage: "프로젝트 정보가 존재하지 않습니다." });
+  };
+
   const skills = projectQuery.ProjectSkills.map(eachSkill => eachSkill.skill);
   const photos = projectQuery.ProjectPhotos.map(eachPhoto => eachPhoto.photo);
-
   const createdAt = moment(projectQuery.createdAt).format("YYYY-MM-DD hh:mm:ss");
 
   let applications = [];
@@ -188,13 +190,9 @@ router.get("/:projectId", async (req, res) => {
     applications,
     photos,
     skills
-  }
+  };
 
-  if (!projectQuery) { 
-    res.status(404).json({ errorMessage: "프로젝트 정보가 존재하지 않습니다." });
-  } else {
     res.send({ project });
-  }
 });
 
 // 프로젝트 수정
@@ -215,6 +213,10 @@ router.put("/:projectId", authMiddleware, async (req, res) => {
     return res.status(401).json({ errorMessage: "로그인 후 사용하세요." });
   };
 
+  if (id !== existProject.id) {
+    return res.status(400).send({ errorMessage : '작성자만 수정할 수 있습니다.' });
+  };
+
   try {
     var { title, details, subscript, role, start, end, skills, schedule, photos }
     = await projectPostSchema.validateAsync(req.body);
@@ -226,11 +228,48 @@ router.put("/:projectId", authMiddleware, async (req, res) => {
     return res.status(400).json({ errorMessage: "작성란을 모두 기입해주세요." });
   };
 
-  if (id !== existProject.id) {
-    return res.status(400).send({ errorMessage : '작성자만 수정할 수 있습니다.' });
+  if (start >= end) return res.status(400).json({ errorMessage: "날짜 형식이 잘못되었습니다." });
+
+  // --- 기존 이미지 다중 삭제
+
+  const existPhotos = await ProjectPhoto.findAll({
+    where: { projectId }
+  })
+
+  if (existPhotos.length) {
+    let deletePhotos = [];
+    existPhotos.forEach((item) => {
+      let photoUrl = item.dataValues.photo; // DB에 저장되어있는 URL에서 키값만 추출
+      const photo = photoUrl.split('.com/')[1];
+      deletePhotos.push({ Key: photo }); // [{키: 밸류},{키: 밸류}] 형태로 전달해 줍니다
+    });
+    console.log(deletePhotos)
+    const params = {
+      Bucket: 'jerryjudymary', 
+      Delete: {
+        Objects: deletePhotos, 
+        Quiet: false
+      }
+    };
+  
+    s3.deleteObjects(params, function(err, data) {
+      if (err) { console.log('에러:', err) 
+      return(err) }
+      else console.log("버킷의 이미지들이 삭제 - 수정되었습니다.");
+    });
   };
 
-  const t = await sequelize.transaction(); //이하 쿼리들 트랜잭션 처리
+  // ---
+
+  // 예외처리 문제로 트랜잭션 밖으로 빼 줍니다.
+  if (photos || photos.length) {
+    await ProjectPhoto.destroy({ where: { projectId }});
+    for (let i = 0; i < photos.length; i++) {
+      await ProjectPhoto.create({ projectId, photo : photos[i] });
+    };
+  }
+
+  const t = await sequelize.transaction(); // 이하 쿼리들 트랜잭션 처리
 
   try {
     Project.update({ title, details, subscript, role, start, end, nickname },
@@ -249,42 +288,6 @@ router.put("/:projectId", authMiddleware, async (req, res) => {
       await ProjectSkill.create({ projectId, skill : skills[i] },  { transaction: t });
     };
 
-    // 스케쥴과 동일한 문제 있음
-    await ProjectPhoto.destroy({ where: { projectId }, transaction: t });
-    for (let i = 0; i < photos.length; i++) {
-      await ProjectPhoto.create({ projectId, photo : photos[i] },  { transaction: t });
-    };
-
-    // --- 기존 이미지 다중 삭제
-
-    const existPhotos = await ProjectPhoto.findAll({
-      where: { projectId }
-    });
-
-    let deletePhotos = [];
-
-    existPhotos.forEach((item) => {
-      let photoUrl = item.dataValues.photo; // DB에 저장되어있는 URL에서 키값만 추출
-      const photo = photoUrl.split('.com/')[1];
-      console.log(photo)
-      deletePhotos.push({ Key: photo }); // [{키: 밸류},{키: 밸류}] 형태로 전달해 줍니다
-    });
-    
-    const params = {
-      Bucket: 'jerryjudymary', 
-      Delete: {
-        Objects: deletePhotos, 
-        Quiet: false
-      }
-    };
-
-    s3.deleteObjects(params, function(err, data) {
-      if (err) return(err)     
-      else console.log("버킷의 이미지들이 삭제 - 수정되었습니다.");   
-    });
-
-    // ---
-
     res.status(200).json({
       message: "프로젝트 게시글을 수정했습니다.",
     });
@@ -298,10 +301,6 @@ router.put("/:projectId", authMiddleware, async (req, res) => {
 // 프로젝트 삭제
 
 router.delete("/:projectId", authMiddleware, async (req, res) => {
-  if (!res.locals.user) {
-    return res.status(401).json({ errorMessage: "로그인 후 사용하세요." });
-  };
-
   const { id } = res.locals.user;
   const { projectId  } = req.params;
 
@@ -313,39 +312,44 @@ router.delete("/:projectId", authMiddleware, async (req, res) => {
     return res.status(404).json({ errorMessage: "프로젝트 정보가 존재하지 않습니다." });
   };
 
+  if (!res.locals.user) {
+    return res.status(401).json({ errorMessage: "로그인 후 사용하세요." });
+  };
+
   if (id !== existProject.id) {
     return res.status(401).send({ errorMessage : '작성자만 삭제할 수 있습니다.' });
   };
   
-  // --- 기존 이미지 다중 삭제
+ // --- 기존 이미지 다중 삭제
 
   const existPhotos = await ProjectPhoto.findAll({
     where: { projectId }
-  });
+  })
 
-  let deletePhotos = [];
+  if (existPhotos.length) {
+    let deletePhotos = [];
+    existPhotos.forEach((item) => {
+      let photoUrl = item.dataValues.photo; // DB에 저장되어있는 URL에서 키값만 추출
+      const photo = photoUrl.split('.com/')[1];
+      deletePhotos.push({ Key: photo }); // [{키: 밸류},{키: 밸류}] 형태로 전달해 줍니다
+    });
+    console.log(deletePhotos)
+    const params = {
+      Bucket: 'jerryjudymary', 
+      Delete: {
+        Objects: deletePhotos, 
+        Quiet: false
+      }
+    };
 
-  existPhotos.forEach((item) => {
-    let photoUrl = item.dataValues.photo; // DB에 저장되어있는 URL에서 키값만 추출
-    const photo = photoUrl.split('.com/')[1];
-    console.log(photo)
-    deletePhotos.push({ Key: photo }); // [{키: 밸류},{키: 밸류}] 형태로 전달해 줍니다
-  });
-  
-  const params = {
-    Bucket: 'jerryjudymary', 
-    Delete: {
-      Objects: deletePhotos, 
-      Quiet: false
-    }
+    s3.deleteObjects(params, function(err, data) {
+      if (err) { console.log('에러:', err) 
+      return(err) }
+      else console.log("버킷의 이미지들이 삭제 - 수정되었습니다."); 
+    });
   };
 
-  s3.deleteObjects(params, function(err, data) {
-    if (err) return(err)     
-    else console.log("버킷의 이미지들이 삭제되었습니다.");   
-  });
-
-  // ---
+// ---
 
   Project.destroy({ // ON DELETE CASCADE 적용으로 자식 테이블의 데이터도 지워집니다
     where: { projectId, id },
