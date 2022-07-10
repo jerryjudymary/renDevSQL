@@ -7,10 +7,6 @@ const multerS3 = require("multer-s3");
 const aws = require("aws-sdk");
 const s3 = new aws.S3();
 const authMiddleware = require("../middlewares/authMiddleware");
-const { resume } = require("../config/database");
-
-// const moments = require("moment-timezone");
-// const moments.tz.setDefault("Asia/Seoul");
 
 // multer - S3 이미지 업로드 설정
 const upload = multer({
@@ -44,8 +40,6 @@ router.post("/", authMiddleware, async (req, res) => {
 
     if (!userId) return res.status(401).json({ errorMessage: "로그인 후 사용하세요." });
 
-    const users = User.findOne({ attributes: ["userId", "nickname"], where: { userId, nickname } });
-
     const createdAt = new Date();
 
     await Resume.create({ id, userId, nickname, content, start, end, role, content2, content3, resumeImage, createdAt }).then((result) => {
@@ -54,7 +48,7 @@ router.post("/", authMiddleware, async (req, res) => {
       }
     });
 
-    res.status(200).send({ users, message: "나의 정보를 등록 했습니다." });
+    res.status(200).send({ message: "나의 정보를 등록 했습니다." });
   } catch (err) {
     console.log(err);
     res.status(400).send({ errormessage: "작성란을 모두 기입해주세요." });
@@ -118,7 +112,7 @@ router.get("/:resumeId", async (req, res) => {
       ],
       where: { resumeId },
     });
-    // const skills = projectQuery.ProjectSkills.map(eachSkill => eachSkill.skill);
+    // map을 이용하여 배열 안에 객체
     const resumeskills = existresumes.ResumeSkills.map((skills) => skills.skill);
 
     const resumes = {
@@ -146,37 +140,32 @@ router.get("/:resumeId", async (req, res) => {
   }
 });
 
-// 팀원 찾기 정보 수정
+// 팀원 찾기 정보 수정 // 코드 수정
 router.put("/:resumeId", authMiddleware, async (req, res) => {
+  const { userId } = res.locals.user;
+  const { resumeId } = req.params;
+  const { content, start, end, role, skill, content2, content3, resumeImage } = req.body;
+
+  const existResume = await Resume.findOne({ where: { resumeId } });
+  if (userId !== existResume.userId) return res.status(400).send({ errormessage: "내 게시글이 아닙니다" });
+
+  const tran = await sequelize.transaction(); // 트랙잭션 시작
+
   try {
-    const { userId } = res.locals.user;
-    const { resumeId } = req.params;
-    const { content, start, end, role, skill, content2, content3 } = req.body;
-
-    const existResume = await Resume.findOne({ where: { resumeId, userId } });
-
-    if (userId !== existResume.userId) {
-      return res.status(400).send({ errormessage: "내 게시글이 아닙니다" });
-    } else {
-      const tran = await sequelize.transaction(); // 트랙잭션 시작
-      try {
-        Resume.update({ content, start, end, role, content2, content3, resumeImage }, { where: { resumeId, userId } });
-        // 등록 당시의 개수와 수정 당시의 개수가 다르면 update 사용 곤란으로 삭제 후 재등록 처리
-        if (skill.length) {
-          await ResumeSkill.destroy({ where: { resumeId }, transaction: tran });
-          for (let i = 0; i < skill.length; i++) {
-            await ResumeSkill.create({ resumeId, skill: skill[i] }, { transaction: tran });
-          }
-        }
-        await tran.commit();
-      } catch (error) {
-        await tran.rollback(); // 트랜젝션 실패시 시작부분까지 되돌리기
+    existResume.update({ content, start, end, role, content2, content3, resumeImage }, { where: { resumeId } });
+    // 등록 당시의 개수와 수정 당시의 개수가 다르면 update 사용 곤란으로 삭제 후 재등록 처리
+    if (skill.length) {
+      await ResumeSkill.destroy({ where: { resumeId }, transaction: tran });
+      for (let i = 0; i < skill.length; i++) {
+        await ResumeSkill.create({ resumeId, skill: skill[i] }, { transaction: tran });
       }
     }
     res.status(200).send({ message: "나의 정보를 수정했습니다." });
+    await tran.commit();
   } catch (error) {
     console.log(error);
     res.status(401).send({ errormessage: "작성란을 모두 기입해주세요." });
+    await tran.rollback(); // 트랜젝션 실패시 시작부분까지 되돌리기
   }
 });
 
@@ -188,7 +177,7 @@ router.delete("/:resumeId", authMiddleware, async (req, res) => {
 
     if (!userId) return res.status(401).json({ errorMessage: "로그인 후 사용하세요." });
 
-    const existResume = await Resume.findOne({ include: [{ model: ResumeSkill, where: { resumeId } }], where: { resumeId, userId } });
+    const existResume = await Resume.findOne({ include: [{ model: ResumeSkill, where: { resumeId } }], where: { resumeId } });
 
     if (userId !== existResume.userId) {
       return res.status(400).send({ errormessage: "내 게시글이 아닙니다" });
