@@ -27,8 +27,7 @@ require("dotenv").config();
 app.use(
   cors({
     // exposedHeaders:["authorization"],
-    origin: "*",
-    credentials: "true",
+    credentials: "true"
   })
 );
 

@@ -2,11 +2,26 @@ const express = require("express");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const saltRounds = 10;
+const multer = require("multer");
+const multerS3 = require("multer-s3");
+const aws = require("aws-sdk");
+const s3 = new aws.S3();
 require("dotenv").config();
 
 const { User } = require("../models");
 
 const db = require("../config/database");
+
+const upload = multer({
+  storage: multerS3({
+    s3: s3,
+    bucket: "jerryjudymary",
+    acl: "public-read",
+    key: function (req, file, cb) {
+      cb(null, "profileImage/" + Date.now() + "." + file.originalname.split(".").pop()); // 이름 설정
+      },
+  }),
+});
 
 const { postLoginSchema, postUsersSchema, postNicknameSchema, postUserIdSchema } = require("./validation.controller.js");
 
@@ -266,12 +281,59 @@ const userDelete = async(req, res) => {
         refreshToken: refreshTokens, password: passwords, passwordCheck: passwordChecks },
         { where : { nickname : user.nickname }
       });
+
+      s3.deleteObject(
+        {
+        Bucket: "jerryjudymary",
+        Key: users.profileImage,
+        },
+        (err, data) => {
+        if (err) {
+            console.log(err)
+        }
+        }
+    );
       return res.status(200).send({ message: "정상적으로 회원 탈퇴 됐습니다."})
     } else {
       return res.status(401).send({ errorMessage: "비밀번호가 일치하지 않습니다."})
     }
   }
 }
+
+const profileImage = async (req, res) => {
+  try {
+    const profileImage = req.file.location;
+
+    if (!profileImage) {
+      return res.status(400).send({ errorMessage: "사진을 추가해 주세요" });
+    }
+
+    const { nickname } = req.params;
+
+    const user = await User.findOne({ where : { nickname } });
+
+      s3.deleteObject(
+          {
+          Bucket: "jerryjudymary",
+          Key: user.profileImage,
+          },
+          (err, data) => {
+          if (err) {
+              console.log(err)
+          }
+          }
+      );
+
+    const updateImage = await User.update({ profileImage : profileImage }, { where: { nickname }})
+
+  //   await User.update({ refreshToken }, { where: { userId } });
+
+    return res.status(200).json({ message: "사진을 업로드 했습니다.", updateImage });
+  } catch (err) {
+    console.log(err);
+    res.status(400).send({ errorMessage: "사진업로드 실패-파일 형식과 크기(1.5Mb 이하) 를 확인해주세요." });
+  }
+};
 
 module.exports = {
   signUp,
@@ -280,5 +342,6 @@ module.exports = {
   login,
   refresh,
   updatePw,
-  userDelete
+  userDelete,
+  profileImage
 };
