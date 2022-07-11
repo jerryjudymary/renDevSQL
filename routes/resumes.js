@@ -78,7 +78,6 @@ router.get("/", async (req, res) => {
     resumes.forEach((resume, index) => {
       let a_resume = {};
       a_resume.resumeId = resume.resumeId;
-      a_resume.userId = resume.userId;
       a_resume.nickname = resume.nickname;
       a_resume.resumeImage = resume.resumeImage;
       a_resume.content = resume.content;
@@ -128,10 +127,6 @@ router.get("/:resumeId", async (req, res) => {
       resumeImage: existresumes.resumeImage,
       resumeskills,
     };
-
-    console.log(resumes);
-    console.log(resumeskills);
-    // console.log(existResume);
 
     res.status(200).send({ resumes });
   } catch (error) {
