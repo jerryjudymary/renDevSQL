@@ -129,7 +129,7 @@ const login = async (req, res) => {
           nickname: users.nickname,
         };
         const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
-          expiresIn: "2h",
+          expiresIn: "1m",
         });
         const refreshToken = jwt.sign(payload, process.env.JWT_SECRET_REFRESH, {
           expiresIn: "2d",
