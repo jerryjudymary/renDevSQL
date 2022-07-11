@@ -62,7 +62,7 @@ router.post("/", authMiddleware, async (req, res) => {
   if (start >= end) return res.status(400).json({ errorMessage: "날짜 형식이 잘못되었습니다." });
   
   const available = true;
-  const createdAt = moment().format("YYYY-MM-DD hh:mm:ss");
+  const createdAt = moment().format("YYYY-MM-DD HH:mm:ss");
   const email = userId;
 
   // 시퀄라이즈 쿼리의 반환값은 promise로 반환되므로 .then을 붙여 이용해 줍니다
@@ -107,7 +107,7 @@ router.get("/", async (req, res) => {
   let projects = [];
 
   projectsQuery.forEach((project, index) => {
-    let createdAt = moment(project.createdAt).format("YYYY-MM-DD hh:mm:ss");
+    let createdAt = moment(project.createdAt).format("YYYY-MM-DD HH:mm:ss");
     let projectArray = {};
 
     projectArray.projectid = project.projectId;
@@ -158,12 +158,12 @@ router.get("/:projectId", async (req, res) => {
 
   const skills = projectQuery.ProjectSkills.map(eachSkill => eachSkill.skill);
   const photos = projectQuery.ProjectPhotos.map(eachPhoto => eachPhoto.photo);
-  const createdAt = moment(projectQuery.createdAt).format("YYYY-MM-DD hh:mm:ss");
+  const createdAt = moment(projectQuery.createdAt).format("YYYY-MM-DD HH:mm:ss");
 
   let applications = [];
 
   projectQuery.Applications.forEach((eachApp, index) => {
-    let schedule = moment(eachApp.schedule).format("YYYY-MM-DD hh:mm:ss");
+    let schedule = moment(eachApp.schedule).format("YYYY-MM-DD HH:mm:ss");
     let application = {};
 
     application.applicationId = eachApp.applicationId;
