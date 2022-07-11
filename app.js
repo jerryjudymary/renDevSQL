@@ -26,8 +26,6 @@ require("dotenv").config();
 
 app.use(
   cors({
-    allowedHeaders: ["Origin", "Content", "Accept", "Content-Type", "Credentials"],
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     credentials: "true",
   })
 );
