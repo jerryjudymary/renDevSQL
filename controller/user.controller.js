@@ -41,7 +41,11 @@ const signUp = async (req, res) => {
 
   try {
     if (password === passwordCheck) {
-      const [bcryptPw, idExist, nickExist] = await Promise.all([(password = bcrypt.hashSync(password, saltRounds)), User.findOne({ where: { userId } }), User.findOne({ where: { nickname } })]);
+      const [bcryptPw, idExist, nickExist] = await Promise.all([
+        (password = bcrypt.hashSync(password, saltRounds)),
+        User.findOne({ where: { userId } }),
+        User.findOne({ where: { nickname } }),
+      ]);
 
       if (!idExist && !nickExist) {
         const users = await User.create({ userId, nickname, password: bcryptPw, name, birth, policy, profileImage, refreshToken });
@@ -123,10 +127,10 @@ const login = async (req, res) => {
   try {
     const users = await User.findOne({ where: { userId } });
 
-    if( userId !== users.userId){
-      return res.status(400).send({ errorMessage: "아이디 또는 비밀번호가 일치하지 않습니다. "})
+    if (userId !== users.userId) {
+      return res.status(400).send({ errorMessage: "아이디 또는 비밀번호가 일치하지 않습니다. " });
     }
-    
+
     if (users) {
       const hashed = bcrypt.compareSync(password, users.password);
 
@@ -140,7 +144,7 @@ const login = async (req, res) => {
           nickname: users.nickname,
         };
         const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
-          expiresIn: "2h",
+          expiresIn: "1h",
         });
         const refreshToken = jwt.sign(payload, process.env.JWT_SECRET_REFRESH, {
           expiresIn: "2d",
@@ -148,12 +152,7 @@ const login = async (req, res) => {
 
         console.log(refreshToken);
         await User.update({ refreshToken }, { where: { userId } });
-
-        res.cookie("refreshToken", refreshToken, {
-          httpOnly: true,
-          sameSite: 'None',
-          expires: new Date(Date.now() + 3600000 * 2)
-        });
+        res.cookie("refreshToken", refreshToken, { httpOnly: true, sameSite: "None", expires: new Date(Date.now() + 3600000 * 2) });
         return res.status(200).send({ message: "로그인 하셨습니다.", token });
       }
     }
@@ -192,7 +191,7 @@ const refresh = async (req, res) => {
           const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
             expiresIn: "1h",
           });
-          return res.status(200).send({ message: "토큰이 재발급 됐습니다.", token});
+          return res.status(200).send({ message: "토큰이 재발급 됐습니다.", token });
         }
       });
     }
@@ -211,13 +210,13 @@ const updatePw = async (req, res) => {
       return res.status(401).send({ errorMessage: "로그인이 필요합니다." });
     }
     let { password, newPassword } = req.body;
-    const newHash = bcrypt.hashSync(newPassword, saltRounds)
-    
-    if(!newHash){
-      return res.status(400).send({ errorMessage: "비밀번호 암호화에 실패했습니다."})
+    const newHash = bcrypt.hashSync(newPassword, saltRounds);
+
+    if (!newHash) {
+      return res.status(400).send({ errorMessage: "비밀번호 암호화에 실패했습니다." });
     }
 
-    const { nickname } = req.params
+    const { nickname } = req.params;
 
     const users = await User.findOne({ where: { nickname } });
     if (!users) {
@@ -239,32 +238,28 @@ const updatePw = async (req, res) => {
   }
 };
 
-const userDelete = async(req, res) => {
-  
+const userDelete = async (req, res) => {
   const user = res.locals.user;
-  const { nickname } = req.params
+  const { nickname } = req.params;
   var { password } = req.body;
-  console.log(user.nickname)
-  console.log(nickname)
+  console.log(user.nickname);
+  console.log(nickname);
 
-  if(user === undefined){
-    return res.status(401).send({ errorMessage: "로그인이 필요한 기능입니다."})
-  } else if(user.nickname !== nickname ){
-    return res.status(401).send({ errorMessage: "본인만 탈퇴할 수 있습니다."})
+  if (user === undefined) {
+    return res.status(401).send({ errorMessage: "로그인이 필요한 기능입니다." });
+  } else if (user.nickname !== nickname) {
+    return res.status(401).send({ errorMessage: "본인만 탈퇴할 수 있습니다." });
   }
-  
-  const users = await User.findOne({ where : { nickname } });
-  
-  if(users){
-    
 
-    if(!password && password === "" && password === undefined ){
-      return res.status(401).send({ errorMessage: "비밀번호를 입력해 주세요"})
+  const users = await User.findOne({ where: { nickname } });
+
+  if (users) {
+    if (!password && password === "" && password === undefined) {
+      return res.status(401).send({ errorMessage: "비밀번호를 입력해 주세요" });
     }
-    
+
     const hashed = bcrypt.compareSync(password, users.password);
-    if(hashed){
-      
+    if (hashed) {
       const ids = Math.random().toString(36).slice(-3) + "id";
       const nicks = Math.random().toString(36).slice(-3) + "nick";
       const names = ""
@@ -294,11 +289,12 @@ const userDelete = async(req, res) => {
         }
     );
       return res.status(200).send({ message: "정상적으로 회원 탈퇴 됐습니다."})
+
     } else {
-      return res.status(401).send({ errorMessage: "비밀번호가 일치하지 않습니다."})
+      return res.status(401).send({ errorMessage: "비밀번호가 일치하지 않습니다." });
     }
   }
-}
+};
 
 const profileImage = async (req, res) => {
   try {
