@@ -6,6 +6,9 @@ module.exports = (sequelize, DataTypes) => {
       Resume.hasMany(models.Application, {
         foreignKey: "resumeId",
       });
+      Resume.hasMany(models.Proposal, {
+        foreignKey: "resumeId",
+      });
       Resume.hasMany(models.ResumeSkill, {
         foreignKey: "resumeId",
         sourceKey: "resumeId",

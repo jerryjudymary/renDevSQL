@@ -108,19 +108,19 @@ router.get("/", async (req, res) => {
 
   projectsQuery.forEach((project, index) => {
     let createdAt = moment(project.createdAt).format("YYYY-MM-DD HH:mm:ss");
-    let projectArray = {};
+    let projectObject = {};
 
-    projectArray.projectid = project.projectId;
-    projectArray.nickname = project.nickname;
-    projectArray.title = project.title;
-    projectArray.subscript = project.subscript;
-    projectArray.role = project.role;
-    projectArray.start = project.start;
-    projectArray.end = project.end;
-    projectArray.createdAt = createdAt; 
-    projectArray.skills = projectSkills[index];
+    projectObject.projectid = project.projectId;
+    projectObject.nickname = project.nickname;
+    projectObject.title = project.title;
+    projectObject.subscript = project.subscript;
+    projectObject.role = project.role;
+    projectObject.start = project.start;
+    projectObject.end = project.end;
+    projectObject.createdAt = createdAt; 
+    projectObject.skills = projectSkills[index];
 
-    projects.push(projectArray);
+    projects.push(projectObject);
     }
   );
       
@@ -355,7 +355,7 @@ router.delete("/:projectId", authMiddleware, async (req, res) => {
     };
 
     s3.deleteObjects(params, function(err, data) {
-      if (err) { console.log('에러:', err) 
+      if (err) { console.log('버킷 이미지 삭제 에러:', err) 
       return(err) }
       else console.log("버킷의 이미지들이 삭제 - 수정되었습니다."); 
     });
