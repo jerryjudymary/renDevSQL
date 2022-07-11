@@ -4,46 +4,51 @@ const router = express.Router();
 const { Op } = require("sequelize");
 const { Project, ProjectSkill, Resume, ResumeSkill, sequelize } = require("../models");
 
+// 프로젝트 찾기에 검색기능
 router.get("/project", async (req, res) => {
   try {
     const { role, skill, start, end } = req.body;
 
-    const projects = await Project.findAll({ include: [{ model: ProjectSkill, attribute: ["skill"] }] }).map((skills) => skills.get({ raw: true }));
-    // const projects = await ProjectSkill.findAll({ attributes: ["skill"] });
-    console.log("projects 출력:", projects);
-
-    // [{skill}, {skill}]부분을 -> [skill, skill]로 map함수를 사용하여 새로 정의
-    // const projectskills = projects.map((resume) => resume.ProjectSkills.map((skill) => skill["skill"]));
-    // const projectskills = projects.map((ProjectSkills) => (ProjectSkills) => ProjectSkills["skill"]);
-    // console.log("project skill 만 출력 :", projectskills);
-
-    // const startdate = new date(start);
-    // const enddate = new date(end);
-
-    // console.log(typeof startdate);
-    // console.log(typeof enddate);
-
-    const proskill = projects.map((skills) => skills["skill"]);
-
-    const projectserch = await Project.findAll({
-      include: [{ model: ProjectSkill, where: { skill: proskill }, attributes: ["skill"] }],
+    const projectsQuery = await Project.findAll({
+      include: [{ model: ProjectSkill, attributes: ["skill"] }],
       where: {
-        [Op.or]: [{ start: { [Op.lte]: start } }, { end: { [Op.lte]: end } }],
-        [Op.or]: [{ start: { [Op.gte]: start } }, { end: { [Op.gte]: end } }],
-        // skill: proskill,
+        start: { [Op.gte]: start },
+        end: { [Op.lte]: end },
+        skill: { [Op.in]: skill },
+        // [Op.or]: [{ start: { [Op.lte]: start } }, { end: { [Op.lte]: end } }],
+        // [Op.or]: [{ start: { [Op.gte]: start } }, { end: { [Op.gte]: end } }],
       },
       order: [["createdAt", "DESC"]],
     });
-    // console.log("project skill 만 출력 :", proskill);
 
-    // console.log(projectserch);
+    const projectSkills = projectsQuery.map((project) => project.ProjectSkills.map((skill) => skill["skill"]));
 
-    res.status(200).send({ projectserch });
+    let projects = [];
+
+    projectsQuery.forEach((project, index) => {
+      let projectArray = {};
+
+      projectArray.projectid = project.projectId;
+      projectArray.nickname = project.nickname;
+      projectArray.title = project.title;
+      projectArray.subscript = project.subscript;
+      projectArray.role = project.role;
+      projectArray.start = project.start;
+      projectArray.end = project.end;
+      projectArray.createdAt = project.createdAt;
+      projectArray.skills = projectSkills[index];
+
+      projects.push(projectArray);
+    });
+
+    res.status(200).send({ projects });
   } catch (error) {
     console.log(error);
     res.status(400).send({ errorMessage: "조회 실패" });
   }
 });
+
+// 팀원 찾기에 검색기능
 router.get("/resume", async (req, res) => {
   const { skill, start, end } = req.query;
 });
