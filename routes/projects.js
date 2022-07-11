@@ -8,6 +8,7 @@ const multerS3 = require("multer-s3");
 const aws = require("aws-sdk");
 const s3 = new aws.S3();
 const moment = require("moment");
+const { v4 } = require("uuid");
 
 // multer - S3 이미지 업로드 설정
 
@@ -16,8 +17,8 @@ const upload = multer({
     s3: s3,
     bucket: "jerryjudymary",
     acl: "public-read",
-    key: function (req, file, cb) {  // 이름 설정
-      cb(null, "projectImage/" + Date.now() + "." + file.originalname.split(".").pop());
+    key: function (req, file, cb) {  // 이미지 파일 이름 설정
+      cb(null, "projectImage/" + v4().toString().replace("-", "") + "." + file.originalname.split(".").pop());
     },
   }),
 });
@@ -42,7 +43,7 @@ router.post("/", authMiddleware, async (req, res) => {
 
   const { id, nickname, userId } = res.locals.user;
 
-  if (!id || !nickname || !userId ) {    
+  if (!id || !nickname || !userId ) {
     return res.status(404).json({ errorMessage: "회원정보가 올바르지 않습니다." });
   }
 
@@ -218,19 +219,19 @@ router.put("/:projectId", authMiddleware, async (req, res) => {
   };
 
   try {
-    var { title, details, subscript, role, start, end, skills, schedule, photos }
+    var { title, details, subscript, role, start, end, skills, photos }
     = await projectPostSchema.validateAsync(req.body);
   } catch (err) {
     return res.status(400).json({ errorMessage: "작성 형식을 확인해주세요." });
   };
 
-  if (!title || !details || !subscript || !role || !start || !end || !skills || !schedule) {
+  if ( !title || !details || !subscript || !role || !start || !end || !skills ) {
     return res.status(400).json({ errorMessage: "작성란을 모두 기입해주세요." });
   };
 
   if (start >= end) return res.status(400).json({ errorMessage: "날짜 형식이 잘못되었습니다." });
 
-  // --- 기존 이미지 다중 삭제
+  // --- 기존 이미지 선별적 다중 삭제
 
   const existPhotos = await ProjectPhoto.findAll({
     where: { projectId }
@@ -238,29 +239,35 @@ router.put("/:projectId", authMiddleware, async (req, res) => {
 
   if (existPhotos.length) {
     let deletePhotos = [];
+    let photoUrl;
+    let photo;
     existPhotos.forEach((item) => {
-      let photoUrl = item.dataValues.photo; // DB에 저장되어있는 URL에서 키값만 추출
-      const photo = photoUrl.split('.com/')[1];
-      deletePhotos.push({ Key: photo }); // [{키: 밸류},{키: 밸류}] 형태로 전달해 줍니다
+      photoUrl = item.dataValues.photo; // DB에 저장되어있는 URL에서 키값만 추출
+      if ( photos.includes(photoUrl) === false ) { // photoUrl(기존 DB에 있는 각 이미지 URL이 body로 온 photos에 없다면 해당 URL 삭제)
+        photo = photoUrl.split('.com/')[1];
+        deletePhotos.push({ Key: photo }); // [{키: 밸류},{키: 밸류}] 형태로 전달해 줍니다
+      };
     });
-    console.log(deletePhotos)
-    const params = {
-      Bucket: 'jerryjudymary', 
-      Delete: {
-        Objects: deletePhotos, 
-        Quiet: false
-      }
-    };
-  
-    s3.deleteObjects(params, function(err, data) {
-      if (err) { console.log('에러:', err) 
-      return(err) }
-      else console.log("버킷의 이미지들이 삭제 - 수정되었습니다.");
-    });
+
+    if (deletePhotos.length) {
+      const params = {
+        Bucket: 'jerryjudymary', 
+        Delete: {
+          Objects: deletePhotos, 
+          Quiet: false
+        }
+      };
+    
+      s3.deleteObjects(params, function(err, data) {
+        if (err) { console.log('에러:', err) 
+        return(err) }
+        else console.log("버킷의 이미지들이 삭제 - 수정되었습니다.");
+      });
+    } 
   };
 
   // ---
-
+ 
   // 예외처리 문제로 트랜잭션 밖으로 빼 줍니다.
   if (photos || photos.length) {
     await ProjectPhoto.destroy({ where: { projectId }});
@@ -272,8 +279,10 @@ router.put("/:projectId", authMiddleware, async (req, res) => {
   const t = await sequelize.transaction(); // 이하 쿼리들 트랜잭션 처리
 
   try {
-    Project.update({ title, details, subscript, role, start, end, nickname },
-    { where: { projectId } });
+    await Project.update({ title, details, subscript, role, start, end, nickname },
+    { where: { projectId }, transaction: t });
+
+    /* 현재 스케쥴부분 MVP까지 수정 제외로 주석처리합니다 
 
     // 등록 당시의 개수와 수정 당시의 개수가 다르면 update 사용 곤란으로 삭제 후 재등록 처리
     //현재 스케쥴을 등록하면 이전 스케쥴은 무조건 사라지는 문제 해결해야 함( 프론트에서 해결 가능..? )
@@ -281,6 +290,7 @@ router.put("/:projectId", authMiddleware, async (req, res) => {
     for (let i = 0; i < schedule.length; i++) {
       await Application.create({ projectId, schedule : schedule[i] }, { transaction: t });
     }; // 추후 available등 수정 시 사항 추가 가능하게? -> 면접시간 수정용 API가 하나 더 있어야할 것 같다.
+    */
 
     // 스케쥴과 동일한 문제 있음
     await ProjectSkill.destroy({ where: { projectId }, transaction: t });
@@ -288,10 +298,12 @@ router.put("/:projectId", authMiddleware, async (req, res) => {
       await ProjectSkill.create({ projectId, skill : skills[i] },  { transaction: t });
     };
 
-    res.status(200).json({
+    await t.commit();
+
+    return res.status(200).json({
       message: "프로젝트 게시글을 수정했습니다.",
     });
-    await t.commit();
+
   } catch(error) {
     await t.rollback();
     return (error);
@@ -333,7 +345,7 @@ router.delete("/:projectId", authMiddleware, async (req, res) => {
       const photo = photoUrl.split('.com/')[1];
       deletePhotos.push({ Key: photo }); // [{키: 밸류},{키: 밸류}] 형태로 전달해 줍니다
     });
-    console.log(deletePhotos)
+   
     const params = {
       Bucket: 'jerryjudymary', 
       Delete: {
