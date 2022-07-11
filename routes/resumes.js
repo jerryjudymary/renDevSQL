@@ -135,7 +135,7 @@ router.get("/:resumeId", async (req, res) => {
   }
 });
 
-// 팀원 찾기 정보 수정 // 코드 수정
+// 팀원 찾기 정보 수정
 router.put("/:resumeId", authMiddleware, async (req, res) => {
   const { userId } = res.locals.user;
   const { resumeId } = req.params;
