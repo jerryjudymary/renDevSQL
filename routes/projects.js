@@ -51,7 +51,7 @@ router.post("/", authMiddleware, async (req, res) => {
 
   const { id, nickname, userId } = res.locals.user;
 
-  if (!id || !nickname || !userId ) {
+  if (!id || !nickname || !userId ) {    
     return res.status(404).json({ errorMessage: "회원정보가 올바르지 않습니다." });
   }
 
