@@ -5,12 +5,8 @@ const { Project, ProjectSkill, Resume, ResumeSkill, sequelize } = require("../mo
 
 router.get("/project", async (req, res) => {
   try {
-    const { skill, start, end } = req.query;
-    console.log(typeof start);
-    console.log(typeof end);
-    console.log(typeof skill);
-
-    const projectskill = await Project.findAll({ include: [{ model: ProjectSkill, attribute: ["skill"] }] });
+    const { role, skill, start, end } = req.body;
+    const projects = await Project.findAll({ include: [{ model: ProjectSkill, attribute: ["skill"] }] });
 
     const projectserch = await Project.findAll({
       where: {
