@@ -137,7 +137,7 @@ const login = async (req, res) => {
 
         console.log(refreshToken);
         await User.update({ refreshToken }, { where: { userId } });
-        res.cookie("refreshToken", refreshToken, { httpOnly: true, sameSite: "None", signed: true, expires: new Date(Date.now() + 3600000 * 2) });
+        res.cookie("refreshToken", refreshToken, { httpOnly: true, sameSite: "None", expires: new Date(Date.now() + 3600000 * 2) });
         return res.status(200).send({ message: "로그인 하셨습니다.", token });
       }
     }
