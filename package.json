@@ -17,7 +17,8 @@
     "nodemailer": "^6.7.7",
     "nodemon": "^2.0.19",
     "redis": "^3.1.2",
-    "sequelize": "^6.21.2"
+    "sequelize": "^6.21.2",
+    "uuid": "^8.3.2"
   },
   "name": "realwork_project",
   "description": "항해99 실전프로젝트 백엔드",
