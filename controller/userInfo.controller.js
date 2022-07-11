@@ -82,7 +82,27 @@ const userDetail = async (req, res) => {
 
         if(!project){
           return res.status(401).send({ errorMessage: "내가 작성한 Project가 없습니다."})
-        }
+        };
+
+        const proSkills = project.map(data => data.ProjectSkills.map(data2 => data2["skill"]))
+
+        const Pro = []
+        project.forEach((data, idx) => {
+            let projects = {}
+            projects.projectId = data.projectId
+            projects.id = data.id
+            projects.nickname = data.nickname
+            projects.title = data.title
+            projects.details = data.details
+            projects.role = data.role
+            projects.start = data.start
+            projects.end = data.end
+            projects.createdAt = data.createdAt    
+            projects.ProjectSkills = proSkills[idx]
+
+            return Pro.push(projects)
+        })
+
         // const sql = "SELECT * FROM user A INNER JOIN project B on A.userId = B.userId where A.userId=?; ";
         // db.query(sql, userId, (err, result) => {
         //   if (err) {
@@ -90,7 +110,7 @@ const userDetail = async (req, res) => {
         // }
         //   return res.status(200).send({ Projects: result });
         // });
-        return res.status(200).send({ message : project });
+        return res.status(200).send({ message : Pro });
       }
     } catch (err){
       if(err){
@@ -119,6 +139,26 @@ const userDetail = async (req, res) => {
         if(!resume){
           return res.status(401).send({ errorMessage: "내가 작성한 Resume가 없습니다."})
         }
+
+        const resumeSkills = resume.map(data => data.ResumeSkills.map(data2 => data2["skill"]))
+
+        const Recruit = []
+        resume.forEach((data, idx) => {
+            let resumes = {}
+            resumes.resumeId = data.resumeId
+            resumes.id = data.id
+            resumes.nickname = data.nickname
+            resumes.content = data.content
+            resumes.content2 = data.content2
+            resumes.content3 = data.content3
+            resumes.role = data.role
+            resumes.start = data.start
+            resumes.end = data.end
+            resumes.createdAt = data.createdAt    
+            resumes.ResumeSkills = resumeSkills[idx]
+
+            return Recruit.push({message : Recruit})
+        })
         // const sql = "SELECT * FROM user A INNER JOIN project B on A.userId = B.userId where A.userId=?; ";
         // db.query(sql, userId, (err, result) => {
         //   if (err) {
@@ -126,7 +166,7 @@ const userDetail = async (req, res) => {
         // }
         //   return res.status(200).send({ Projects: result });
         // });
-        return res.status(200).send( resume );
+        return res.status(200).send( Recruit );
       }
     } catch (err){
       if(err){
@@ -166,24 +206,34 @@ const userDetail = async (req, res) => {
             }
           ]})
           
-          const mapProject = project.map( data => [data.projectId, data.id, data.Applications.map(result => result.schedule)]) //() => {
-        //     const appSchedule = data.Applications.map(result => result.schedule)
-        //     const delArray = appSchedule.reduce(( acc, cur) => [...acc, ...cur], []);
-        //     return delArray
-        // }])
-          const mapPro = mapProject.reduce(( acc, cur) => [...acc, ...cur], []);
-          const mapProject2 = project.map( data => data.id)
-          const mapApp = project.map(data => data.Applications.map(result => result.schedule))
-          console.log("배열제거:" , mapPro)
-          console.log({projectId : mapProject, id : mapProject2})
-          
         if(!apply){
           return res.status(401).send({ errorMessage: "지원한 프로젝트가 없습니다."})
         }
+
+        const proSkills = project.map(data => data.ProjectSkills.map(data2 => data2["skill"]))
+        const proApp = project.map(data => data.Applications.map(data2 => [data2['schedule'], data2['status'], data2['interviewCode']]))
+
+        const Pro = []
+        project.forEach((data, idx) => {
+            let projects = {}
+            projects.projectId = data.projectId
+            projects.id = data.id
+            projects.nickname = data.nickname
+            projects.title = data.title
+            projects.details = data.details
+            projects.role = data.role
+            projects.start = data.start
+            projects.end = data.end
+            projects.createdAt = data.createdAt    
+            projects.ProjectSkills = proSkills[idx]
+            projects.Applications = proApp[idx]
+
+            return Pro.push(projects)
+        })
         
         // const status = apply.map( data => [data.applicationId, data.status]);
    
-        return res.status(200).send(project)
+        return res.status(200).send(Pro)
       }
     } catch(err){
       if(err){
@@ -209,14 +259,10 @@ const userDetail = async (req, res) => {
       }
 
       const proId = project.map(data => data.projectId)
-      console.log("Id입니다" , proId)
   
       if(!user){
           return res.status(401).send({ errorMessage: "존재하지 않는 유저입니다."}); 
       };
-      console.log("user" , user)
-      console.log("project" , project)
-  
   
       const App = await Application.findAll({ where: { projectId : proId } ,
         include : [
@@ -225,12 +271,40 @@ const userDetail = async (req, res) => {
           }
         ]   
       });
+
+      if(!App){
+        return res.status(401).send({ errorMessage: "지원받은 프로젝특가 없습니다."})
+      }
+
+    const proSkills = project.map(data => data.ProjectSkills.map(data2 => data2["skill"]))
+    const project2 = project.map(data => [data["projectId"], data["id"], data["title"], data["details"], data["role"], data["email"],
+    data["start"], data["end"], data["subscript"], data["createdAt"], data["nickname"]
+    ])
+    // const project3 = project2.reduce(( acc, cur) => [...acc, ...cur], [])
+
+    const Apps = []
+        App.forEach((data, idx) => {
+            let projects = {}
+            
+            projects.applicationId = data.applicationId
+            projects.projectId = data.projectId
+            projects.resumeId = data.resumeId
+            projects.id = data.id
+            projects.schedule = data.schedule
+            projects.available = data.available
+            projects.status = data.status
+            projects.interviewCode = data.interviewCode
+            projects.Project = project2[idx]
+            projects.ProjectSkills = proSkills[idx]
+
+            return Apps.push(projects)
+        })
    
       // 프로젝트들에 대한 유저들의 지원상태
       // 프로젝트 Id를 기준으로 reserve된 id를 모두 가져와야한다.
       // 프로젝트 Id 1개당 1개의 지원서를 불러와야 한다. 
   
-      return res.status(200).send({ "App" : App })
+      return res.status(200).send(Apps)
   
     } catch(err){
       if(err){

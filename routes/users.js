@@ -18,7 +18,7 @@ const upload = multer({
 });
 
 const {
-    signUp, checkUserId, checkNickname, login, refresh, updatePw, userDelete
+    signUp, checkUserId, checkNickname, login, refresh, updatePw, userDelete, profileImage
 } = require("../controller/user.controller.js");
 
 const {
@@ -29,41 +29,6 @@ const {
     User,
 }
 = require("../models");
-
-router.put("/details/:nickname/image", upload.single("profileImage"), authMiddleware ,async (req, res) => {
-    try {
-      const profileImage = req.file.location;
-
-      if (!profileImage) {
-        return res.status(400).send({ errorMessage: "사진을 추가해 주세요" });
-      }
-
-      const { nickname } = req.params;
-
-      const user = await User.findOne({ where : { nickname } });
-
-        s3.deleteObject(
-            {
-            Bucket: "jerryjudymary",
-            Key: user.profileImage,
-            },
-            (err, data) => {
-            if (err) {
-                console.log(err)
-            }
-            }
-        );
-
-      const updateImage = await User.update({ profileImage : profileImage }, { where: { nickname }})
-
-    //   await User.update({ refreshToken }, { where: { userId } });
-
-      return res.status(200).json({ message: "사진을 업로드 했습니다.", updateImage });
-    } catch (err) {
-      console.log(err);
-      res.status(400).send({ errorMessage: "사진업로드 실패-파일 형식과 크기(1.5Mb 이하) 를 확인해주세요." });
-    }
-  });
 
 router.post("/signup", signUp); // 회원가입
 
@@ -90,6 +55,8 @@ router.get("/details/:nickname/applys", authMiddleware, recruit); // 내 모집�
 router.put('/details/:nickname/updatepw', authMiddleware, updatePw); // 비밀번호 변경
 
 router.put('/details/:nickname/delete', authMiddleware, userDelete); // 회원탈퇴
+
+router.put(router.put("/details/:nickname/image", upload.single("profileImage"), authMiddleware, profileImage)) // 프로필 이미지 업로드
 
 // router.delete('/details/:nickname/delete',  authMiddleware, deleteUser);
 
