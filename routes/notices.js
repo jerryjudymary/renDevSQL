@@ -57,7 +57,7 @@ async function noteApplicant (projectId, resumeId, applicationId) {
     const resume = await Resume.findOne({ where: { resumeId } })
     const application = await Application.findone({ where: { applicationId } })
 
-    const noticeReceiver = resume.email;
+    const noticeReceiver = resume.userId;
     const emailSubject = '[renDev] 프로젝트 기획자에게 인터뷰 요청을 하셨습니다.'
     const emailTemplate =  `
     축하합니다. 관심 가는 프로젝트를 찾으셨군요! 아래와 같이 인터뷰를 예약하셨습니다.<br>
@@ -85,12 +85,12 @@ async function noteApplicant (projectId, resumeId, applicationId) {
 }
 
 // 3) 특정 Resume에 면접 제안을 보낼 때, 제안하는 상대방에게 이메일을 보낸다.
-async function InterviewProposal (projectId, resumeId, applicationId) {
+async function InterviewProposal (projectId, resumeId) {
     // 이메일 받는이 / 제목 / 내용을 설정한다
     const project = await Project.findOne({ where: { projectId } })
     const resume = await Resume.findOne({ where: { resumeId } })
 
-    const noticeReceiver = resume.email;
+    const noticeReceiver = resume.userId;
     const emailSubject = '[renDev] 프로젝트 기획자가 회원님의 참여를 요청하셨습니다.'
     const emailTemplate =  `
     축하합니다. 러브콜을 받으셨어요! 아래와 같이 프로젝트 합류 요청을 받으셨습니다.<br>

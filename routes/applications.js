@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const authMiddleware = require("../middlewares/authMiddleware");
-const { Project, ProjectSkill, ProjectPhoto, Application, Resume, sequelize } = require("../models");
+const { Project, Application, Resume, ResumeSkill, sequelize } = require("../models");
 const { QueryTypes } = require("sequelize");
 const { noteProjectOwner, noteApplicant } = require("./notices");
 
@@ -81,15 +81,38 @@ router.get("/resumes", authMiddleware, async (req, res) => {
 
   const { id } = res.locals.user;
 
-  const resumes = await Resume.findAll({
-    where: { id }
+  const resumesQuery = await Resume.findAll({
+    where: { id },
+    include: [
+      {
+        model: ResumeSkill,
+        attributes: ["skill"]
+      }
+    ]
   });
 
-  if (!resumes || !resumes.length) { 
-    res.status(404).json({ errorMessage: "지원서가 존재하지 않습니다." });
-  } else {
-    res.send({ resumes });
+  if (!resumesQuery || !resumesQuery.length) { 
+    return res.status(404).json({ errorMessage: "지원서가 존재하지 않습니다." });
   };
+
+  const resumeSkills = resumesQuery.map((resume) => resume.ResumeSkills.map((skill) => skill["skill"]));
+  let resumes = [];
+
+  resumesQuery.forEach((resume, index) => {
+    let resumeObject = {};
+    resumeObject.resumeId = resume.resumeId;
+    resumeObject.nickname = resume.nickname;
+    resumeObject.resumeImage = resume.resumeImage;
+    resumeObject.content = resume.content;
+    resumeObject.start = resume.start;
+    resumeObject.end = resume.end;
+    resumeObject.role = resume.role;
+    resumeObject.skills = resumeSkills[index];
+    resumeObject.createdAt = resume.createdAt;
+
+    resumes.push(resumeObject);
+  });
+  res.send({ resumes });
 });
 
  
