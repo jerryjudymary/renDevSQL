@@ -22,7 +22,6 @@ const upload = multer({
 
 // 이미지 업로드
 router.post("/image", upload.single("resumeImage"), async (req, res) => {
-  // router.post("/image", authMiddleware, upload.single("resumeImage"), async (req, res) => {
   try {
     const resumeImage = req.file.location;
     return res.status(200).json({ message: "사진을 업로드 했습니다.", resumeImage });
@@ -38,7 +37,7 @@ router.post("/", authMiddleware, async (req, res) => {
     const { id, userId, nickname } = res.locals.user;
     const { content, start, end, role, skill, resumeImage, content2, content3 } = req.body;
 
-    if (!userId) return res.status(401).json({ errorMessage: "로그인 후 사용하세요." });
+    if (!userId) return res.status(401).send({ errorMessage: "로그인 후 사용하세요." });
 
     const createdAt = new Date();
 
@@ -135,7 +134,7 @@ router.get("/:resumeId", async (req, res) => {
   }
 });
 
-// 팀원 찾기 정보 수정 // 코드 수정
+// 팀원 찾기 정보 수정
 router.put("/:resumeId", authMiddleware, async (req, res) => {
   const { userId } = res.locals.user;
   const { resumeId } = req.params;
