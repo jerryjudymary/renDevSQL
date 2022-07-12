@@ -66,7 +66,7 @@ router.get("/", async (req, res) => {
         },
       ],
       // offset: 3,
-      limit: 9, // 하나의 페이지 9개 조회
+      // limit: 9, // 하나의 페이지 9개 조회
       order: [["createdAt", "DESC"]],
     });
     // [{skill},{skill}]부분을 -> [skill,skill]로 map함수를 사용하여 새로 정의
