@@ -1,5 +1,4 @@
 const express = require("express");
-const { date } = require("joi");
 const router = express.Router();
 const { Op } = require("sequelize");
 const { Project, ProjectSkill, Resume, ResumeSkill, sequelize } = require("../models");
@@ -9,39 +8,50 @@ router.get("/project", async (req, res) => {
   try {
     const { role, skill, start, end } = req.body;
 
-    const projectsQuery = await Project.findAll({
-      include: [{ model: ProjectSkill, attributes: ["skill"] }],
+    const projectskills = await ProjectSkill.findAll({ attributes: ["skill"], where: { skill: { [Op.in]: skill } } });
+
+    const skills = projectskills.map((e) => e["skill"]);
+
+    const project = await Project.findAll({
       where: {
-        start: { [Op.gte]: start },
-        end: { [Op.lte]: end },
-        skill: { [Op.in]: skill },
-        // [Op.or]: [{ start: { [Op.lte]: start } }, { end: { [Op.lte]: end } }],
-        // [Op.or]: [{ start: { [Op.gte]: start } }, { end: { [Op.gte]: end } }],
+        include: [{ model: ProjectSkill }],
+        [Op.and]: {
+          // req.body.start 보다 이상
+          start: { [Op.gte]: start },
+          // req.body.end 보다 이하
+          end: { [Op.lte]: end },
+          skill: { [Op.in]: skill },
+        },
+
+        // [Op.or]: {
+        //   role: { [Op.eq]: role },
+        // },
       },
+
       order: [["createdAt", "DESC"]],
     });
 
-    const projectSkills = projectsQuery.map((project) => project.ProjectSkills.map((skill) => skill["skill"]));
+    // const projectSkills = project.map((project) => project.ProjectSkills.map((skill) => skill["skill"]));
 
-    let projects = [];
+    // let projects = [];
 
-    projectsQuery.forEach((project, index) => {
-      let projectArray = {};
+    // project.forEach((project, index) => {
+    //   let projectArray = {};
 
-      projectArray.projectid = project.projectId;
-      projectArray.nickname = project.nickname;
-      projectArray.title = project.title;
-      projectArray.subscript = project.subscript;
-      projectArray.role = project.role;
-      projectArray.start = project.start;
-      projectArray.end = project.end;
-      projectArray.createdAt = project.createdAt;
-      projectArray.skills = projectSkills[index];
+    //   projectArray.projectId = project.projectId;
+    //   projectArray.nickname = project.nickname;
+    //   projectArray.title = project.title;
+    //   projectArray.subscript = project.subscript;
+    //   projectArray.role = project.role;
+    //   projectArray.start = project.start;
+    //   projectArray.end = project.end;
+    //   projectArray.createdAt = project.createdAt;
+    //   projectArray.skill = projectSkills[index];
 
-      projects.push(projectArray);
-    });
+    //   projects.push(projectArray);
+    // });
 
-    res.status(200).send({ projects });
+    res.status(200).send({ project });
   } catch (error) {
     console.log(error);
     res.status(400).send({ errorMessage: "조회 실패" });
