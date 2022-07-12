@@ -8,6 +8,7 @@ const {
     Application,
     ProjectSkill,
     Resume,
+    ResumeSkill,
     ProjectPhoto
 }
 = require("../models");
@@ -198,7 +199,8 @@ const userDetail = async (req, res) => {
           include: [
             {
               model: Application,
-              attributes:['schedule', 'status', 'applicationId', 'interviewCode']
+              where : { id: user.id },
+              attributes:['schedule', 'status','interviewCode']
             },
             {
               model: ProjectSkill,
@@ -211,13 +213,11 @@ const userDetail = async (req, res) => {
         }
 
         const proSkills = project.map(data => data.ProjectSkills.map(data2 => data2["skill"]))
-        const proApp = project.map(data => data.Applications.map(data2 => [data2['schedule'], data2['status'], data2['interviewCode']]))
+        // const proApp = project.map(data => data.Applications.map(data2 => [data2['schedule'], data2['status'], data2['interviewCode']]))
 
         const Pro = []
         project.forEach((data, idx) => {
             let projects = {}
-            projects.projectId = data.projectId
-            projects.id = data.id
             projects.nickname = data.nickname
             projects.title = data.title
             projects.details = data.details
@@ -226,7 +226,7 @@ const userDetail = async (req, res) => {
             projects.end = data.end
             projects.createdAt = data.createdAt    
             projects.ProjectSkills = proSkills[idx]
-            projects.Applications = proApp[idx]
+            projects.Applications = data.Applications
 
             return Pro.push(projects)
         })
@@ -252,49 +252,74 @@ const userDetail = async (req, res) => {
       const { nickname } = req.params;
   
       const user = await User.findOne({ where: { nickname } });
-      const project = await Project.findAll({ where: { id : user.id }})
+      
+      const project = await Project.findAll({ where: { id : user.id }, include :
+        [ 
+          {
+            model: ProjectSkill
+          }
+        ]
+      })
 
       if(!project){
         return res.status(401).send({ errorMessage: "내 Project를 찾을 수 없습니다."})
       }
 
       const proId = project.map(data => data.projectId)
-  
+
       if(!user){
           return res.status(401).send({ errorMessage: "존재하지 않는 유저입니다."}); 
       };
+
+      const app = await Application.findAll({ where: { projectId : proId }})
+
+      if(!app){
+        return res.status(400).send({ errorMessage: "내 Project에 지원기록을 찾을 수 없습니다."})
+      }
+
+      const apps = app.map(data => data.resumeId)
+
+      const Res = await Resume.findAll({ where: { resumeId : apps}})
+
+      if(!Res){
+        return res.status(400).send({ errorMessage: "지원서를 찾을 수 없습니다."})
+      }
+
+      // Application과 관계를 맺은 테이블 Project, Resume
+      // 지원자 status의 nickname, role은 resume nickname role이다.
+      // 한개의 App당 하나의 project 정보와 선별된 resume정보가 담겨야 한다.
+      // 이 프로젝트에 지원한 resume를 어떻게 Resume테이블에서 긁어오나?
+      // App에 담긴 resume Id로 긁어온다.
+      // 해야할일은 먼저 app을 매핑하는 것
+
+      const resumeId = Res.map( data => data.resumeId )
   
       const App = await Application.findAll({ where: { projectId : proId } ,
         include : [
           {
             model : Project,
+            attributes: ['nickname', 'title', 'details', 'role', 'start', 'end', 'createdAt']
+          },
+          {
+            model: Resume,
+            where: { resumeId : resumeId},
+            attributes: ['nickname', 'role']
           }
         ]   
       });
 
-      if(!App){
-        return res.status(401).send({ errorMessage: "지원받은 프로젝특가 없습니다."})
-      }
-
     const proSkills = project.map(data => data.ProjectSkills.map(data2 => data2["skill"]))
-    const project2 = project.map(data => [data["projectId"], data["id"], data["title"], data["details"], data["role"], data["email"],
-    data["start"], data["end"], data["subscript"], data["createdAt"], data["nickname"]
-    ])
-    // const project3 = project2.reduce(( acc, cur) => [...acc, ...cur], [])
-
+    
     const Apps = []
         App.forEach((data, idx) => {
             let projects = {}
             
-            projects.applicationId = data.applicationId
-            projects.projectId = data.projectId
-            projects.resumeId = data.resumeId
-            projects.id = data.id
             projects.schedule = data.schedule
             projects.available = data.available
             projects.status = data.status
             projects.interviewCode = data.interviewCode
-            projects.Project = project2[idx]
+            projects.Project = data.Project
+            projects.Resume = data.Resume
             projects.ProjectSkills = proSkills[idx]
 
             return Apps.push(projects)
