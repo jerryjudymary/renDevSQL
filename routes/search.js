@@ -15,19 +15,17 @@ router.get("/project", async (req, res) => {
     const project = await Project.findAll({
       include: [{ model: ProjectSkill }],
       where: {
-        [Op.and]: {
-          // req.body.start 보다 이상
-          start: { [Op.gte]: start },
-          // req.body.end 보다 이하
-          end: { [Op.lte]: end },
-          // skill: { [Op.eq]: skill },
+        [Op.or]: {
+          [Op.and]: {
+            // req.body.start 보다 이상
+            start: { [Op.gte]: start },
+            // req.body.end 보다 이하
+            end: { [Op.lte]: end },
+          },
+          role: { [Op.eq]: role },
         },
-
-        // [Op.or]: {
-        //   role: { [Op.eq]: role },
-        // },
+        // skill: { [Op.eq]: skill },
       },
-
       order: [["createdAt", "DESC"]],
     });
 
