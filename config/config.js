@@ -1,9 +1,11 @@
-{
-  "development": {
+require("dotenv").config();
+const env = process.env;
+
+const development =  {
     "username": "root",
-    "password": "judymary",
+    "password": env.DB_PASSWORD,
     "database": "rendevSQL",
-    "host": "3.34.200.72",
+    "host": env.DB_HOST,
     "dialect": "mysql",
     "logging": false,
     "timezone":"+09:00",            
@@ -15,19 +17,23 @@
       "define":{
         "timestamps":true
       }
-  },
-  "test": {
+  };
+
+  const test = {
     "username": "root",
-    "password": "judymary",
+    "password": env.DB_PASSWORD,
     "database": "rendevSQL",
-    "host": "3.34.200.72",
+    "host": env.DB_HOST,
     "dialect": "mysql"
-  },
-  "production": {
+  };
+
+  const production = {
     "username": "root",
-    "password": "judymary",
+    "password": env.DB_PASSWORD,
     "database": "rendevSQL",
-    "host": "3.34.200.72",
+    "host": env.DB_HOST,
     "dialect": "mysql"
-  }
-}
+  };
+
+
+module.exports = { development, production, test };
