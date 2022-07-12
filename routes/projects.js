@@ -174,7 +174,7 @@ router.get("/:projectId", async (req, res) => {
 
     applications.push(application);
     }
-  )
+  );
 
   const project = {
     projectId: projectQuery.projectId,
@@ -185,7 +185,7 @@ router.get("/:projectId", async (req, res) => {
     email: projectQuery.email,
     start: projectQuery.start,
     end: projectQuery.end,
-    subscript: projectQuery.end,
+    subscript: projectQuery.subscript,
     nickname: projectQuery.nickname,
     createdAt,
     applications,
