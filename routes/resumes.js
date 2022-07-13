@@ -185,10 +185,19 @@ router.delete("/:resumeId", authMiddleware, async (req, res) => {
       return res.status(400).send({ errormessage: "내 게시글이 아닙니다" });
     } else {
       // if (existResume.resumeImage === resumeImage) {
-      // s3.deleteObject({
-      //   bucket: "jerryjudymary",
-      //   Key: existResume.resumeImage,
-      // });
+      //   s3.deleteObject(
+      //     {
+      //       bucket: "jerryjudymary",
+      //       Key: "resumeImage/" + existResume.resumeImage,
+      //     },
+      //     (err, data) => {
+      //       if (err) {
+      //         throw err;
+      //       }
+      //       console.log("s3 deleteObject ", data);
+      //     }
+      //   );
+      console.log(existResume.resumeImage);
       await existResume.destroy({});
     }
     // }
