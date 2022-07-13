@@ -33,12 +33,16 @@ router.post("/image", upload.single("resumeImage"), async (req, res) => {
 
 // 팀원 찾기 등록
 router.post("/", authMiddleware, async (req, res) => {
+  const { id, userId, nickname } = res.locals.user;
+  const { content, start, end, role, skill, resumeImage, content2, content3 } = req.body;
+
+  if (!userId) return res.status(401).send({ errorMessage: "로그인 후 사용하세요." });
+
+  if (!content || !start || !end || !role || !skill || !content2 || !content3) return res.status(400).send({ errorMessage: "작성란을 모두 기입해주세요." });
+
+  if (start >= end) return res.status(400).send({ errorMessage: "날짜 형식이 잘못되었습니다." });
+
   try {
-    const { id, userId, nickname } = res.locals.user;
-    const { content, start, end, role, skill, resumeImage, content2, content3 } = req.body;
-
-    if (!userId) return res.status(401).send({ errorMessage: "로그인 후 사용하세요." });
-
     const createdAt = new Date();
 
     await Resume.create({ id, userId, nickname, content, start, end, role, content2, content3, resumeImage, createdAt }).then((result) => {
@@ -46,11 +50,10 @@ router.post("/", authMiddleware, async (req, res) => {
         ResumeSkill.create({ resumeId: result.resumeId, skill: skill[i] });
       }
     });
-
     res.status(200).send({ message: "나의 정보를 등록 했습니다." });
   } catch (err) {
     console.log(err);
-    res.status(400).send({ errormessage: "작성란을 모두 기입해주세요." });
+    res.status(400).send({ errormessage: "등록 실패" });
   }
 });
 
@@ -130,7 +133,7 @@ router.get("/:resumeId", async (req, res) => {
     res.status(200).send({ resumes });
   } catch (error) {
     console.log(error);
-    res.status(400).send({ errorMessage: "잠시만요" });
+    res.status(400).send({ errorMessage: "정보가 존재하지 않습니다." });
   }
 });
 
@@ -141,7 +144,12 @@ router.put("/:resumeId", authMiddleware, async (req, res) => {
   const { content, start, end, role, skill, content2, content3, resumeImage } = req.body;
 
   const existResume = await Resume.findOne({ where: { resumeId } });
+
   if (userId !== existResume.userId) return res.status(400).send({ errormessage: "내 게시글이 아닙니다" });
+
+  if (!content || !start || !end || !role || !skill || !content2 || !content3) return res.status(400).send({ errorMessage: "작성란을 모두 기입해주세요" });
+
+  if (start >= end) return res.status(400).send({ errorMessage: "날짜 형식이 잘못되었습니다." });
 
   const tran = await sequelize.transaction(); // 트랙잭션 시작
 
@@ -158,7 +166,7 @@ router.put("/:resumeId", authMiddleware, async (req, res) => {
     await tran.commit();
   } catch (error) {
     console.log(error);
-    res.status(401).send({ errormessage: "작성란을 모두 기입해주세요." });
+    res.status(401).send({ errormessage: "정보 수정 실패" });
     await tran.rollback(); // 트랜젝션 실패시 시작부분까지 되돌리기
   }
 });

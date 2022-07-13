@@ -13,41 +13,42 @@ router.get("/project", async (req, res) => {
     // const skills = projectskills.map((e) => e["skill"]);
 
     const project = await Project.findAll({
-      include: [{ model: ProjectSkill }],
+      include: { model: ProjectSkill, attributes: ["skill"], skill: { [Op.eq]: skill } },
       where: {
-        [Op.or]: {
-          [Op.and]: {
-            // req.body.start 보다 이상
-            start: { [Op.gte]: start },
-            // req.body.end 보다 이하
-            end: { [Op.lte]: end },
-          },
-          role: { [Op.eq]: role },
-        },
-        // skill: { [Op.eq]: skill },
+        [Op.and]: [
+          // req.body.start 보다 이상
+          { start: { [Op.gte]: start } },
+          // req.body.end 보다 이하
+          { end: { [Op.lte]: end } },
+        ],
       },
       order: [["createdAt", "DESC"]],
+      require: false,
     });
 
-    // const projectSkills = project.map((project) => project.ProjectSkills.map((skill) => skill["skill"]));
+    // console.log(project);
 
-    // let projects = [];
+    const projectSkills = project.map((project) => project.ProjectSkills.map((skill) => skill["skill"]));
 
-    // project.forEach((project, index) => {
-    //   let projectArray = {};
+    let projects = [];
 
-    //   projectArray.projectId = project.projectId;
-    //   projectArray.nickname = project.nickname;
-    //   projectArray.title = project.title;
-    //   projectArray.subscript = project.subscript;
-    //   projectArray.role = project.role;
-    //   projectArray.start = project.start;
-    //   projectArray.end = project.end;
-    //   projectArray.createdAt = project.createdAt;
-    //   projectArray.skill = projectSkills[index];
+    project.forEach((project, index) => {
+      let projectObject = {};
 
-    //   projects.push(projectArray);
-    // });
+      projectObject.projectId = project.projectId;
+      projectObject.nickname = project.nickname;
+      projectObject.title = project.title;
+      projectObject.subscript = project.subscript;
+      projectObject.role = project.role;
+      projectObject.start = project.start;
+      projectObject.end = project.end;
+      projectObject.createdAt = project.createdAt;
+      projectObject.skill = projectSkills[index];
+
+      projects.push(projectObject);
+    });
+
+    function projectskills(projects, searchskill) {}
 
     res.status(200).send({ project });
   } catch (error) {
