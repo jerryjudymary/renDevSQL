@@ -6,7 +6,7 @@ const { Project, ProjectSkill, Resume, ResumeSkill, sequelize } = require("../mo
 function periodFilter(inputItems, start, end) {
   let periodFilteredItems = [];
   inputItems.forEach((item) => {
-    if (item.start <= start && item.end >= end) periodFilteredItems.push(item);
+    if (item.start >= start && item.end <= end) periodFilteredItems.push(item);
   });
   return periodFilteredItems;
 }
