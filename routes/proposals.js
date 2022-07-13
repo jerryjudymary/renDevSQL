@@ -27,6 +27,10 @@ router.get("/projects", authMiddleware, async (req, res) => {
     }]
   });
 
+  if (!projectsQuery || !projectsQuery.length) { 
+    return res.status(404).json({ errorMessage: "내 프로젝트가 존재하지 않습니다." });
+  };
+
   const projectSkills = projectsQuery.map(project => project.ProjectSkills.map( skill => skill["skill"] ));
 
   let projects = [];
