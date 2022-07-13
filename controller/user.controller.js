@@ -336,12 +336,21 @@ const profileImage = async (req, res) => {
   }
 };
 
+// module.exports = {
+//   signUp,
+//   checkUserId,
+//   checkNickname,
+//   login,
+//   refresh,
+//   updatePw,
+//   userDelete,
+//   profileImage,
+// };
 module.exports = {
   signUp,
   checkUserId,
   checkNickname,
   login,
-  refresh,
   updatePw,
   userDelete,
   profileImage,
