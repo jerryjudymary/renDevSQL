@@ -17,6 +17,9 @@ const { noteProjectOwner, noteApplicant } = require("./notices");
 // 면접 예약
 
 router.put("/:projectId/:applicationId", authMiddleware, async (req, res) => {
+  if (!res.locals.user) {
+    return res.status(401).json({ errorMessage: "로그인 후 사용하세요." });
+  };
 
   const { id } = res.locals.user;
   const { projectId, applicationId } = req.params;
@@ -27,10 +30,6 @@ router.put("/:projectId/:applicationId", authMiddleware, async (req, res) => {
 
   if(!existApplications) {
     return res.status(404).json({ errorMessage: "프로젝트 예약 정보가 존재하지 않습니다." });
-  };
-
-  if (!res.locals.user) {
-    return res.status(401).json({ errorMessage: "로그인 후 사용하세요." });
   };
 
   const status = 'reserved' // => 와이어프레임상 '모집완료' 단계에 해당
