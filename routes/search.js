@@ -1,6 +1,14 @@
 const express = require("express");
+const { exist, x } = require("joi");
 const router = express.Router();
-const { Project, ProjectSkill, Resume, ResumeSkill, sequelize } = require("../models");
+const { Op } = require("sequelize");
+const {
+  Project,
+  ProjectSkill,
+  Resume,
+  ResumeSkill,
+  sequelize,
+} = require("../models");
 
 // Project검색API, Resume검색API 둘 다 공용으로 사용할 함수 periodFilter와 skillFilter를 먼저 선언한다.
 function periodFilter(inputItems, start, end) {

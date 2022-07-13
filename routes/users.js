@@ -17,8 +17,10 @@ const upload = multer({
   }),
 });
 
-// const { signUp, checkUserId, checkNickname, login, refresh, updatePw, userDelete, profileImage } = require("../controller/user.controller.js");
-const { signUp, checkUserId, checkNickname, login, updatePw, userDelete, profileImage } = require("../controller/user.controller.js");
+const {
+    signUp, checkUserId, checkNickname, login, updatePw, userDelete, profileImage
+} = require("../controller/user.controller.js");
+
 
 const { userInfo, userDetail, userProject, userResume, myApply, recruit } = require("../controller/userInfo.controller.js");
 
