@@ -9,6 +9,7 @@ const aws = require("aws-sdk");
 const s3 = new aws.S3();
 const moment = require("moment");
 const { v4 } = require("uuid");
+const { redisClient, DEFAULT_EXPIRATION } = require("../config/redis")
 
 // multer - S3 이미지 업로드 설정
 
@@ -28,7 +29,7 @@ const upload = multer({
 router.post('/photos', authMiddleware, upload.array('photos'), async (req, res) => {
   try {
     const photos = req.files.map(image => image.location);
-    res.status(200).json({ message : '사진을 업로드 했습니다.', photos });
+    res.status(200).json({ message : '사진을 업로드했습니다.', photos });
   } catch (err) {
     return res.status(400).send({ errorMessage : '사진업로드 실패-파일 형식과 크기(1.5Mb 이하) 를 확인해주세요.' });
   };
@@ -85,7 +86,12 @@ router.post("/", authMiddleware, async (req, res) => {
         );
       };
     });
-      res.status(200).json({ message : '프로젝트 게시글을 작성했습니다.' });
+
+    redisClient.del(`projects`, function(err, response) {
+      if (response == 1) console.log("게시물 등록으로 전체조회 캐시 삭제")
+    });
+
+    await res.status(200).json({ message : '프로젝트 게시글을 작성했습니다.' });
   } catch (error) {
     return res.status(400).json({ errorMessage: "게시글 등록 실패" });
   }
@@ -94,111 +100,131 @@ router.post("/", authMiddleware, async (req, res) => {
 // 프로젝트 조회
 
 router.get("/", async (req, res) => {
-  const projectsQuery = await Project.findAll({
-    include: {
-      model: ProjectSkill,
-      attributes:['skill'],
-      required: true // 자식 테이블로 ProjectSkill row가 존재하는 projects만 불러옵니다
-    }
+  redisClient.get('projects', async (err, data) => { // 레디스 서버에서 데이터 체크, 레디스에 저장되는 키 값은 projects
+    if (err) console.error(error);
+    if (data) return res.json(JSON.parse(data)); // 캐시 적중(cache hit)시 response!
+
+    const projectsQuery = await Project.findAll({
+      include: {
+        model: ProjectSkill,
+        attributes:['skill'],
+        required: true // 자식 테이블로 ProjectSkill row가 존재하는 projects만 불러옵니다
+      }
+    });
+
+    if (!projectsQuery) { 
+      return res.status(404).json({ errorMessage: "프로젝트가 존재하지 않습니다." });
+    };
+
+    const projectSkills = projectsQuery.map(project => project.ProjectSkills.map( skill => skill["skill"] ));
+
+    let projects = [];
+
+    projectsQuery.forEach((project, index) => {
+      let createdAt = moment(project.createdAt).format("YYYY-MM-DD HH:mm:ss");
+      let projectObject = {};
+
+      projectObject.projectid = project.projectId;
+      projectObject.nickname = project.nickname;
+      projectObject.title = project.title;
+      projectObject.subscript = project.subscript;
+      projectObject.role = project.role;
+      projectObject.start = project.start;
+      projectObject.end = project.end;
+      projectObject.createdAt = createdAt; 
+      projectObject.skills = projectSkills[index];
+
+      projects.push(projectObject);
+      }
+    );
+    // 캐시 부적중(cache miss)시 DB에 쿼리 전송, setex 메서드로 설정한 기본 만료시간까지 redis 캐시 저장
+    redisClient.setex('projects', DEFAULT_EXPIRATION, JSON.stringify(projects));
+    res.send({ projects });
   });
-
-  const projectSkills = projectsQuery.map(project => project.ProjectSkills.map( skill => skill["skill"] ));
-
-  let projects = [];
-
-  projectsQuery.forEach((project, index) => {
-    let createdAt = moment(project.createdAt).format("YYYY-MM-DD HH:mm:ss");
-    let projectObject = {};
-
-    projectObject.projectid = project.projectId;
-    projectObject.nickname = project.nickname;
-    projectObject.title = project.title;
-    projectObject.subscript = project.subscript;
-    projectObject.role = project.role;
-    projectObject.start = project.start;
-    projectObject.end = project.end;
-    projectObject.createdAt = createdAt; 
-    projectObject.skills = projectSkills[index];
-
-    projects.push(projectObject);
-    }
-  );
-      
-  res.send({ projects });
 });
 
 // 프로젝트 상세 조회
 
 router.get("/:projectId", async (req, res) => {
   const { projectId } = req.params;
-  const projectQuery = await Project.findOne({
+  // 레디스 서버에서 데이터 체크, 레디스에 저장되는 키 값은 projects
+  redisClient.get(`projects:${projectId}`, async (err, data) => {
+    if (err) console.error(error);
+    if (data) return res.json(JSON.parse(data)); // 캐시 적중(cache hit)시 response!
+    const projectQuery = await Project.findOne({
 
-    where: {
-      projectId
-    },
-    include: [
-      {
-        model: ProjectSkill,
-        attributes:['skill'],
+      where: {
+        projectId
       },
-      {
-        model: ProjectPhoto,
-        attributes:['photo'],
-      },
-      {
-        model: Application,
-        attributes:['applicationId', 'schedule','available','status','interviewCode'],
+      include: [
+        {
+          model: ProjectSkill,
+          attributes:['skill'],
+        },
+        {
+          model: ProjectPhoto,
+          attributes:['photo'],
+        },
+        {
+          model: Application,
+          attributes:['applicationId', 'schedule','available','status','interviewCode'],
+        }
+      ]
+    });
+
+    if (!projectQuery) { 
+      return res.status(404).json({ errorMessage: "프로젝트 정보가 존재하지 않습니다." });
+    };
+
+    const skills = projectQuery.ProjectSkills.map(eachSkill => eachSkill.skill);
+    const photos = projectQuery.ProjectPhotos.map(eachPhoto => eachPhoto.photo);
+    const createdAt = moment(projectQuery.createdAt).format("YYYY-MM-DD HH:mm:ss");
+
+    let applications = [];
+
+    projectQuery.Applications.forEach((eachApp, index) => {
+      let schedule = moment(eachApp.schedule).format("YYYY-MM-DD HH:mm:ss");
+      let application = {};
+
+      application.applicationId = eachApp.applicationId;
+      application.schedule = schedule;
+      application.available = eachApp.available;
+      application.status = eachApp.status;
+      application.interviewCode = eachApp.interviewCode;
+
+      applications.push(application);
       }
-    ]
-  });
+    );
 
-  if (!projectQuery) { 
-    return res.status(404).json({ errorMessage: "프로젝트 정보가 존재하지 않습니다." });
-  };
-
-  const skills = projectQuery.ProjectSkills.map(eachSkill => eachSkill.skill);
-  const photos = projectQuery.ProjectPhotos.map(eachPhoto => eachPhoto.photo);
-  const createdAt = moment(projectQuery.createdAt).format("YYYY-MM-DD HH:mm:ss");
-
-  let applications = [];
-
-  projectQuery.Applications.forEach((eachApp, index) => {
-    let schedule = moment(eachApp.schedule).format("YYYY-MM-DD HH:mm:ss");
-    let application = {};
-
-    application.applicationId = eachApp.applicationId;
-    application.schedule = schedule;
-    application.available = eachApp.available;
-    application.status = eachApp.status;
-    application.interviewCode = eachApp.interviewCode;
-
-    applications.push(application);
-    }
-  );
-
-  const project = {
-    projectId: projectQuery.projectId,
-    id: projectQuery.id,
-    title: projectQuery.title,
-    details: projectQuery.details,
-    role: projectQuery.role,
-    email: projectQuery.email,
-    start: projectQuery.start,
-    end: projectQuery.end,
-    subscript: projectQuery.subscript,
-    nickname: projectQuery.nickname,
-    createdAt,
-    applications,
-    photos,
-    skills
-  };
-
+    const project = {
+      projectId: projectQuery.projectId,
+      id: projectQuery.id,
+      title: projectQuery.title,
+      details: projectQuery.details,
+      role: projectQuery.role,
+      email: projectQuery.email,
+      start: projectQuery.start,
+      end: projectQuery.end,
+      subscript: projectQuery.subscript,
+      nickname: projectQuery.nickname,
+      createdAt,
+      applications,
+      photos,
+      skills
+    };
+    // 캐시 부적중(cache miss)시 DB에 쿼리 전송, setex 메서드로 설정한 기본 만료시간까지 redis 캐시 저장
+    redisClient.setex(`projects:${projectId}`, DEFAULT_EXPIRATION, JSON.stringify(project));
     res.send({ project });
+  });
 });
 
 // 프로젝트 수정
 
 router.put("/:projectId", authMiddleware, async (req, res) => {
+  if (!res.locals.user) {
+    return res.status(401).json({ errorMessage: "로그인 후 사용하세요." });
+  };
+
   const { id, nickname } = res.locals.user;
   const { projectId } = req.params;
 
@@ -207,13 +233,9 @@ router.put("/:projectId", authMiddleware, async (req, res) => {
   });
 
   if (!existProject) {
-    return res.status(404).json({ errorMessage: "프로젝트 정보가 존재하지 않습니다." });
+    return res.status(404).json({ errorMessage: "회원님께서 등록한 프로젝트가 아닙니다." });
   };
     
-  if (!res.locals.user) {
-    return res.status(401).json({ errorMessage: "로그인 후 사용하세요." });
-  };
-
   if (id !== existProject.id) {
     return res.status(400).send({ errorMessage : '작성자만 수정할 수 있습니다.' });
   };
@@ -259,9 +281,8 @@ router.put("/:projectId", authMiddleware, async (req, res) => {
       };
     
       s3.deleteObjects(params, function(err, data) {
-        if (err) { console.log('에러:', err) 
-        return(err) }
-        else console.log("버킷의 이미지들이 삭제 - 수정되었습니다.");
+        if (err) { console.log('버킷 이미지 삭제 에러:', err) 
+        return(err) };
       });
     } 
   };
@@ -300,6 +321,12 @@ router.put("/:projectId", authMiddleware, async (req, res) => {
 
     await t.commit();
 
+    // 수정시 해당 프로젝트, 전체조회 캐싱용 Redis 키 삭제
+    redisClient.del(`projects:${projectId}`, `projects`, function(err, response) {
+      if (response == 1) console.log("1 Redis key deleted")
+      if (response == 2) console.log("2 Redis key deleted")
+    });
+  
     return res.status(200).json({
       message: "프로젝트 게시글을 수정했습니다.",
     });
@@ -313,6 +340,10 @@ router.put("/:projectId", authMiddleware, async (req, res) => {
 // 프로젝트 삭제
 
 router.delete("/:projectId", authMiddleware, async (req, res) => {
+  if (!res.locals.user) {
+    return res.status(401).json({ errorMessage: "로그인 후 사용하세요." });
+  };
+
   const { id } = res.locals.user;
   const { projectId  } = req.params;
 
@@ -321,11 +352,7 @@ router.delete("/:projectId", authMiddleware, async (req, res) => {
   })
 
   if (!existProject) {
-    return res.status(404).json({ errorMessage: "프로젝트 정보가 존재하지 않습니다." });
-  };
-
-  if (!res.locals.user) {
-    return res.status(401).json({ errorMessage: "로그인 후 사용하세요." });
+    return res.status(404).json({ errorMessage: "회원님께서 등록한 프로젝트가 아닙니다." });
   };
 
   if (id !== existProject.id) {
@@ -356,8 +383,7 @@ router.delete("/:projectId", authMiddleware, async (req, res) => {
 
     s3.deleteObjects(params, function(err, data) {
       if (err) { console.log('버킷 이미지 삭제 에러:', err) 
-      return(err) }
-      else console.log("버킷의 이미지들이 삭제 - 수정되었습니다."); 
+      return(err) };
     });
   };
 
@@ -365,6 +391,12 @@ router.delete("/:projectId", authMiddleware, async (req, res) => {
 
   Project.destroy({ // ON DELETE CASCADE 적용으로 자식 테이블의 데이터도 지워집니다
     where: { projectId, id },
+  });
+
+  // 삭제시 해당 프로젝트, 전체조회 캐싱용 Redis 키 삭제
+  redisClient.del(`projects:${projectId}`, `projects`, function(err, response) {
+    if (response == 1) console.log("1 Redis key deleted")
+    if (response == 2) console.log("2 Redis key deleted")
   });
 
   res.status(200).json({

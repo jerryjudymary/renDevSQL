@@ -19,7 +19,7 @@ const upload = multer({
     acl: "public-read",
     key: function (req, file, cb) {
       cb(null, "profileImage/" + Date.now() + "." + file.originalname.split(".").pop()); // 이름 설정
-      },
+    },
   }),
 });
 
@@ -262,34 +262,39 @@ const userDelete = async (req, res) => {
     if (hashed) {
       const ids = Math.random().toString(36).slice(-3) + "id";
       const nicks = Math.random().toString(36).slice(-3) + "nick";
-      const names = ""
-      const births = ""
-      const profileImages = "" 
-      const refreshTokens = ""
-      const passwords = ""
-      const passwordChecks  = ""
-      
-      await User.update
-      ({
-        userId: ids, nickname:nicks, name: names,
-        birth: births, profileImage: profileImages,
-        refreshToken: refreshTokens, password: passwords, passwordCheck: passwordChecks },
-        { where : { nickname : user.nickname }
-      });
+      const names = "";
+      const births = "";
+      const profileImages = "";
+      const refreshTokens = "";
+      const passwords = "";
+      const passwordChecks = "";
+
+      await User.update(
+        {
+          userId: ids,
+          nickname: nicks,
+          name: names,
+          birth: births,
+          profileImage: profileImages,
+          refreshToken: refreshTokens,
+          password: passwords,
+          passwordCheck: passwordChecks,
+        },
+        { where: { nickname: user.nickname } }
+      );
 
       s3.deleteObject(
         {
-        Bucket: "jerryjudymary",
-        Key: users.profileImage,
+          Bucket: "jerryjudymary",
+          Key: users.profileImage,
         },
         (err, data) => {
-        if (err) {
-            console.log(err)
+          if (err) {
+            console.log(err);
+          }
         }
-        }
-    );
-      return res.status(200).send({ message: "정상적으로 회원 탈퇴 됐습니다."})
-
+      );
+      return res.status(200).send({ message: "정상적으로 회원 탈퇴 됐습니다." });
     } else {
       return res.status(401).send({ errorMessage: "비밀번호가 일치하지 않습니다." });
     }
@@ -306,23 +311,23 @@ const profileImage = async (req, res) => {
 
     const { nickname } = req.params;
 
-    const user = await User.findOne({ where : { nickname } });
+    const user = await User.findOne({ where: { nickname } });
 
-      s3.deleteObject(
-          {
-          Bucket: "jerryjudymary",
-          Key: user.profileImage,
-          },
-          (err, data) => {
-          if (err) {
-              console.log(err)
-          }
-          }
-      );
+    s3.deleteObject(
+      {
+        Bucket: "jerryjudymary",
+        Key: user.profileImage,
+      },
+      (err, data) => {
+        if (err) {
+          console.log(err);
+        }
+      }
+    );
 
-    const updateImage = await User.update({ profileImage : profileImage }, { where: { nickname }})
+    const updateImage = await User.update({ profileImage: profileImage }, { where: { nickname } });
 
-  //   await User.update({ refreshToken }, { where: { userId } });
+    //   await User.update({ refreshToken }, { where: { userId } });
 
     return res.status(200).json({ message: "사진을 업로드 했습니다.", updateImage });
   } catch (err) {
@@ -339,5 +344,5 @@ module.exports = {
   refresh,
   updatePw,
   userDelete,
-  profileImage
+  profileImage,
 };
