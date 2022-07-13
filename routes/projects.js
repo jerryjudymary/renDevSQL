@@ -199,6 +199,10 @@ router.get("/:projectId", async (req, res) => {
 // 프로젝트 수정
 
 router.put("/:projectId", authMiddleware, async (req, res) => {
+  if (!res.locals.user) {
+    return res.status(401).json({ errorMessage: "로그인 후 사용하세요." });
+  };
+
   const { id, nickname } = res.locals.user;
   const { projectId } = req.params;
 
@@ -207,13 +211,9 @@ router.put("/:projectId", authMiddleware, async (req, res) => {
   });
 
   if (!existProject) {
-    return res.status(404).json({ errorMessage: "프로젝트 정보가 존재하지 않습니다." });
+    return res.status(404).json({ errorMessage: "회원님께서 등록한 프로젝트가 아닙니다." });
   };
     
-  if (!res.locals.user) {
-    return res.status(401).json({ errorMessage: "로그인 후 사용하세요." });
-  };
-
   if (id !== existProject.id) {
     return res.status(400).send({ errorMessage : '작성자만 수정할 수 있습니다.' });
   };
@@ -313,6 +313,10 @@ router.put("/:projectId", authMiddleware, async (req, res) => {
 // 프로젝트 삭제
 
 router.delete("/:projectId", authMiddleware, async (req, res) => {
+  if (!res.locals.user) {
+    return res.status(401).json({ errorMessage: "로그인 후 사용하세요." });
+  };
+
   const { id } = res.locals.user;
   const { projectId  } = req.params;
 
@@ -321,11 +325,7 @@ router.delete("/:projectId", authMiddleware, async (req, res) => {
   })
 
   if (!existProject) {
-    return res.status(404).json({ errorMessage: "프로젝트 정보가 존재하지 않습니다." });
-  };
-
-  if (!res.locals.user) {
-    return res.status(401).json({ errorMessage: "로그인 후 사용하세요." });
+    return res.status(404).json({ errorMessage: "회원님께서 등록한 프로젝트가 아닙니다." });
   };
 
   if (id !== existProject.id) {
