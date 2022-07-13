@@ -144,7 +144,7 @@ const login = async (req, res) => {
           nickname: users.nickname,
         };
         const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
-          expiresIn: "1m",
+          expiresIn: "1h",
         });
         const refreshToken = jwt.sign(payload, process.env.JWT_SECRET_REFRESH, {
           expiresIn: "2d",
