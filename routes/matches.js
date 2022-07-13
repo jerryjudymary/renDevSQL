@@ -1,90 +1,135 @@
 const express = require("express");
 const router = express.Router();
-const { Op } = require("sequelize");
-const { User, Project, ProjectSkill, ProjectPhoto, Resume, ResumeSkill, sequelize } = require("../models");
-const authMiddleware = require("../middlewares/authMiddleware");
+const { Project, ProjectSkill, Resume, ResumeSkill, sequelize } = require("../models");
 
-// 매칭기능 1) 프로젝트에 맞는 이력서를 조회
-router.get("/resumes/:projectId", async (req, res) => {
-  //여기에, 현재 로그인 user가 project 작성 유저인지 확인하는 부분도 만들 것.
-  const { projectId } = req.params;
-  let project;
-  let FitPeriodResumes;
-
-  // 파라미터로 입력받은 projectId에 해당하는 project를 MySQL에서 가져옴.
-  await connection.query(`SELECT * FROM projects WHERE projectId = ${projectId}`, (error, result, fields) => {
-    if (error) throw error;
-    project = result;
-    console.log(project, result);
+// Project검색API, Resume검색API 둘 다 공용으로 사용할 함수 periodFilter와 skillFilter를 먼저 선언한다.
+function periodFilter(inputItems, start, end) {
+  let periodFilteredItems = [];
+  inputItems.forEach((item) => {
+    if (item.start <= start && item.end >= end) periodFilteredItems.push(item);
   });
-  // console.log(project);
+  return periodFilteredItems;
+}
 
-  // MySQL DB에서, 기준이 되는 project와 기간 조건(start, end)이 맞는 Resume만 가져옴.
-  await connection.query(
-    `SELECT * 
-      FROM resumes
-      WHERE 
-        start <= ${project.start}
-        AND
-        end >= ${project.end}`,
-    (error, result, fields) => {
-      if (error) throw error;
-      FitPeriodResumes = result;
-    }
-  );
-  console.log(FitPeriodResumes);
+// 요구스킬 필터링 함수 (Project, Resume 공용)
+function skillFilter(inputItems, requiredSkills) {
+  let skillFilteredItems = [];
+  let allSkill;
+  inputItems.forEach((item) => {
+    allSkill = requiredSkills.every((specificSkill) => item["skills"].includes(specificSkill));
+    if (allSkill) skillFilteredItems.push(item);
+  });
+  return skillFilteredItems;
+}
 
-  // FitPeriodResumes 중에서, project.skills의 모든 값을 포함하는 skills를 가진 것만 필터링.
-  let FitResumes = [];
+// "Resume의 조건에 맞는 Projects" 매칭 API
+router.get("/projects/:resumeId", async (req, res) => {
+  const { resumeId } = req.params;
+
+  // 선택한 resume의 role, start, end, skill 조건을 추출한다.
+  const resumeStandard = await Resume.findOne({
+    where: { resumeId: resumeId },
+    include: [{ model: ResumeSkill, attributtes: ["skill"] }],
+  });
+
+  const role = resumeStandard.role;
+  const start = resumeStandard.start;
+  const end = resumeStandard.end;
+  const skill = resumeStandard.ResumeSkills.map((skill) => skill["skill"]);
+
+  // Project DB에서 role로 필터링해 가져오면서, 앞으로 필터링할 객체 배열에는 필요한 요소들만 넣어 놓기
+  const roleFilter = await Project.findAll({
+    where: { role: role },
+    include: [{ model: ProjectSkill, attributtes: ["skill"] }],
+  });
+
+  // Project의 정보 중 필요한 요소들만 빼내기 위한 부분,
+  // 특히 skills 배열의 데이터 형태를 보기 좋게 가공한다.
+  let roleFilteredProjects = [];
+  const projectSkills = roleFilter.map((project) => project.ProjectSkills.map((skill) => skill["skill"]));
+
+  roleFilter.forEach((project, index) => {
+    let projectObject = {};
+
+    projectObject.projectId = project.projectId;
+    projectObject.nickname = project.nickname;
+    projectObject.title = project.title;
+    projectObject.subscript = project.subscript;
+    projectObject.role = project.role;
+    projectObject.start = project.start;
+    projectObject.end = project.end;
+    projectObject.skills = projectSkills[index];
+    projectObject.createdAt = project.createdAt;
+
+    roleFilteredProjects.push(projectObject);
+  });
+
+  // 기간 필터링 함수 실행
+  const periodFilteredProjects = await periodFilter(roleFilteredProjects, start, end);
+
+  // 요구스킬 필터링 (공용 함수와 다르다는 것에 주의!)
+  //  특정 resume의 조건에 맞는 project란, resume의 skill을 모두 포함하고 있는 project가 아니다.
+  //  반대로 resume가 특정 project의 skill을 모두 포함하고 있어야 요구 조건에 맞다.
+  let skillFilteredProjects = [];
   let allSkill;
 
-  FitPeriodResumes.forEach((resume, index) => {
-    allSkill = project.skills.every((skill) => resume["skills"].includes(skill));
-    if (allSkill) FitResumes.push(resume);
+  periodFilteredProjects.forEach((project) => {
+    allSkill = project["skills"].every((specificSkill) => skill.includes(specificSkill));
+    if (allSkill) skillFilteredProjects.push(project);
   });
 
-  return res.send({ FitResumes });
+  return res.json(skillFilteredProjects);
 });
 
-// 매칭기능 2) 이력서에 맞는 프로젝트를 조회
-router.get("/projects/:resumeId", async (req, res) => {
-  //여기에, resume 작성 유저인지 확인하는 부분도 만들 것.
-  const { resumeId } = req.params;
-  let resume;
-  let FitPeriodProjects;
+// "Project의 조건에 맞는 Resumes" 매칭 API
+router.get("/resumes/:projectId", async (req, res) => {
+  const { projectId } = req.params;
 
-  // 파라미터로 입력받은 resumeId 에 해당하는 resume를 MySQL에서 가져옴.
-  await connection.query(`SELECT * FROM resumes WHERE resumeId = ${resumeId}`, (error, result, fields) => {
-    if (error) throw error;
-    resume = result;
-  });
-  console.log(resume);
-
-  // MySQL DB에서, 기준이 되는 resume와 기간 조건(start, end)이 맞는 project만 가져옴.
-  await connection.query(
-    `SELECT * 
-    FROM projects
-    WHERE 
-      start >= ${resume.start}
-      AND
-      end <= ${resume.end}`,
-    (error, result, fields) => {
-      if (error) throw error;
-      FitPeriodProjects = result;
-    }
-  );
-  console.log(FitPeriodProjects);
-
-  // resume 입장에선, project 요구 skills 중 "자신이 갖지 않은 것이 없어야" 한다.
-  // 이것을 SQL로 처리하기 애매해서, 1) DB query로 기간 조건만 필터링한 후, 2) 배열 메소드로 해결했다.
-  let FitProjects = [];
-  let allSkill;
-  FitPeriodProjects.forEach((project, index) => {
-    allSkill = project["skills"].every((skill, skillIndex) => resume.skills.includes(skill));
-    if (allSkill) FitProjects.push(project);
+  // 선택한 resume의 role, start, end, skill 조건을 추출한다.
+  const projectStandard = await Project.findOne({
+    where: { projectId: projectId },
+    include: [{ model: ProjectSkill, attributtes: ["skill"] }],
   });
 
-  return res.json({ FitProjects });
+  const role = projectStandard.role;
+  const start = projectStandard.start;
+  const end = projectStandard.end;
+  const skill = projectStandard.ProjectSkills.map((skill) => skill["skill"]);
+
+  // DB에서 role로 필터링해 가져오면서, 앞으로 필터링할 객체 배열에는 필요한 요소들만 넣어 놓기
+  const roleFilter = await Resume.findAll({
+    where: { role: role },
+    include: [{ model: ResumeSkill, attributtes: ["skill"] }],
+  });
+
+  // Resume의 정보 중 필요한 요소들만 빼내기 위한 부분,
+  // 특히 skills 배열의 데이터 형태를 보기 좋게 가공한다.
+  let roleFilteredResumes = [];
+  const resumeSkills = roleFilter.map((resume) => resume.ResumeSkills.map((skill) => skill["skill"]));
+
+  roleFilter.forEach((resume, index) => {
+    let resumeObject = {};
+
+    resumeObject.resumeId = resume.resumeId;
+    resumeObject.nickname = resume.nickname;
+    resumeObject.resumeImage = resume.resumeImage;
+    resumeObject.content = resume.content;
+    resumeObject.role = resume.role;
+    resumeObject.start = resume.start;
+    resumeObject.end = resume.end;
+    resumeObject.skills = resumeSkills[index];
+    resumeObject.createdAt = resume.createdAt;
+
+    roleFilteredResumes.push(resumeObject);
+  });
+
+  // 기간 필터링 함수 실행
+  const periodFilteredResumes = await periodFilter(roleFilteredResumes, start, end);
+
+  // 요구스킬 필터링 함수 실행
+  const skillFilteredResumes = await skillFilter(periodFilteredResumes, skill);
+
+  return res.json(skillFilteredResumes);
 });
 
 module.exports = router;
