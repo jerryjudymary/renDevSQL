@@ -341,7 +341,7 @@ module.exports = {
   checkUserId,
   checkNickname,
   login,
-  refresh,
+  // refresh,
   updatePw,
   userDelete,
   profileImage,
