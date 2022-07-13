@@ -30,7 +30,7 @@ router.get("/projects/:resumeId", async (req, res) => {
   const resumeStandard = await Resume.findOne({
     where: { resumeId: resumeId },
     include: [{ model: ResumeSkill, attributtes: ["skill"] }],
-  });
+  });  
 
   const role = resumeStandard.role;
   const start = resumeStandard.start;
@@ -121,13 +121,20 @@ router.get("/resumes/:projectId", async (req, res) => {
     resumeObject.createdAt = resume.createdAt;
 
     roleFilteredResumes.push(resumeObject);
-  });
+  });  
 
-  // 기간 필터링 함수 실행
-  const periodFilteredResumes = await periodFilter(roleFilteredResumes, start, end);
+  // 기간 필터링 (주의! 공용 기간 필터링 함수와 다르다) 
+  // 프로젝트의 기간보다 Resume의 기간이 커야함.
+  // 즉 Resume의 기간 안에 Project의 기간이 들어와야 한다. 
+  let periodFilteredResumes = [];
+
+  roleFilteredResumes.forEach((item) => {
+    if (item.start <= start && item.end >= end) 
+    periodFilteredResumes.push(item);
+  });  
 
   // 요구스킬 필터링 함수 실행
-  const skillFilteredResumes = await skillFilter(periodFilteredResumes, skill);
+  const skillFilteredResumes = await skillFilter(periodFilteredResumes, skill);  
 
   return res.json(skillFilteredResumes);
 });
