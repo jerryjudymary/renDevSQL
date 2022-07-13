@@ -8,12 +8,8 @@ router.get("/project", async (req, res) => {
   try {
     const { role, skill, start, end } = req.body;
 
-    // const projectskills = await ProjectSkill.findAll({ attributes: ["skill"], where: { skill: { [Op.in]: skill } } });
-
-    // const skills = projectskills.map((e) => e["skill"]);
-
     const project = await Project.findAll({
-      include: { model: ProjectSkill, attributes: ["skill"], skill: { [Op.eq]: skill } },
+      include: { model: ProjectSkill },
       where: {
         [Op.and]: [
           // req.body.start 보다 이상
@@ -23,13 +19,11 @@ router.get("/project", async (req, res) => {
         ],
       },
       order: [["createdAt", "DESC"]],
-      require: false,
     });
-
-    // console.log(project);
 
     const projectSkills = project.map((project) => project.ProjectSkills.map((skill) => skill["skill"]));
 
+    // start - end 검색된 상태
     let projects = [];
 
     project.forEach((project, index) => {
@@ -48,9 +42,41 @@ router.get("/project", async (req, res) => {
       projects.push(projectObject);
     });
 
-    function projectskills(projects, searchskill) {}
+    // console.log(projects);
 
-    res.status(200).send({ project });
+    // function skillFilter(inputItems, requiredSkills) {
+    //   let skillFilteredItems = [];
+    //   let allSkill;
+    //   inputItems.forEach((item) => {
+    //     allSkill = requiredSkills.every((specificSkill) => item["skills"].includes(specificSkill));
+    //     if (allSkill) skillFilteredItems.push(item);
+    //   });
+    //   return skillFilteredItems;
+    // }
+
+    // start와 end가 검색된 상태
+    if (start && end && role && !skill) {
+      let projectsrole = [];
+      project.forEach((roleproject, index) => {
+        let projectObject = {};
+
+        projectObject.projectId = roleproject.projectId;
+        projectObject.nickname = roleproject.nickname;
+        projectObject.title = roleproject.title;
+        projectObject.subscript = roleproject.subscript;
+        projectObject.role = roleproject.role;
+        projectObject.start = roleproject.start;
+        projectObject.end = roleproject.end;
+        projectObject.createdAt = roleproject.createdAt;
+        projectObject.skill = projectSkills[index];
+
+        projectsrole.push(projectObject);
+      });
+      console.log(projectsrole);
+      return res.status(200).send({ projectsrole });
+    }
+
+    res.status(200).send({ projects });
   } catch (error) {
     console.log(error);
     res.status(400).send({ errorMessage: "조회 실패" });
