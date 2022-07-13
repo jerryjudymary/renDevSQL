@@ -28,7 +28,7 @@ const upload = multer({
 router.post('/photos', authMiddleware, upload.array('photos'), async (req, res) => {
   try {
     const photos = req.files.map(image => image.location);
-    res.status(200).json({ message : '사진을 업로드 했습니다.', photos });
+    res.status(200).json({ message : '사진을 업로드했습니다.', photos });
   } catch (err) {
     return res.status(400).send({ errorMessage : '사진업로드 실패-파일 형식과 크기(1.5Mb 이하) 를 확인해주세요.' });
   };
@@ -101,6 +101,10 @@ router.get("/", async (req, res) => {
       required: true // 자식 테이블로 ProjectSkill row가 존재하는 projects만 불러옵니다
     }
   });
+
+  if (!projectsQuery) { 
+    return res.status(404).json({ errorMessage: "프로젝트가 존재하지 않습니다." });
+  };
 
   const projectSkills = projectsQuery.map(project => project.ProjectSkills.map( skill => skill["skill"] ));
 
