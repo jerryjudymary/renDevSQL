@@ -83,6 +83,7 @@ router.get("/", async (req, res) => {
         // limit: 9, // 하나의 페이지 9개 조회
         order: [["createdAt", "DESC"]],
       });
+      logger.log(resumes);
       // [{skill},{skill}]부분을 -> [skill,skill]로 map함수를 사용하여 새로 정의
       const resumeskills = resumes.map((resume) => resume.ResumeSkills.map((skill) => skill["skill"]));
 
@@ -90,6 +91,7 @@ router.get("/", async (req, res) => {
 
       resumes.forEach((resume, index) => {
         let a_resume = {};
+
         a_resume.resumeId = resume.resumeId;
         a_resume.nickname = resume.nickname;
         a_resume.resumeImage = resume.resumeImage;
@@ -97,16 +99,19 @@ router.get("/", async (req, res) => {
         a_resume.start = resume.start;
         a_resume.end = resume.end;
         a_resume.role = resume.role;
-        a_resume.resumeskills = resumeskills[index];
+        a_resume.skill = resumeskills[index];
         a_resume.createdAt = resume.createdAt;
 
         returnResumes.push(a_resume);
       });
 
+      console.log(returnResumes);
+
       // 캐시 부적중(cache miss)시 DB에 쿼리 전송, setex 메서드로 설정한 기본 만료시간까지 redis 캐시 저장
       redisClient.setex("resumes", DEFAULT_EXPIRATION, JSON.stringify(returnResumes));
       res.status(200).send({ returnResumes });
     } catch (error) {
+      c;
       logger.error(err);
       res.status(400).send({});
     }
