@@ -83,7 +83,7 @@ router.get("/", async (req, res) => {
         // limit: 9, // 하나의 페이지 9개 조회
         order: [["createdAt", "DESC"]],
       });
-      logger.log(resumes);
+
       // [{skill},{skill}]부분을 -> [skill,skill]로 map함수를 사용하여 새로 정의
       const resumeskills = resumes.map((resume) => resume.ResumeSkills.map((skill) => skill["skill"]));
 
@@ -99,19 +99,16 @@ router.get("/", async (req, res) => {
         a_resume.start = resume.start;
         a_resume.end = resume.end;
         a_resume.role = resume.role;
-        a_resume.skill = resumeskills[index];
+        a_resume.resumeskills = resumeskills[index];
         a_resume.createdAt = resume.createdAt;
 
         returnResumes.push(a_resume);
       });
 
-      console.log(returnResumes);
-
       // 캐시 부적중(cache miss)시 DB에 쿼리 전송, setex 메서드로 설정한 기본 만료시간까지 redis 캐시 저장
       // redisClient.setex("resumes", DEFAULT_EXPIRATION, JSON.stringify(returnResumes));
       res.status(200).send({ returnResumes });
     } catch (error) {
-      c;
       logger.error(err);
       res.status(400).send({});
     }
@@ -126,40 +123,40 @@ router.get("/:resumeId", async (req, res) => {
   //   if (err) logger.error(err);
   //   if (data) return res.status(200).json({ resumes: JSON.parse(data) }); // 캐시 적중(cache hit)시 response!
 
-    try {
-      const existresumes = await Resume.findOne({
-        include: [
-          {
-            model: ResumeSkill,
-            attributes: ["skill"],
-          },
-        ],
-        where: { resumeId },
-      });
-      // map을 이용하여 배열 안에 객체
-      const resumeskills = existresumes.ResumeSkills.map((skills) => skills.skill);
+  try {
+    const existresumes = await Resume.findOne({
+      include: [
+        {
+          model: ResumeSkill,
+          attributes: ["skill"],
+        },
+      ],
+      where: { resumeId },
+    });
+    // map을 이용하여 배열 안에 객체
+    const resumeskills = existresumes.ResumeSkills.map((skills) => skills.skill);
 
-      const resumes = {
-        resumeId: existresumes.resumeId,
-        userId: existresumes.userId,
-        nickname: existresumes.nickname,
-        content: existresumes.content,
-        start: existresumes.start,
-        end: existresumes.end,
-        role: existresumes.role,
-        content2: existresumes.content2,
-        content3: existresumes.content3,
-        resumeImage: existresumes.resumeImage,
-        resumeskills,
-      };
+    const resumes = {
+      resumeId: existresumes.resumeId,
+      userId: existresumes.userId,
+      nickname: existresumes.nickname,
+      content: existresumes.content,
+      start: existresumes.start,
+      end: existresumes.end,
+      role: existresumes.role,
+      content2: existresumes.content2,
+      content3: existresumes.content3,
+      resumeImage: existresumes.resumeImage,
+      resumeskills,
+    };
 
-      // 캐시 부적중(cache miss)시 DB에 쿼리 전송, setex 메서드로 설정한 기본 만료시간까지 redis 캐시 저장
-      // redisClient.setex(`resumes:${resumeId}`, DEFAULT_EXPIRATION, JSON.stringify(resumes));
-      res.status(200).send({ resumes });
-    } catch (error) {
-      logger.error(err);
-      res.status(400).send({ errorMessage: "정보가 존재하지 않습니다." });
-    }
+    // 캐시 부적중(cache miss)시 DB에 쿼리 전송, setex 메서드로 설정한 기본 만료시간까지 redis 캐시 저장
+    // redisClient.setex(`resumes:${resumeId}`, DEFAULT_EXPIRATION, JSON.stringify(resumes));
+    res.status(200).send({ resumes });
+  } catch (error) {
+    logger.error(err);
+    res.status(400).send({ errorMessage: "정보가 존재하지 않습니다." });
+  }
   // });
 });
 
