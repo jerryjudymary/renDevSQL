@@ -32,6 +32,16 @@ const production = {
   database: "rendevSQLtest",
   host: process.env.DB_HOST,
   dialect: "mysql",
+  logging: false,
+  timezone: "+09:00",
+  dialectOptions: {
+    dateStrings: true,
+    typeCast: true,
+    timezone: "+09:00",
+  },
+  define: {
+    timestamps: true,
+  },
 };
 
 module.exports = { development, production, test };
