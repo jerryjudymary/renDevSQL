@@ -22,7 +22,7 @@ const development = {
 const test = {
   username: "root",
   password: env.DB_PASSWORD,
-  database: "rendevSQLtestCode",
+  database: "rendevSQL",
   host: env.DB_HOST,
   dialect: "mysql",
 };
