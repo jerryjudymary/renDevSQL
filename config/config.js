@@ -30,7 +30,7 @@ const test = {
 const production = {
   username: "root",
   password: env.DB_PASSWORD,
-  database: "rendevSQLtest",
+  database: "rendevSQL",
   host: env.DB_HOST,
   dialect: "mysql",
   logging: false,
