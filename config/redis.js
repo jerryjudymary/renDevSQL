@@ -3,9 +3,12 @@ const Redis = require('redis');
 
 // redis 인스턴스 선언
 
+/****** !!! 테스트 환경은 2번 DB, 서비스 환경은 0번 DB !!! ******/
+
 const redisClient = new Redis.createClient({
     host: process.env.REDIS_HOST,
     port: process.env.REDIS_PORT,
+    db:2,
     password: process.env.REDIS_PASSWORD
 });
 
