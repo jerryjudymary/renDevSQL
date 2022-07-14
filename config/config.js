@@ -1,6 +1,5 @@
 require("dotenv").config();
-// DB_HOST = "3.34.200.72";
-// DB_PASSWORD = "judymary";
+
 const development = {
   username: "root",
   password: process.env.DB_PASSWORD,
