@@ -1,10 +1,12 @@
 const express = require("express");
 const app = express();
 const helmet = require("helmet");
+const morganMiddleware = require("./middlewares/morganMiddleware");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const { sequelize } = require("./models");
 // const db = require("./models/index.js");
+const logger = require("./config/logger");
 
 const usersRouter = require("./routes/users");
 const projectsRouter = require("./routes/projects");
@@ -25,12 +27,13 @@ app.use(
 sequelize
   .sync({ force: false })
   .then(() => {
-    console.log("SEQUELIZE -=CONNECTED=-");
+    logger.info("SEQUELIZE -=CONNECTED=-");
   })
   .catch((error) => {
-    console.error(error);
+    logger.error(error);
   });
 
+app.use(morganMiddleware);
 app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false, crossOriginResourcePolicy: false }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));

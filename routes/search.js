@@ -1,14 +1,8 @@
 const express = require("express");
-const { exist, x } = require("joi");
 const router = express.Router();
+const logger = require("../config/logger");
 const { Op } = require("sequelize");
-const {
-  Project,
-  ProjectSkill,
-  Resume,
-  ResumeSkill,
-  sequelize,
-} = require("../models");
+const { Project, ProjectSkill, Resume, ResumeSkill, sequelize } = require("../models");
 
 // Project검색API, Resume검색API 둘 다 공용으로 사용할 함수 periodFilter와 skillFilter를 먼저 선언한다.
 function periodFilter(inputItems, start, end) {
@@ -37,98 +31,108 @@ function skillFilter(inputItems, requiredSkills) {
 
 // 프로젝트 검색 API
 router.get("/project", async (req, res) => {
-  const { role, skill, start, end } = req.body;
+  try {
+    const { role, skill, start, end } = req.body;
 
-  // DB에서 role로 필터링해 가져오면서, 앞으로 필터링할 객체 배열에는 필요한 요소들만 넣어 놓기
-  const roleFilter = role
-    ? await Project.findAll({
-        where: { role: role },
-        include: [{ model: ProjectSkill, attributtes: ["skill"] }],
-        order: [["start", "ASC"]],
-      })
-    : await Project.findAll({
-        include: [{ model: ProjectSkill, attributtes: ["skill"] }],
-        order: [["createdAt", "DESC"]],
-      });
+    // DB에서 role로 필터링해 가져오면서, 앞으로 필터링할 객체 배열에는 필요한 요소들만 넣어 놓기
+    const roleFilter = role
+      ? await Project.findAll({
+          where: { role: role },
+          include: [{ model: ProjectSkill, attributtes: ["skill"] }],
+          order: [["start", "ASC"]],
+        })
+      : await Project.findAll({
+          include: [{ model: ProjectSkill, attributtes: ["skill"] }],
+          order: [["createdAt", "DESC"]],
+        });
 
-  // Project의 정보 중 필요한 요소들만 빼내기 위한 부분,
-  // 특히 skills 배열의 데이터 형태를 보기 좋게 가공한다.
-  let roleFilteredProjects = [];
-  const projectSkills = roleFilter.map((project) => project.ProjectSkills.map((skill) => skill["skill"]));
+    // Project의 정보 중 필요한 요소들만 빼내기 위한 부분,
+    // 특히 skills 배열의 데이터 형태를 보기 좋게 가공한다.
+    let roleFilteredProjects = [];
+    const projectSkills = roleFilter.map((project) => project.ProjectSkills.map((skill) => skill["skill"]));
 
-  roleFilter.forEach((project, index) => {
-    let projectObject = {};
+    roleFilter.forEach((project, index) => {
+      let projectObject = {};
 
-    projectObject.projectId = project.projectId;
-    projectObject.nickname = project.nickname;
-    projectObject.title = project.title;
-    projectObject.subscript = project.subscript;
-    projectObject.role = project.role;
-    projectObject.start = project.start;
-    projectObject.end = project.end;
-    projectObject.skills = projectSkills[index];
-    projectObject.createdAt = project.createdAt;
+      projectObject.projectId = project.projectId;
+      projectObject.nickname = project.nickname;
+      projectObject.title = project.title;
+      projectObject.subscript = project.subscript;
+      projectObject.role = project.role;
+      projectObject.start = project.start;
+      projectObject.end = project.end;
+      projectObject.skills = projectSkills[index];
+      projectObject.createdAt = project.createdAt;
 
-    roleFilteredProjects.push(projectObject);
-  });
-  // console.log(roleFilteredProjects);
+      roleFilteredProjects.push(projectObject);
+    });
+    // console.log(roleFilteredProjects);
 
-  if (start >= end) return res.status(400).send({ errorMessage: "날짜 검색이 잘못되었습니다" });
+    if (start >= end) return res.status(400).send({ errorMessage: "날짜 검색이 잘못되었습니다" });
 
-  // 기간 필터링 함수 실행
-  const periodFilteredProjects = start && end ? await periodFilter(roleFilteredProjects, start, end) : roleFilteredProjects;
+    // 기간 필터링 함수 실행
+    const periodFilteredProjects = start && end ? await periodFilter(roleFilteredProjects, start, end) : roleFilteredProjects;
 
-  // 요구스킬 필터링 함수 실행
-  const skillFilteredProjects = skill ? await skillFilter(periodFilteredProjects, skill) : periodFilteredProjects;
+    // 요구스킬 필터링 함수 실행
+    const skillFilteredProjects = skill ? await skillFilter(periodFilteredProjects, skill) : periodFilteredProjects;
 
-  return res.json(skillFilteredProjects);
+    return res.json(skillFilteredProjects);
+  } catch (error) {
+    logger.error(error);
+    res.status(400).send({ errorMessage: "검색 실패" });
+  }
 });
 
 // Resume 찾기 API
 router.get("/resume", async (req, res) => {
-  const { role, skill, start, end } = req.body;
-  // DB에서 role로 필터링해 가져오면서, 앞으로 필터링할 객체 배열에는 필요한 요소들만 넣어 놓기
-  const roleFilter = role
-    ? await Resume.findAll({
-        where: { role: role },
-        include: [{ model: ResumeSkill, attributtes: ["skill"] }],
-        order: [["start", "ASC"]],
-      })
-    : await Resume.findAll({
-        include: [{ model: ResumeSkill, attributtes: ["skill"] }],
-        order: [["createdAt", "DESC"]],
-      });
+  try {
+    const { role, skill, start, end } = req.body;
+    // DB에서 role로 필터링해 가져오면서, 앞으로 필터링할 객체 배열에는 필요한 요소들만 넣어 놓기
+    const roleFilter = role
+      ? await Resume.findAll({
+          where: { role: role },
+          include: [{ model: ResumeSkill, attributtes: ["skill"] }],
+          order: [["start", "ASC"]],
+        })
+      : await Resume.findAll({
+          include: [{ model: ResumeSkill, attributtes: ["skill"] }],
+          order: [["createdAt", "DESC"]],
+        });
 
-  // Resume의 정보 중 필요한 요소들만 빼내기 위한 부분,
-  // 특히 skills 배열의 데이터 형태를 보기 좋게 가공한다.
-  let roleFilteredResumes = [];
-  const resumeSkills = roleFilter.map((resume) => resume.ResumeSkills.map((skill) => skill["skill"]));
+    // Resume의 정보 중 필요한 요소들만 빼내기 위한 부분,
+    // 특히 skills 배열의 데이터 형태를 보기 좋게 가공한다.
+    let roleFilteredResumes = [];
+    const resumeSkills = roleFilter.map((resume) => resume.ResumeSkills.map((skill) => skill["skill"]));
 
-  roleFilter.forEach((resume, index) => {
-    let resumeObject = {};
+    roleFilter.forEach((resume, index) => {
+      let resumeObject = {};
 
-    resumeObject.resumeId = resume.resumeId;
-    resumeObject.nickname = resume.nickname;
-    resumeObject.resumeImage = resume.resumeImage;
-    resumeObject.content = resume.content;
-    resumeObject.role = resume.role;
-    resumeObject.start = resume.start;
-    resumeObject.end = resume.end;
-    resumeObject.skills = resumeSkills[index];
-    resumeObject.createdAt = resume.createdAt;
+      resumeObject.resumeId = resume.resumeId;
+      resumeObject.nickname = resume.nickname;
+      resumeObject.resumeImage = resume.resumeImage;
+      resumeObject.content = resume.content;
+      resumeObject.role = resume.role;
+      resumeObject.start = resume.start;
+      resumeObject.end = resume.end;
+      resumeObject.skills = resumeSkills[index];
+      resumeObject.createdAt = resume.createdAt;
 
-    roleFilteredResumes.push(resumeObject);
-  });
+      roleFilteredResumes.push(resumeObject);
+    });
 
-  if (start >= end) return res.status(400).send({ errorMessage: "날짜 검색이 잘못되었습니다" });
+    if (start >= end) return res.status(400).send({ errorMessage: "날짜 검색이 잘못되었습니다" });
 
-  // 기간 필터링 함수 실행
-  const periodFilteredResumes = start && end ? await periodFilter(roleFilteredResumes, start, end) : roleFilteredResumes;
+    // 기간 필터링 함수 실행
+    const periodFilteredResumes = start && end ? await periodFilter(roleFilteredResumes, start, end) : roleFilteredResumes;
 
-  // 요구스킬 필터링 함수 실행
-  const skillFilteredResumes = skill ? await skillFilter(periodFilteredResumes, skill) : periodFilteredResumes;
+    // 요구스킬 필터링 함수 실행
+    const skillFilteredResumes = skill ? await skillFilter(periodFilteredResumes, skill) : periodFilteredResumes;
 
-  return res.json(skillFilteredResumes);
+    return res.json(skillFilteredResumes);
+  } catch {
+    logger.error(error);
+    res.status(400).send({ errorMessage: "검색 실패" });
+  }
 });
 
 module.exports = router;
