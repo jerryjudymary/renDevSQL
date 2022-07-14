@@ -146,13 +146,13 @@ const login = async (req, res) => {
         const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
           expiresIn: "1h",
         });
-        const refreshToken = jwt.sign(payload, process.env.JWT_SECRET_REFRESH, {
-          expiresIn: "2d",
-        });
+        // const refreshToken = jwt.sign(payload, process.env.JWT_SECRET_REFRESH, {
+        //   expiresIn: "2d",
+        // });
 
-        console.log(refreshToken);
-        await User.update({ refreshToken }, { where: { userId } });
-        res.cookie("refreshToken", refreshToken, { httpOnly: true, sameSite: "None", expires: new Date(Date.now() + 3600000 * 2) });
+        // console.log(refreshToken);
+        // await User.update({ refreshToken }, { where: { userId } });
+        // res.cookie("refreshToken", refreshToken, { httpOnly: true, sameSite: "None", expires: new Date(Date.now() + 3600000 * 2) });
         return res.status(200).send({ message: "로그인 하셨습니다.", token });
       }
     }
@@ -164,44 +164,44 @@ const login = async (req, res) => {
   }
 };
 
-const refresh = async (req, res) => {
-  const refreshToken = req.cookies.refreshToken;
+// const refresh = async (req, res) => {
+//   const refreshToken = req.cookies.refreshToken;
 
-  console.log("refresh 입니다: ", refreshToken);
+//   console.log("refresh 입니다: ", refreshToken);
 
-  if (!refreshToken) {
-    return res.status(401).send({ errorMessage: "Token is expired" });
-  }
+//   if (!refreshToken) {
+//     return res.status(401).send({ errorMessage: "Token is expired" });
+//   }
 
-  const users = await User.findAll({ where: { refreshToken } });
-  console.log("users입니다:", users);
+//   const users = await User.findAll({ where: { refreshToken } });
+//   console.log("users입니다:", users);
 
-  try {
-    if (!users) {
-      return res.status(401).json({ errorMessage: "refreshToken is unvalidate" });
-    } else {
-      jwt.verify(refreshToken, process.env.JWT_SECRET_REFRESH, (err, data) => {
-        if (err) {
-          return res.status(403).send({ errorMessage: "refreshToken is unvalidate" });
-        } else {
-          const payload = {
-            userId: refreshToken.userId,
-            nickname: refreshToken.nickname,
-          };
-          const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
-            expiresIn: "1h",
-          });
-          return res.status(200).send({ message: "토큰이 재발급 됐습니다.", token });
-        }
-      });
-    }
-  } catch (err) {
-    if (err) {
-      console.log(err);
-      return res.status(401).send({ errorMessage: "refreshToken is unvalidate" });
-    }
-  }
-};
+//   try {
+//     if (!users) {
+//       return res.status(401).json({ errorMessage: "refreshToken is unvalidate" });
+//     } else {
+//       jwt.verify(refreshToken, process.env.JWT_SECRET_REFRESH, (err, data) => {
+//         if (err) {
+//           return res.status(403).send({ errorMessage: "refreshToken is unvalidate" });
+//         } else {
+//           const payload = {
+//             userId: refreshToken.userId,
+//             nickname: refreshToken.nickname,
+//           };
+//           const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
+//             expiresIn: "1h",
+//           });
+//           return res.status(200).send({ message: "토큰이 재발급 됐습니다.", token });
+//         }
+//       });
+//     }
+//   } catch (err) {
+//     if (err) {
+//       console.log(err);
+//       return res.status(401).send({ errorMessage: "refreshToken is unvalidate" });
+//     }
+//   }
+// };
 
 const updatePw = async (req, res) => {
   try {
@@ -336,12 +336,12 @@ const profileImage = async (req, res) => {
   }
 };
 
+
 module.exports = {
   signUp,
   checkUserId,
   checkNickname,
   login,
-  refresh,
   updatePw,
   userDelete,
   profileImage,
