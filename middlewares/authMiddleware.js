@@ -1,15 +1,12 @@
-const jwt = require("jsonwebtoken");
-
 require("dotenv").config();
+const jwt = require("jsonwebtoken");
 
 const { User } = require("../models");
 
 module.exports = async (req, res, next) => {
-  try { 
-    
-    if(!req.headers.authorization && req.headers.authorization === undefined && req.headers.authorization === null){
-
-      res.status(401).json({ errorMessage: "토큰의 값이 유효하지 않습니다."}) 
+  try {
+    if (!req.headers.authorization && req.headers.authorization === undefined && req.headers.authorization === null) {
+      res.status(401).json({ errorMessage: "토큰의 값이 유효하지 않습니다." });
 
       return next();
     }
@@ -27,10 +24,10 @@ module.exports = async (req, res, next) => {
 
     const { userId } = jwt.verify(tokenValue, process.env.JWT_SECRET_KEY);
 
-      await User.findOne({ where : { userId } }).then((user) => {
+    await User.findOne({ where: { userId } }).then((user) => {
       res.locals.user = user;
       next();
-    })
+    });
     // const sql = "SELECT * FROM user where userId=?";
     // db.query(sql, userId, (err, data) => {
     //   if (err) console.log(err);

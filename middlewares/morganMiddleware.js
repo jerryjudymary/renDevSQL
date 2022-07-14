@@ -1,8 +1,6 @@
+require("dotenv").config();
 const morgan = require("morgan");
 const logger = require("../config/logger");
-const dotenv = require("dotenv");
-
-dotenv.config();
 
 const format = () => {
   // const result = process.env.NODE_ENV === "production" ? "combined" : "dev";

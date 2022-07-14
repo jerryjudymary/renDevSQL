@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const app = express();
 const helmet = require("helmet");
@@ -15,7 +16,6 @@ const matchesRouter = require("./routes/matches");
 const searchRouter = require("./routes/search");
 const applicationsRouter = require("./routes/applications");
 const proposalsRouter = require("./routes/proposals");
-require("dotenv").config();
 
 app.use(
   cors({
