@@ -7,15 +7,15 @@ const db = require("../config/database");
 const { User } = require("../models");
 
 module.exports = async (req, res, next) => {
-  try {
-    const { authorization } = req.headers;
+  try { 
+    
+    if(!req.headers.authorization && req.headers.authorization === undefined && req.headers.authorization === null){
 
-    console.log("헤더입니다: " , authorization)
-    if (!authorization && authorization === null && authorization === undefined){
       res.status(401).json({ errorMessage: "토큰의 값이 유효하지 않습니다."}) 
 
       return next();
     }
+    const { authorization } = req.headers;
 
     if (authorization.split(" ").length !== 2) {
       res.status(400).json({ errorMessage: "Token is not a Bearer" });
