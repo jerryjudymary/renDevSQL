@@ -102,7 +102,7 @@ router.post("/", authMiddleware, async (req, res) => {
 router.get("/", async (req, res) => {
   redisClient.get('projects', async (err, data) => { // 레디스 서버에서 데이터 체크, 레디스에 저장되는 키 값은 projects
     if (err) console.error(error);
-    if (data) return res.json(JSON.parse(data)); // 캐시 적중(cache hit)시 response!
+    if (data) return res.json({ projects: JSON.parse(data) }); // 캐시 적중(cache hit)시 response!
 
     const projectsQuery = await Project.findAll({
       include: {
@@ -150,7 +150,7 @@ router.get("/:projectId", async (req, res) => {
   // 레디스 서버에서 데이터 체크, 레디스에 저장되는 키 값은 projects
   redisClient.get(`projects:${projectId}`, async (err, data) => {
     if (err) console.error(error);
-    if (data) return res.json(JSON.parse(data)); // 캐시 적중(cache hit)시 response!
+    if (data) return res.json({ project: JSON.parse(data) }); // 캐시 적중(cache hit)시 response!
     const projectQuery = await Project.findOne({
 
       where: {
