@@ -8,6 +8,7 @@ const aws = require("aws-sdk");
 const logger = require("../config/logger");
 const s3 = new aws.S3();
 const authMiddleware = require("../middlewares/authMiddleware");
+const { redisClient, DEFAULT_EXPIRATION } = require("../config/redis")
 
 // multer - S3 이미지 업로드 설정
 const upload = multer({
@@ -51,6 +52,11 @@ router.post("/", authMiddleware, async (req, res) => {
         ResumeSkill.create({ resumeId: result.resumeId, skill: skill[i] });
       }
     });
+
+    redisClient.del(`resumes`, function(err, response) {
+      if (response == 1) console.log("새 지원서 등록으로 전체조회 캐시 삭제")
+    });
+
     res.status(200).send({ message: "나의 정보를 등록 했습니다." });
   } catch (err) {
     logger.error(err);
@@ -60,82 +66,97 @@ router.post("/", authMiddleware, async (req, res) => {
 
 // 팀원 찾기 전체 조회
 router.get("/", async (req, res) => {
-  try {
-    const resumes = await Resume.findAll({
-      //   // ResumeSkill 모델에서 skill를 찾은 후 resumes 에 담음
-      include: [
-        {
-          model: ResumeSkill,
-          attributes: ["skill"],
-        },
-      ],
-      // offset: 3,
-      // limit: 9, // 하나의 페이지 9개 조회
-      order: [["createdAt", "DESC"]],
-    });
-    // [{skill},{skill}]부분을 -> [skill,skill]로 map함수를 사용하여 새로 정의
-    const resumeskills = resumes.map((resume) => resume.ResumeSkills.map((skill) => skill["skill"]));
+  redisClient.get('resumes', async (err, data) => { // 레디스 서버에서 데이터 체크, 레디스에 저장되는 키 값은 projects
+    if (err) console.error(error);
+    if (data) return res.status(200).json({ returnResumes: JSON.parse(data) }); // 캐시 적중(cache hit)시 response!
+    try {
+      const resumes = await Resume.findAll({
+        //   // ResumeSkill 모델에서 skill를 찾은 후 resumes 에 담음
+        include: [
+          {
+            model: ResumeSkill,
+            attributes: ["skill"],
+          },
+        ],
+        // offset: 3,
+        // limit: 9, // 하나의 페이지 9개 조회
+        order: [["createdAt", "DESC"]],
+      });
+      // [{skill},{skill}]부분을 -> [skill,skill]로 map함수를 사용하여 새로 정의
+      const resumeskills = resumes.map((resume) => resume.ResumeSkills.map((skill) => skill["skill"]));
 
-    let returnResumes = [];
+      let returnResumes = [];
 
-    resumes.forEach((resume, index) => {
-      let a_resume = {};
-      a_resume.resumeId = resume.resumeId;
-      a_resume.nickname = resume.nickname;
-      a_resume.resumeImage = resume.resumeImage;
-      a_resume.content = resume.content;
-      a_resume.start = resume.start;
-      a_resume.end = resume.end;
-      a_resume.role = resume.role;
-      a_resume.resumeskills = resumeskills[index];
-      a_resume.createdAt = resume.createdAt;
+      resumes.forEach((resume, index) => {
+        let a_resume = {};
+        a_resume.resumeId = resume.resumeId;
+        a_resume.nickname = resume.nickname;
+        a_resume.resumeImage = resume.resumeImage;
+        a_resume.content = resume.content;
+        a_resume.start = resume.start;
+        a_resume.end = resume.end;
+        a_resume.role = resume.role;
+        a_resume.resumeskills = resumeskills[index];
+        a_resume.createdAt = resume.createdAt;
 
-      returnResumes.push(a_resume);
-    });
+        returnResumes.push(a_resume);
+      });
 
-    res.status(200).send({ returnResumes });
-  } catch (error) {
-    logger.error(error);
-    res.status(400).send({});
-  }
+      // 캐시 부적중(cache miss)시 DB에 쿼리 전송, setex 메서드로 설정한 기본 만료시간까지 redis 캐시 저장
+      redisClient.setex('resumes', DEFAULT_EXPIRATION, JSON.stringify(returnResumes));
+      res.status(200).send({ returnResumes });
+
+    } catch (error) {
+      console.log(error);
+      res.status(400).send({});
+    }
+  });
 });
 
 // 팀원 찾기 상세조회
 router.get("/:resumeId", async (req, res) => {
-  try {
-    const { resumeId } = req.params;
+  const { resumeId } = req.params;
+  // 레디스 서버에서 데이터 체크, 레디스에 저장되는 키 값은 projects
+  redisClient.get(`resumes:${resumeId}`, async (err, data) => {
+    if (err) console.error(error);
+    if (data) return res.status(200).json({ resumes: JSON.parse(data) }); // 캐시 적중(cache hit)시 response!
+    
+    try {
+      const existresumes = await Resume.findOne({
+        include: [
+          {
+            model: ResumeSkill,
+            attributes: ["skill"],
+          },
+        ],
+        where: { resumeId },
+      });
+      // map을 이용하여 배열 안에 객체
+      const resumeskills = existresumes.ResumeSkills.map((skills) => skills.skill);
 
-    const existresumes = await Resume.findOne({
-      include: [
-        {
-          model: ResumeSkill,
-          attributes: ["skill"],
-        },
-      ],
-      where: { resumeId },
-    });
-    // map을 이용하여 배열 안에 객체
-    const resumeskills = existresumes.ResumeSkills.map((skills) => skills.skill);
+      const resumes = {
+        resumeId: existresumes.resumeId,
+        userId: existresumes.userId,
+        nickname: existresumes.nickname,
+        content: existresumes.content,
+        start: existresumes.start,
+        end: existresumes.end,
+        role: existresumes.role,
+        content2: existresumes.content2,
+        content3: existresumes.content3,
+        resumeImage: existresumes.resumeImage,
+        resumeskills,
+      };
 
-    const resumes = {
-      resumeId: existresumes.resumeId,
-      userId: existresumes.userId,
-      nickname: existresumes.nickname,
-      content: existresumes.content,
-      start: existresumes.start,
-      end: existresumes.end,
-      role: existresumes.role,
-      content2: existresumes.content2,
-      content3: existresumes.content3,
-      resumeImage: existresumes.resumeImage,
-      resumeskills,
-    };
+      // 캐시 부적중(cache miss)시 DB에 쿼리 전송, setex 메서드로 설정한 기본 만료시간까지 redis 캐시 저장
+      redisClient.setex(`resumes:${resumeId}`, DEFAULT_EXPIRATION, JSON.stringify(resumes));
+      res.status(200).send({ resumes });
 
-    res.status(200).send({ resumes });
-  } catch (error) {
-    logger.error(error);
-    res.status(400).send({ errorMessage: "정보가 존재하지 않습니다." });
-  }
+    } catch (error) {
+      console.log(error);
+      res.status(400).send({ errorMessage: "정보가 존재하지 않습니다." });
+    }
+  });
 });
 
 // 팀원 찾기 정보 수정
@@ -165,6 +186,13 @@ router.put("/:resumeId", authMiddleware, async (req, res) => {
     }
     res.status(200).send({ message: "나의 정보를 수정했습니다." });
     await tran.commit();
+
+    // 수정시 해당 지원서, 전체조회 캐싱용 Redis 키 삭제
+    redisClient.del(`resumes:${resumeId}`, `resumes`, function(err, response) {
+      if (response == 1) console.log("1 Redis key deleted")
+      if (response == 2) console.log("2 Redis key deleted")
+    });
+
   } catch (error) {
     logger.error(error);
     res.status(401).send({ errormessage: "정보 수정 실패" });
@@ -200,6 +228,12 @@ router.delete("/:resumeId", authMiddleware, async (req, res) => {
       //   );
       console.log(existResume.resumeImage);
       await existResume.destroy({});
+
+      // 수정시 해당 지원서, 전체조회 캐싱용 Redis 키 삭제
+      redisClient.del(`resumes:${resumeId}`, `resumes`, function(err, response) {
+      if (response == 1) console.log("1 Redis key deleted")
+      if (response == 2) console.log("2 Redis key deleted")
+    });
     }
     // }
     res.status(200).send({ message: "나의 정보를 삭제했습니다." });

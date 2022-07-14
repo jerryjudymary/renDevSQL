@@ -143,9 +143,11 @@ const login = async (req, res) => {
           userId: users.userId,
           nickname: users.nickname,
         };
+        
         const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
           expiresIn: "1h",
         });
+        
         // const refreshToken = jwt.sign(payload, process.env.JWT_SECRET_REFRESH, {
         //   expiresIn: "2d",
         // });

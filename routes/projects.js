@@ -81,8 +81,9 @@ router.post("/", authMiddleware, async (req, res) => {
       }
     });
 
-    redisClient.del(`projects`, function (err, response) {
-      if (response == 1) console.log("게시물 등록으로 전체조회 캐시 삭제");
+    redisClient.del(`projects`, function(err, response) {
+      if (response == 1) console.log("새 프로젝트 등록으로 전체조회 캐시 삭제")
+
     });
 
     await res.status(200).json({ message: "프로젝트 게시글을 작성했습니다." });

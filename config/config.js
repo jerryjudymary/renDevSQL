@@ -4,7 +4,7 @@ const env = process.env;
 const development =  {
     "username": "root",
     "password": env.DB_PASSWORD,
-    "database": "rendevSQL",
+    "database": "rendevSQLtest",
     "host": env.DB_HOST,
     "dialect": "mysql",
     "logging": false,
@@ -22,7 +22,7 @@ const development =  {
   const test = {
     "username": "root",
     "password": env.DB_PASSWORD,
-    "database": "rendevSQL",
+    "database": "rendevSQLtestCode",
     "host": env.DB_HOST,
     "dialect": "mysql"
   };
@@ -30,7 +30,7 @@ const development =  {
   const production = {
     "username": "root",
     "password": env.DB_PASSWORD,
-    "database": "rendevSQL",
+    "database": "rendevSQLtest",
     "host": env.DB_HOST,
     "dialect": "mysql"
   };
