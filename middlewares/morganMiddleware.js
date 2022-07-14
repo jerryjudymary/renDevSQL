@@ -6,7 +6,7 @@ dotenv.config();
 
 const format = () => {
   // const result = process.env.NODE_ENV === "production" ? "combined" : "dev";
-  const result = process.env.NODE_ENV === "production" ? "combined" : "dev";
+  const result = process.env.NODE_ENV === "production" ? "dev" : "combined";
   return result;
 };
 
