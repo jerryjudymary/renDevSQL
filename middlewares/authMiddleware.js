@@ -7,10 +7,12 @@ const db = require("../config/database");
 const { User } = require("../models");
 
 module.exports = async (req, res, next) => {
-  try {
+  try { 
     
     if(!req.headers.authorization && req.headers.authorization === undefined && req.headers.authorization === null){
+
       res.status(401).json({ errorMessage: "토큰의 값이 유효하지 않습니다."}) 
+
       return next();
     }
     const { authorization } = req.headers;
