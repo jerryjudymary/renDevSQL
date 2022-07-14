@@ -70,48 +70,48 @@ router.get("/", async (req, res) => {
   //   // 레디스 서버에서 데이터 체크, 레디스에 저장되는 키 값은 projects
   //   if (err) logger.error(error);
   //   if (data) return res.status(200).json({ returnResumes: JSON.parse(data) }); // 캐시 적중(cache hit)시 response!
-    try {
-      const resumes = await Resume.findAll({
-        //   // ResumeSkill 모델에서 skill를 찾은 후 resumes 에 담음
-        include: [
-          {
-            model: ResumeSkill,
-            attributes: ["skill"],
-          },
-        ],
-        // offset: 3,
-        // limit: 9, // 하나의 페이지 9개 조회
-        order: [["createdAt", "DESC"]],
-      });
+  // try {
+  const resumes = await Resume.findAll({
+    //   // ResumeSkill 모델에서 skill를 찾은 후 resumes 에 담음
+    include: [
+      {
+        model: ResumeSkill,
+        attributes: ["skill"],
+      },
+    ],
+    // offset: 3,
+    // limit: 9, // 하나의 페이지 9개 조회
+    order: [["createdAt", "DESC"]],
+  });
 
-      // [{skill},{skill}]부분을 -> [skill,skill]로 map함수를 사용하여 새로 정의
-      const resumeskills = resumes.map((resume) => resume.ResumeSkills.map((skill) => skill["skill"]));
+  // [{skill},{skill}]부분을 -> [skill,skill]로 map함수를 사용하여 새로 정의
+  const resumeskills = resumes.map((resume) => resume.ResumeSkills.map((skill) => skill["skill"]));
 
-      let returnResumes = [];
+  let returnResumes = [];
 
-      resumes.forEach((resume, index) => {
-        let a_resume = {};
+  resumes.forEach((resume, index) => {
+    let a_resume = {};
 
-        a_resume.resumeId = resume.resumeId;
-        a_resume.nickname = resume.nickname;
-        a_resume.resumeImage = resume.resumeImage;
-        a_resume.content = resume.content;
-        a_resume.start = resume.start;
-        a_resume.end = resume.end;
-        a_resume.role = resume.role;
-        a_resume.resumeskills = resumeskills[index];
-        a_resume.createdAt = resume.createdAt;
+    a_resume.resumeId = resume.resumeId;
+    a_resume.nickname = resume.nickname;
+    a_resume.resumeImage = resume.resumeImage;
+    a_resume.content = resume.content;
+    a_resume.start = resume.start;
+    a_resume.end = resume.end;
+    a_resume.role = resume.role;
+    a_resume.resumeskills = resumeskills[index];
+    a_resume.createdAt = resume.createdAt;
 
-        returnResumes.push(a_resume);
-      });
+    returnResumes.push(a_resume);
+  });
 
-      // 캐시 부적중(cache miss)시 DB에 쿼리 전송, setex 메서드로 설정한 기본 만료시간까지 redis 캐시 저장
-      // redisClient.setex("resumes", DEFAULT_EXPIRATION, JSON.stringify(returnResumes));
-      res.status(200).send({ returnResumes });
-    } catch (error) {
-      logger.error(err);
-      res.status(400).send({});
-    }
+  // 캐시 부적중(cache miss)시 DB에 쿼리 전송, setex 메서드로 설정한 기본 만료시간까지 redis 캐시 저장
+  // redisClient.setex("resumes", DEFAULT_EXPIRATION, JSON.stringify(returnResumes));
+  await res.status(200).send({ returnResumes });
+  // } catch (error) {
+  // logger.error(err);
+  // res.status(400).send({});
+  // }
   // });
 });
 
