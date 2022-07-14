@@ -13,7 +13,6 @@ const matchesRouter = require("./routes/matches");
 const searchRouter = require("./routes/search");
 const applicationsRouter = require("./routes/applications");
 const proposalsRouter = require("./routes/proposals");
-const port = 3000;
 require("dotenv").config();
 
 app.use(
