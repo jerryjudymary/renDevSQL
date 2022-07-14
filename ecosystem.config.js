@@ -17,10 +17,10 @@ module.exports = {
       //     // 운영 환경설정 (--env production 옵션으로 지정할 수 있다.)
       //     NODE_ENV: 'production',
       // }
-      // 로그 출력 경로를 설정
-      output: "~/logs/pm2/console.log",
-      // 에러 로그 출력 경로를 설정
-      error: "~/logs/pm2/onsoleError.log",
+      // // 로그 출력 경로를 설정
+      // output: "~/logs/pm2/console.log",
+      // // 에러 로그 출력 경로를 설정
+      // error: "~/logs/pm2/onsoleError.log",
     },
   ],
 };
