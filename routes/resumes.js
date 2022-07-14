@@ -66,10 +66,10 @@ router.post("/", authMiddleware, async (req, res) => {
 
 // 팀원 찾기 전체 조회
 router.get("/", async (req, res) => {
-  redisClient.get("resumes", async (err, data) => {
-    // 레디스 서버에서 데이터 체크, 레디스에 저장되는 키 값은 projects
-    if (err) logger.error(error);
-    if (data) return res.status(200).json({ returnResumes: JSON.parse(data) }); // 캐시 적중(cache hit)시 response!
+  // redisClient.get("resumes", async (err, data) => {
+  //   // 레디스 서버에서 데이터 체크, 레디스에 저장되는 키 값은 projects
+  //   if (err) logger.error(error);
+  //   if (data) return res.status(200).json({ returnResumes: JSON.parse(data) }); // 캐시 적중(cache hit)시 response!
     try {
       const resumes = await Resume.findAll({
         //   // ResumeSkill 모델에서 skill를 찾은 후 resumes 에 담음
@@ -110,7 +110,7 @@ router.get("/", async (req, res) => {
       logger.error(err);
       res.status(400).send({});
     }
-  });
+  // });
 });
 
 // 팀원 찾기 상세조회
