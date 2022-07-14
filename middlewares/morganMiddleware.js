@@ -31,17 +31,17 @@ morgan.token("request", (req, res) => {
 });
 // 아직 body값이 없어서 undefined
 
-// const morganMiddleware = morgan(format(), { stream, skip });
+const morganMiddleware = morgan(format(), { stream, skip });
 // 모건 미들웨어 구축
-const morganMiddleware = morgan(
-  // 메세지 형식 문자열을 Define한다(기본 문자열로),
-  // 메세지 형식은 토큰으로 만들어지며,
-  // 각 토큰은 모건 라이브러리 내에 Define되있다.
-  // 이것을 사용하는 당신은 사용자 지정 토큰을 만들어 요청에서 원하는 내용을 표시할 수 있다.
-  ":method :url :request :status :res[content-length] - :response-time ms",
-  // Options: 이 케이스의 경우, Stream과 skip logic을 덮어썼다.
-  // 위의 방법을 참조하면,
-  { stream, skip }
-);
+// const morganMiddleware = morgan(
+//   // 메세지 형식 문자열을 Define한다(기본 문자열로),
+//   // 메세지 형식은 토큰으로 만들어지며,
+//   // 각 토큰은 모건 라이브러리 내에 Define되있다.
+//   // 이것을 사용하는 당신은 사용자 지정 토큰을 만들어 요청에서 원하는 내용을 표시할 수 있다.
+//   ":method :url :request :status :res[content-length] - :response-time ms",
+//   // Options: 이 케이스의 경우, Stream과 skip logic을 덮어썼다.
+//   // 위의 방법을 참조하면,
+//   { stream, skip }
+// );
 
 module.exports = morganMiddleware;
