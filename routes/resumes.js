@@ -5,6 +5,7 @@ const { Op } = require("sequelize");
 const { User, Resume, ResumeSkill, sequelize } = require("../models");
 const multerS3 = require("multer-s3");
 const aws = require("aws-sdk");
+const logger = require("../config/logger");
 const s3 = new aws.S3();
 const authMiddleware = require("../middlewares/authMiddleware");
 const { redisClient, DEFAULT_EXPIRATION } = require("../config/redis")
@@ -27,7 +28,7 @@ router.post("/image", upload.single("resumeImage"), async (req, res) => {
     const resumeImage = req.file.location;
     return res.status(200).json({ message: "사진을 업로드 했습니다.", resumeImage });
   } catch (err) {
-    console.log(err);
+    logger.error(err);
     res.status(400).send({ errorMessage: "사진업로드 실패-파일 형식과 크기(1.5Mb 이하) 를 확인해주세요." });
   }
 });
@@ -58,7 +59,7 @@ router.post("/", authMiddleware, async (req, res) => {
 
     res.status(200).send({ message: "나의 정보를 등록 했습니다." });
   } catch (err) {
-    console.log(err);
+    logger.error(err);
     res.status(400).send({ errormessage: "등록 실패" });
   }
 });
@@ -193,7 +194,7 @@ router.put("/:resumeId", authMiddleware, async (req, res) => {
     });
 
   } catch (error) {
-    console.log(error);
+    logger.error(error);
     res.status(401).send({ errormessage: "정보 수정 실패" });
     await tran.rollback(); // 트랜젝션 실패시 시작부분까지 되돌리기
   }
@@ -237,7 +238,7 @@ router.delete("/:resumeId", authMiddleware, async (req, res) => {
     // }
     res.status(200).send({ message: "나의 정보를 삭제했습니다." });
   } catch (error) {
-    console.log(error);
+    logger.error(error);
     res.status(401).send({ errormessage: "작성자만 삭제할 수 있습니다." });
   }
 });
