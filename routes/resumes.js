@@ -53,9 +53,9 @@ router.post("/", authMiddleware, async (req, res) => {
       }
     });
 
-    redisClient.del(`resumes`, function (err, response) {
-      if (response == 1) console.log("새 지원서 등록으로 전체조회 캐시 삭제");
-    });
+    // redisClient.del(`resumes`, function (err, response) {
+    //   if (response == 1) console.log("새 지원서 등록으로 전체조회 캐시 삭제");
+    // });
 
     res.status(200).send({ message: "나의 정보를 등록 했습니다." });
   } catch (err) {
@@ -108,7 +108,7 @@ router.get("/", async (req, res) => {
       console.log(returnResumes);
 
       // 캐시 부적중(cache miss)시 DB에 쿼리 전송, setex 메서드로 설정한 기본 만료시간까지 redis 캐시 저장
-      redisClient.setex("resumes", DEFAULT_EXPIRATION, JSON.stringify(returnResumes));
+      // redisClient.setex("resumes", DEFAULT_EXPIRATION, JSON.stringify(returnResumes));
       res.status(200).send({ returnResumes });
     } catch (error) {
       c;
@@ -122,9 +122,9 @@ router.get("/", async (req, res) => {
 router.get("/:resumeId", async (req, res) => {
   const { resumeId } = req.params;
   // 레디스 서버에서 데이터 체크, 레디스에 저장되는 키 값은 projects
-  redisClient.get(`resumes:${resumeId}`, async (err, data) => {
-    if (err) logger.error(err);
-    if (data) return res.status(200).json({ resumes: JSON.parse(data) }); // 캐시 적중(cache hit)시 response!
+  // redisClient.get(`resumes:${resumeId}`, async (err, data) => {
+  //   if (err) logger.error(err);
+  //   if (data) return res.status(200).json({ resumes: JSON.parse(data) }); // 캐시 적중(cache hit)시 response!
 
     try {
       const existresumes = await Resume.findOne({
@@ -154,13 +154,13 @@ router.get("/:resumeId", async (req, res) => {
       };
 
       // 캐시 부적중(cache miss)시 DB에 쿼리 전송, setex 메서드로 설정한 기본 만료시간까지 redis 캐시 저장
-      redisClient.setex(`resumes:${resumeId}`, DEFAULT_EXPIRATION, JSON.stringify(resumes));
+      // redisClient.setex(`resumes:${resumeId}`, DEFAULT_EXPIRATION, JSON.stringify(resumes));
       res.status(200).send({ resumes });
     } catch (error) {
       logger.error(err);
       res.status(400).send({ errorMessage: "정보가 존재하지 않습니다." });
     }
-  });
+  // });
 });
 
 // 팀원 찾기 정보 수정
@@ -192,10 +192,10 @@ router.put("/:resumeId", authMiddleware, async (req, res) => {
     await tran.commit();
 
     // 수정시 해당 지원서, 전체조회 캐싱용 Redis 키 삭제
-    redisClient.del(`resumes:${resumeId}`, `resumes`, function (err, response) {
-      if (response == 1) console.log("1 Redis key deleted");
-      if (response == 2) console.log("2 Redis key deleted");
-    });
+    // redisClient.del(`resumes:${resumeId}`, `resumes`, function (err, response) {
+    //   if (response == 1) console.log("1 Redis key deleted");
+    //   if (response == 2) console.log("2 Redis key deleted");
+    // });
   } catch (error) {
     logger.error(error);
     res.status(401).send({ errormessage: "정보 수정 실패" });
@@ -233,10 +233,10 @@ router.delete("/:resumeId", authMiddleware, async (req, res) => {
       await existResume.destroy({});
 
       // 수정시 해당 지원서, 전체조회 캐싱용 Redis 키 삭제
-      redisClient.del(`resumes:${resumeId}`, `resumes`, function (err, response) {
-        if (response == 1) console.log("1 Redis key deleted");
-        if (response == 2) console.log("2 Redis key deleted");
-      });
+      // redisClient.del(`resumes:${resumeId}`, `resumes`, function (err, response) {
+      //   if (response == 1) console.log("1 Redis key deleted");
+      //   if (response == 2) console.log("2 Redis key deleted");
+      // });
     }
     // }
     res.status(200).send({ message: "나의 정보를 삭제했습니다." });
