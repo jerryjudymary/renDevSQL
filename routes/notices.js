@@ -1,6 +1,5 @@
 const nodemailer = require("nodemailer");
 const { Project, Resume, Application, sequelize } = require("../models");
-const db = require("../config/database");
 
 // npm install nodemailer
 
