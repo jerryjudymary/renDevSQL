@@ -13,8 +13,6 @@ const {
 }
 = require("../models");
 
-const db = require("../config/database");
-
 const userDetail = async (req, res) => {
     try {
       const user = res.locals.user; 

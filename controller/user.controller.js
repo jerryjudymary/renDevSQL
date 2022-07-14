@@ -7,10 +7,7 @@ const multerS3 = require("multer-s3");
 const aws = require("aws-sdk");
 const s3 = new aws.S3();
 require("dotenv").config();
-
 const { User } = require("../models");
-
-const db = require("../config/database");
 
 const upload = multer({
   storage: multerS3({
