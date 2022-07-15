@@ -1,11 +1,10 @@
 require("dotenv").config();
-const env = process.env;
 
 const development = {
   username: "root",
-  password: env.DB_PASSWORD,
+  password: process.env.DB_PASSWORD,
   database: "rendevSQLtest",
-  host: env.DB_HOST,
+  host: process.env.DB_HOST,
   dialect: "mysql",
   logging: false,
   timezone: "+09:00",
@@ -21,17 +20,17 @@ const development = {
 
 const test = {
   username: "root",
-  password: env.DB_PASSWORD,
+  password: process.env.DB_PASSWORD,
   database: "rendevSQLtest",
-  host: env.DB_HOST,
+  host: process.env.DB_HOST,
   dialect: "mysql",
 };
 
 const production = {
   username: "root",
-  password: env.DB_PASSWORD,
+  password: process.env.DB_PASSWORD,
   database: "rendevSQLtest",
-  host: env.DB_HOST,
+  host: process.env.DB_HOST,
   dialect: "mysql",
   logging: false,
   timezone: "+09:00",

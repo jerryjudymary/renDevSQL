@@ -1,12 +1,10 @@
+require("dotenv").config();
 const morgan = require("morgan");
 const logger = require("../config/logger");
-const dotenv = require("dotenv");
-
-dotenv.config();
 
 const format = () => {
-  // const result = process.env.NODE_ENV === "production" ? "combined" : "dev";
   const result = process.env.NODE_ENV === "production" ? "combined" : "dev";
+  // const result = "combined";
   return result;
 };
 
@@ -17,7 +15,7 @@ const stream = {
   },
 };
 
-// 로깅 스킵 여부 (코드가 400 미만이면 기록 안함 코드가 400 이상이면 로그 기록)
+// 로깅 스킵 여부 (배포 모드시 (production) 코드가 400 미만이면 기록 안함 코드가 400 이상이면 로그 기록)
 const skip = (_, res) => {
   if (process.env.NODE_ENV === "production") {
     return res.statusCode < 400;
@@ -32,6 +30,7 @@ morgan.token("request", (req, res) => {
 // 아직 body값이 없어서 undefined
 
 const morganMiddleware = morgan(format(), { stream, skip });
+
 // 모건 미들웨어 구축
 // const morganMiddleware = morgan(
 //   // 메세지 형식 문자열을 Define한다(기본 문자열로),
