@@ -20,7 +20,7 @@ async function noteProjectOwner (projectId, resumeId, applicationId) {
     // 이메일 받는이 / 제목 / 내용을 설정한다
     const project = await Project.findOne({ where: { projectId } })
     const resume = await Resume.findOne({ where: { resumeId } })
-    const application = await Application.findone({ where: { applicationId } })
+    const application = await Application.findOne({ where: { applicationId } })
 
     const noticeReceiver = project.email;
     const emailSubject = '[renDev] 회원님의 프로젝트에 참가하고 싶은 크루원이 있습니다.'
@@ -54,7 +54,7 @@ async function noteApplicant (projectId, resumeId, applicationId) {
     // 이메일 받는이 / 제목 / 내용을 설정한다
     const project = await Project.findOne({ where: { projectId } })
     const resume = await Resume.findOne({ where: { resumeId } })
-    const application = await Application.findone({ where: { applicationId } })
+    const application = await Application.findOne({ where: { applicationId } })
 
     const noticeReceiver = resume.userId;
     const emailSubject = '[renDev] 프로젝트 기획자에게 인터뷰 요청을 하셨습니다.'
