@@ -1,14 +1,12 @@
 const express = require("express");
-const router = express.Router();
 const moment = require("moment");
-const authMiddleware = require("../middlewares/authMiddleware");
-const { Project, Application, ProjectSkill, Resume, Proposal } = require("../models");
-const { InterviewProposal } = require("./notices");
+const { Project, Application, ProjectSkill, Resume, Proposal } = require("../../../models");
+const { InterviewProposal } = require("../../../API/applications/controllers/notices.controller");
   
 
 // 지원서에 면접 제안시 내 프로젝트 목록 조회
   
-router.get("/projects", authMiddleware, async (req, res) => {
+exports.proposalProject = async (req, res) => {
   if (!res.locals.user) {
     return res.status(401).json({ errorMessage: "로그인 상태가 아닙니다." });
   };
@@ -53,11 +51,11 @@ router.get("/projects", authMiddleware, async (req, res) => {
     projects.push(projectObject);
   });   
   res.send({ projects });
-});
+};
 
 // 지원서에 선택한 프로젝트 면접 제안
 
-router.post("/:resumeId/:projectId", authMiddleware, async (req, res) => {
+exports.proposalResume = async (req, res) => {
 
   if (!res.locals.user) {
     return res.status(401).json({ errorMessage: "로그인 후 사용하세요." });
@@ -114,7 +112,4 @@ router.post("/:resumeId/:projectId", authMiddleware, async (req, res) => {
 
   res.status(200).send({ message : '이력서에 제안을 발송했습니다. 제안은 한 이력서에 세 번만 가능합니다.' });
 
-});
-
-
-module.exports = router;
+};

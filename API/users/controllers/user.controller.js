@@ -7,7 +7,7 @@ const multerS3 = require("multer-s3");
 const aws = require("aws-sdk");
 const s3 = new aws.S3();
 require("dotenv").config();
-const { User } = require("../models");
+const { User } = require("../../../models");
 
 const upload = multer({
   storage: multerS3({
@@ -20,9 +20,9 @@ const upload = multer({
   }),
 });
 
-const { postLoginSchema, postUsersSchema, postNicknameSchema, postUserIdSchema } = require("./validation.controller.js");
+const { postLoginSchema, postUsersSchema, postNicknameSchema, postUserIdSchema } = require("../controllers/userValidation.controller");
 
-const signUp = async (req, res) => {
+exports.signUp = async (req, res) => {
   try {
     var { password, passwordCheck, name, birth, policy } = await postUsersSchema.validateAsync(req.body);
   } catch (err) {
@@ -64,7 +64,7 @@ const signUp = async (req, res) => {
   }
 };
 
-const checkUserId = async (req, res) => {
+exports.checkUserId = async (req, res) => {
   try {
     var { userId } = await postUserIdSchema.validateAsync(req.body);
   } catch (err) {
@@ -89,7 +89,7 @@ const checkUserId = async (req, res) => {
   }
 };
 
-const checkNickname = async (req, res) => {
+exports.checkNickname = async (req, res) => {
   try {
     var { nickname } = await postNicknameSchema.validateAsync(req.body);
   } catch (err) {
@@ -114,7 +114,7 @@ const checkNickname = async (req, res) => {
   }
 };
 
-const login = async (req, res) => {
+exports.login = async (req, res) => {
   try {
     var { userId, password } = await postLoginSchema.validateAsync(req.body);
   } catch (err) {
@@ -163,7 +163,7 @@ const login = async (req, res) => {
   }
 };
 
-// const refresh = async (req, res) => {
+// exports.refresh = async (req, res) => {
 //   const refreshToken = req.cookies.refreshToken;
 
 //   console.log("refresh 입니다: ", refreshToken);
@@ -202,7 +202,7 @@ const login = async (req, res) => {
 //   }
 // };
 
-const updatePw = async (req, res) => {
+exports.updatePw = async (req, res) => {
   try {
     const { userId } = res.locals.user;
     if (userId === undefined) {
@@ -237,7 +237,7 @@ const updatePw = async (req, res) => {
   }
 };
 
-const userDelete = async (req, res) => {
+exports.userDelete = async (req, res) => {
   const user = res.locals.user;
   const { nickname } = req.params;
   var { password } = req.body;
@@ -300,7 +300,7 @@ const userDelete = async (req, res) => {
   }
 };
 
-const profileImage = async (req, res) => {
+exports.profileImage = async (req, res) => {
   try {
     const profileImage = req.file.location;
 
@@ -335,13 +335,3 @@ const profileImage = async (req, res) => {
   }
 };
 
-
-module.exports = {
-  signUp,
-  checkUserId,
-  checkNickname,
-  login,
-  updatePw,
-  userDelete,
-  profileImage,
-};

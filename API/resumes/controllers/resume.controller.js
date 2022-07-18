@@ -1,14 +1,12 @@
 const express = require("express");
-const router = express.Router();
 const multer = require("multer");
 const { Op } = require("sequelize");
-const { User, Resume, ResumeSkill, sequelize } = require("../models");
+const { User, Resume, ResumeSkill, sequelize } = require("../../../models");
 const multerS3 = require("multer-s3");
 const aws = require("aws-sdk");
-const logger = require("../config/logger");
+const logger = require("../../../config/logger");
 const s3 = new aws.S3();
-const authMiddleware = require("../middlewares/authMiddleware");
-const { redisClient, DEFAULT_EXPIRATION } = require("../config/redis");
+const { redisClient, DEFAULT_EXPIRATION } = require("../../../config/redis");
 
 // multer - S3 이미지 업로드 설정
 const upload = multer({
@@ -23,7 +21,7 @@ const upload = multer({
 });
 
 // 이미지 업로드
-router.post("/image", upload.single("resumeImage"), async (req, res) => {
+exports.resumeImage = async (req, res) => {
   try {
     const resumeImage = req.file.location;
     return res.status(200).json({ message: "사진을 업로드 했습니다.", resumeImage });
@@ -31,10 +29,10 @@ router.post("/image", upload.single("resumeImage"), async (req, res) => {
     logger.error(err);
     res.status(400).send({ errorMessage: "사진업로드 실패-파일 형식과 크기(1.5Mb 이하) 를 확인해주세요." });
   }
-});
+};
 
 // 팀원 찾기 등록
-router.post("/", authMiddleware, async (req, res) => {
+exports.resume = async (req, res) => {
   const { id, userId, nickname } = res.locals.user;
   const { content, start, end, role, skill, resumeImage, content2, content3 } = req.body;
 
@@ -62,10 +60,10 @@ router.post("/", authMiddleware, async (req, res) => {
     logger.error(err);
     res.status(400).send({ errormessage: "등록 실패" });
   }
-});
+};
 
 // 팀원 찾기 전체 조회
-router.get("/", async (req, res) => {
+exports.resumeInfo = async (req, res) => {
   // redisClient.get("resumes", async (err, data) => {
   //   // 레디스 서버에서 데이터 체크, 레디스에 저장되는 키 값은 projects
   //   if (err) logger.error(error);
@@ -113,10 +111,10 @@ router.get("/", async (req, res) => {
   // res.status(400).send({});
   // }
   // });
-});
+};
 
 // 팀원 찾기 상세조회
-router.get("/:resumeId", async (req, res) => {
+exports.resumeDetail = async (req, res) => {
   const { resumeId } = req.params;
   // 레디스 서버에서 데이터 체크, 레디스에 저장되는 키 값은 projects
   // redisClient.get(`resumes:${resumeId}`, async (err, data) => {
@@ -158,10 +156,10 @@ router.get("/:resumeId", async (req, res) => {
     res.status(400).send({ errorMessage: "정보가 존재하지 않습니다." });
   }
   // });
-});
+};
 
 // 팀원 찾기 정보 수정
-router.put("/:resumeId", authMiddleware, async (req, res) => {
+exports.resumeUpdate = async (req, res) => {
   const { userId } = res.locals.user;
   const { resumeId } = req.params;
   const { content, start, end, role, skill, content2, content3, resumeImage } = req.body;
@@ -198,10 +196,10 @@ router.put("/:resumeId", authMiddleware, async (req, res) => {
     res.status(401).send({ errormessage: "정보 수정 실패" });
     await tran.rollback(); // 트랜젝션 실패시 시작부분까지 되돌리기
   }
-});
+};
 
 // 팀원 찾기 정보 삭제
-router.delete("/:resumeId", authMiddleware, async (req, res) => {
+exports.resumeDelete = async (req, res) => {
   try {
     const { userId } = res.locals.user;
     const { resumeId } = req.params;
@@ -241,6 +239,4 @@ router.delete("/:resumeId", authMiddleware, async (req, res) => {
     logger.error(error);
     res.status(401).send({ errormessage: "작성자만 삭제할 수 있습니다." });
   }
-});
-
-module.exports = router;
+};
