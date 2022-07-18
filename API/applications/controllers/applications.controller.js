@@ -1,9 +1,7 @@
 const express = require("express");
-const router = express.Router();
-const authMiddleware = require("../middlewares/authMiddleware");
-const { Project, Application, Resume, ResumeSkill, sequelize } = require("../models");
+const { Project, Application, Resume, ResumeSkill, sequelize } = require("../../../models");
 const { QueryTypes } = require("sequelize");
-const { noteProjectOwner, noteApplicant } = require("./notices");
+const { noteProjectOwner, noteApplicant } = require("./notices.controller");
 
 // 필요시 유효성 검사 관련 import 추가 예정
 
@@ -16,7 +14,7 @@ const { noteProjectOwner, noteApplicant } = require("./notices");
 
 // 면접 예약
 
-router.put("/:projectId/:applicationId", authMiddleware, async (req, res) => {
+exports.reserveApp = async (req, res) => {
   if (!res.locals.user) {
     return res.status(401).json({ errorMessage: "로그인 후 사용하세요." });
   };
@@ -69,11 +67,11 @@ router.put("/:projectId/:applicationId", authMiddleware, async (req, res) => {
 
   res.status(200).send({ message : '성공적으로 예약되었습니다.' });
 
-});
+};
 
 // 지원자의 지원서 목록 조회
 
-router.get("/resumes", authMiddleware, async (req, res) => {
+exports.appInfo = async (req, res) => {
   if (!res.locals.user) {
     return res.status(401).json({ errorMessage: "로그인 상태가 아닙니다." });
   };
@@ -112,7 +110,4 @@ router.get("/resumes", authMiddleware, async (req, res) => {
     resumes.push(resumeObject);
   });
   res.send({ resumes });
-});
-
- 
-module.exports = router;
+};

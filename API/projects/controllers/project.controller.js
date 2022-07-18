@@ -1,16 +1,14 @@
 const express = require("express");
-const router = express.Router();
-const authMiddleware = require("../middlewares/authMiddleware");
-const logger = require("../config/logger");
-const { Project, ProjectSkill, ProjectPhoto, Application, sequelize } = require("../models");
-const { projectPostSchema } = require("../controller/projectValidation.controller.js");
+const logger = require("../../../config/logger");
+const { Project, ProjectSkill, ProjectPhoto, Application, sequelize } = require("../../../models");
+const { projectPostSchema } = require("../controllers/projectValidation.controller");
 const multer = require("multer");
 const multerS3 = require("multer-s3");
 const aws = require("aws-sdk");
 const s3 = new aws.S3();
 const moment = require("moment");
 const { v4 } = require("uuid");
-const { redisClient, DEFAULT_EXPIRATION } = require("../config/redis");
+const { redisClient, DEFAULT_EXPIRATION } = require("../../../config/redis");
 
 // multer - S3 이미지 업로드 설정
 
@@ -28,7 +26,7 @@ const upload = multer({
 
 // 이미지 업로드
 
-router.post("/photos", authMiddleware, upload.array("photos"), async (req, res) => {
+exports.projectPhotos = async (req, res) => {
   try {
     const photos = req.files.map((image) => image.location);
     res.status(200).json({ message: "사진을 업로드했습니다.", photos });
@@ -36,11 +34,11 @@ router.post("/photos", authMiddleware, upload.array("photos"), async (req, res) 
     logger.error(err);
     return res.status(400).send({ errorMessage: "사진업로드 실패-파일 형식과 크기(1.5Mb 이하) 를 확인해주세요." });
   }
-});
+};
 
 // 프로젝트 등록
 
-router.post("/", authMiddleware, async (req, res) => {
+exports.project = async (req, res) => {
   if (!res.locals.user) {
     return res.status(401).json({ errorMessage: "로그인 후 사용하세요." });
   }
@@ -91,11 +89,11 @@ router.post("/", authMiddleware, async (req, res) => {
     logger.error(error);
     return res.status(400).json({ errorMessage: "게시글 등록 실패" });
   }
-});
+};
 
 // 프로젝트 조회
 
-router.get("/", async (req, res) => {
+exports.projectInfo = async (req, res) => {
   redisClient.get("projects", async (err, data) => {
     // 레디스 서버에서 데이터 체크, 레디스에 저장되는 키 값은 projects
     if (err) console.error(error);
@@ -137,11 +135,11 @@ router.get("/", async (req, res) => {
     redisClient.setex("projects", DEFAULT_EXPIRATION, JSON.stringify(projects));
     res.send({ projects });
   });
-});
+};
 
 // 프로젝트 상세 조회
 
-router.get("/:projectId", async (req, res) => {
+exports.projectDetail = async (req, res) => {
   const { projectId } = req.params;
   // 레디스 서버에서 데이터 체크, 레디스에 저장되는 키 값은 projects
   redisClient.get(`projects:${projectId}`, async (err, data) => {
@@ -210,11 +208,11 @@ router.get("/:projectId", async (req, res) => {
     redisClient.setex(`projects:${projectId}`, DEFAULT_EXPIRATION, JSON.stringify(project));
     res.send({ project });
   });
-});
+};
 
 // 프로젝트 수정
 
-router.put("/:projectId", authMiddleware, async (req, res) => {
+exports.projectUpdate = async (req, res) => {
   if (!res.locals.user) {
     return res.status(401).json({ errorMessage: "로그인 후 사용하세요." });
   }
@@ -331,11 +329,11 @@ router.put("/:projectId", authMiddleware, async (req, res) => {
     await t.rollback();
     return error;
   }
-});
+};
 
 // 프로젝트 삭제
 
-router.delete("/:projectId", authMiddleware, async (req, res) => {
+exports.projectDelete = async (req, res) => {
   if (!res.locals.user) {
     return res.status(401).json({ errorMessage: "로그인 후 사용하세요." });
   }
@@ -401,6 +399,4 @@ router.delete("/:projectId", authMiddleware, async (req, res) => {
   res.status(200).json({
     message: "프로젝트 게시글을 삭제했습니다.",
   });
-});
-
-module.exports = router;
+};
