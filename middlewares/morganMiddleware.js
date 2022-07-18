@@ -4,7 +4,6 @@ const logger = require("../config/logger");
 
 const format = () => {
   const result = process.env.NODE_ENV === "production" ? "combined" : "dev";
-  // const result = "combined";
   return result;
 };
 

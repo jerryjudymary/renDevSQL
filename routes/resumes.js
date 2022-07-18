@@ -107,7 +107,7 @@ router.get("/", async (req, res) => {
 
   // 캐시 부적중(cache miss)시 DB에 쿼리 전송, setex 메서드로 설정한 기본 만료시간까지 redis 캐시 저장
   // redisClient.setex("resumes", DEFAULT_EXPIRATION, JSON.stringify(returnResumes));
-  await res.status(200).send({ returnResumes });
+  res.status(200).send({ returnResumes });
   // } catch (error) {
   // logger.error(err);
   // res.status(400).send({});
