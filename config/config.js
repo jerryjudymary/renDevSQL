@@ -3,7 +3,7 @@ require("dotenv").config();
 const development = {
   username: "root",
   password: process.env.DB_PASSWORD,
-  database: "rendevSQLtest ",
+  database: "rendevSQLtest",
   host: process.env.DB_HOST,
   dialect: "mysql",
   logging: false,
@@ -39,7 +39,7 @@ const test = {
 const production = {
   username: "root",
   password: process.env.DB_PASSWORD,
-  database: "rendevSQLtest ",
+  database: "rendevSQLtest",
   host: process.env.DB_HOST,
   dialect: "mysql",
   logging: false,

@@ -33,8 +33,8 @@ exports.resumeImage = async (req, res) => {
 
 // 팀원 찾기 등록
 exports.resume = async (req, res) => {
-  const { id, userId, nickname } = res.locals.user;
-  const { content, start, end, role, skill, resumeImage, content2, content3 } = req.body;
+  const { id, userId, nickname, profileImage } = res.locals.user;
+  const { content, start, end, role, skill, content2, content3 } = req.body;
 
   if (!userId) return res.status(401).send({ errorMessage: "로그인 후 사용하세요." });
 
@@ -44,7 +44,7 @@ exports.resume = async (req, res) => {
 
   try {
     const createdAt = new Date();
-
+    let resumeImage = profileImage;
     await Resume.create({ id, userId, nickname, content, start, end, role, content2, content3, resumeImage, createdAt }).then((result) => {
       for (let i = 0; i < skill.length; i++) {
         ResumeSkill.create({ resumeId: result.resumeId, skill: skill[i] });
