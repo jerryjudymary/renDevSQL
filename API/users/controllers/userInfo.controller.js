@@ -11,9 +11,9 @@ const {
     ResumeSkill,
     ProjectPhoto
 }
-= require("../models");
+= require("../../../models");
 
-const userDetail = async (req, res) => {
+exports.userDetail = async (req, res) => {
     try {
       const user = res.locals.user; 
       if (user === undefined) {
@@ -36,7 +36,7 @@ const userDetail = async (req, res) => {
     }
   };
   
-  const userInfo = async (req, res) => {
+exports.userInfo = async (req, res) => {
     try {
       const user = res.locals.user;
       if (user === undefined) {
@@ -56,7 +56,7 @@ const userDetail = async (req, res) => {
     }
   };
 
-  const userProject = async(req,res) => {
+exports.userProject = async(req,res) => {
     try {
       const { userId } = res.locals.user;
       if (userId === undefined) {
@@ -119,7 +119,7 @@ const userDetail = async (req, res) => {
     }
   };
   
-  const userResume =  async(req,res) => {
+exports.userResume =  async(req,res) => {
     try {
       const { userId } = res.locals.user;
       if (userId === undefined) {
@@ -175,7 +175,7 @@ const userDetail = async (req, res) => {
     }
   };
   
-  const myApply = async(req, res) => {
+exports.myApply = async(req, res) => {
     try {
       const { userId } = res.locals.user;
       if(userId === undefined) {
@@ -240,8 +240,7 @@ const userDetail = async (req, res) => {
       }
     }
   };
-  
-  const recruit = async(req, res) => {
+exports.recruit = async(req, res) => {
     try {
       const { userId } = res.locals.user;
       if(userId === undefined) {
@@ -336,12 +335,3 @@ const userDetail = async (req, res) => {
       }
     }
 }
-
-module.exports = {
-    userInfo,
-    userDetail,
-    userProject,
-    userResume,
-    myApply,
-    recruit
-  };

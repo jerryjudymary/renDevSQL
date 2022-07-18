@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const logger = require("../config/logger");
-const { Project, ProjectSkill, Resume, ResumeSkill, sequelize } = require("../models");
+const logger = require("../../../config/logger");
+const { Project, ProjectSkill, Resume, ResumeSkill, sequelize } = require("../../../models");
 
 // Project검색API, Resume검색API 둘 다 공용으로 사용할 함수 periodFilter와 skillFilter를 먼저 선언한다.
 function periodFilter(inputItems, start, end) {
@@ -24,7 +24,7 @@ function skillFilter(inputItems, requiredSkills) {
 }
 
 // "Resume의 조건에 맞는 Projects" 매칭 API
-router.get("/projects/:resumeId", async (req, res) => {
+exports.projectMatches = async (req, res) => {
   try {
     const { resumeId } = req.params;
 
@@ -85,10 +85,10 @@ router.get("/projects/:resumeId", async (req, res) => {
     logger.error(error);
     res.status(400).send({ errorMessage: "매칭 실패" });
   }
-});
+};
 
 // "Project의 조건에 맞는 Resumes" 매칭 API
-router.get("/resumes/:projectId", async (req, res) => {
+exports.resumeMatches = async (req, res) => {
   try {
     const { projectId } = req.params;
 
@@ -147,6 +147,4 @@ router.get("/resumes/:projectId", async (req, res) => {
     logger.error(error);
     res.status(400).send({ errorMessage: "매칭 실패" });
   }
-});
-
-module.exports = router;
+};

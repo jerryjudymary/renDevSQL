@@ -1,8 +1,7 @@
 const express = require("express");
-const router = express.Router();
-const logger = require("../config/logger");
+const logger = require("../../../config/logger");
 const { Op } = require("sequelize");
-const { Project, ProjectSkill, Resume, ResumeSkill, sequelize } = require("../models");
+const { Project, ProjectSkill, Resume, ResumeSkill, sequelize } = require("../../../models");
 
 // Project검색API, Resume검색API 둘 다 공용으로 사용할 함수 periodFilter와 skillFilter를 먼저 선언한다.
 function periodFilter(inputItems, start, end) {
@@ -30,7 +29,7 @@ function skillFilter(inputItems, requiredSkills) {
 // 해당 item에 대한 every 메소드는 true를 반환할 것이며, 요구스킬 조건을 만족한다는 의미이므로 skillFilteredItems에 포함시켜준다(push).
 
 // 프로젝트 검색 API
-router.get("/project", async (req, res) => {
+exports.projectSearch = async (req, res) => {
   try {
     const { role, skill, start, end } = req.body;
 
@@ -81,10 +80,10 @@ router.get("/project", async (req, res) => {
     logger.error(error);
     res.status(400).send({ errorMessage: "검색 실패" });
   }
-});
+};
 
 // Resume 찾기 API
-router.get("/resume", async (req, res) => {
+exports.resumeSearch = async (req, res) => {
   try {
     const { role, skill, start, end } = req.body;
     // DB에서 role로 필터링해 가져오면서, 앞으로 필터링할 객체 배열에는 필요한 요소들만 넣어 놓기
@@ -133,6 +132,4 @@ router.get("/resume", async (req, res) => {
     logger.error(error);
     res.status(400).send({ errorMessage: "검색 실패" });
   }
-});
-
-module.exports = router;
+};
