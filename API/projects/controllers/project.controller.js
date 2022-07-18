@@ -60,7 +60,9 @@ exports.project = async (req, res) => {
     return res.status(400).json({ errorMessage: "작성란을 모두 기입해주세요." });
   }
 
-  if (start >= end) return res.status(400).json({ errorMessage: "날짜 형식이 잘못되었습니다." });
+  const startMsec = Date.parse(start);
+  const endMsec = Date.parse(end);
+  if (startMsec >= endMsec) return res.status(400).json({ errorMessage: "날짜 형식이 잘못되었습니다." });
 
   const available = true;
   const createdAt = moment().format("YYYY-MM-DD HH:mm:ss");
@@ -243,7 +245,9 @@ exports.projectUpdate = async (req, res) => {
     return res.status(400).json({ errorMessage: "작성란을 모두 기입해주세요." });
   }
 
-  if (start >= end) return res.status(400).json({ errorMessage: "날짜 형식이 잘못되었습니다." });
+  const startMsec = Date.parse(start);
+  const endMsec = Date.parse(end);
+  if (startMsec >= endMsec) return res.status(400).json({ errorMessage: "날짜 형식이 잘못되었습니다." });
 
   // --- 기존 이미지 선별적 다중 삭제
 
