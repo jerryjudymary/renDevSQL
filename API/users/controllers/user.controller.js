@@ -310,20 +310,6 @@ exports.profileImage = async (req, res) => {
 
     const { nickname } = req.params;
 
-    const user = await User.findOne({ where: { nickname } });
-
-    s3.deleteObject(
-      {
-        Bucket: "jerryjudymary",
-        Key: user.profileImage,
-      },
-      (err, data) => {
-        if (err) {
-          console.log(err);
-        }
-      }
-    );
-
     const updateImage = await User.update({ profileImage: profileImage }, { where: { nickname } });
 
     //   await User.update({ refreshToken }, { where: { userId } });
