@@ -1,6 +1,5 @@
 const nodemailer = require("nodemailer");
-const { Project, Resume, Application, sequelize } = require("../models");
-
+const { Project, Resume, Application, sequelize } = require("../../../models");
 // npm install nodemailer
 
 // 상황에 따라 아래 3가지 함수 중 2개 혹은 1개를 실행합니다.
