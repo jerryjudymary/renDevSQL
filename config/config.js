@@ -24,7 +24,7 @@ const test = {
   database: "rendevSQLtestCode",
   host: process.env.TEST_HOST,
   dialect: "mysql",
-  logging: false,
+  logging: true,
   timezone: "+09:00",
   dialectOptions: {
     dateStrings: true,
