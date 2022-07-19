@@ -50,7 +50,8 @@ exports.project = async (req, res) => {
   }
 
   try {
-    var { title, details, subscript, role, start, end, skills, schedule, photos } = await projectPostSchema.validateAsync(req.body);
+    var { title, details, subscript, role, start, end, skills, schedule, photos }
+    = await projectPostSchema.validateAsync(req.body);
   } catch (err) {
     logger.error(err);
     return res.status(400).json({ errorMessage: "작성 형식을 확인해주세요." });
