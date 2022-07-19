@@ -5,7 +5,7 @@ const multerS3 = require("multer-s3");
 const aws = require("aws-sdk");
 const s3 = new aws.S3();
 const authMiddleware = require("../../middlewares/authMiddleware");
-const resumeController = require("./controllers/resume.controller")
+const resumeController = require("./controllers/resume.controller");
 
 // multer - S3 이미지 업로드 설정
 const upload = multer({
