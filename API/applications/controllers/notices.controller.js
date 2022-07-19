@@ -114,6 +114,8 @@ async function InterviewProposal (projectId, resumeId) {
 async function sendNotice (receiver, subject, content) {
 
     const transporter = nodemailer.createTransport({
+        pool: true, 
+        maxConnections: 1,
         service: 'naver',
         host: 'smtp.naver.com',  // SMTP 서버명
         port: 465,  // SMTP 포트
