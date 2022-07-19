@@ -1,7 +1,7 @@
 // request로 가져오는게 관행
+const request = require("supertest");
 const app = require("../../index.js");
 const { sequelize } = require("../../models");
-const request = require("supertest");
 
 beforeAll(async () => {
   await sequelize.sync({});
