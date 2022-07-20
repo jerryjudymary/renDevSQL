@@ -71,7 +71,7 @@ module.exports = async (req, res, next) => {
     });
   } catch (err) {
     if (err.name === "TokenExpiredError") {
-      console.log("TokenExpiredError:", req.cookies.refreshToken);
+      console.log({ errorMessage: "TokenExpiredError" });
 
       const refreshToken = req.cookies.refreshToken;
 
