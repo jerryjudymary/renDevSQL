@@ -151,7 +151,7 @@ exports.login = async (req, res) => {
 
         await User.update({ refreshToken }, { where: { userId } });
 
-        return res.status(200).cookie("refreshToken", refreshToken, { httpOnly: true }).send({ message: "로그인 하셨습니다.", token });
+        return res.status(200).cookie("refreshToken", refreshToken, { httpOnly: true, sameSite: "strict" }).send({ message: "로그인 하셨습니다.", token });
       }
     }
   } catch (err) {
