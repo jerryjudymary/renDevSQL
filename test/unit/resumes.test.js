@@ -27,20 +27,35 @@ describe("팀원 찾기 등록 테스트", () => {
   });
 
   //   it("Resume.create 모델 호출", () => {
-
   //     resumeController.resume(req, res, next);
 
   //     // expect와 matcher(toBeCalledWitd)를 통해서 데이터베이스에 데이터가 되는 부분 코드 테스트
+  //     expect(Resume.create).toBeCalledWith(newResume);
   //     expect(ResumeSkill.create).toBeCalledWith(newResume.skill);
   //   });
+
+  //   it("상태코드 200 반환 테스트", () => {
+  //     resumeController.resume(req, res, next);
+
+  //     expect(res.statusCode).toBe(200);
+  //     결과값이 잘 전송됐는지 확인은 isEndCalled
+  //     expect(res._isEndCalled()).toBeTruthy();
+  //   });
+
+  it("Json body의 응답값 반환", () => {
+    Resume.create.mockReturnValue(newResume);
+    resumeController.resume(req, res, next);
+    expect(res._getJSONDate()).toStrictEqual(newResume);
+  });
 });
 
-describe("팀원 찾기 전체 조회", () => {
+describe("팀원 찾기 전체 조회 테스트", () => {
   it("전체 조회 함수 테스트", () => {
     expect(typeof resumeController.resumeInfo).toBe("function");
   });
   //   it("Resume Model 호출 findAll({})", async () => {
   //     await resumeController.resumeInfo(req, res, next);
+
   //     expect(Resume.findAll).toHaveBeenCalledWith({});
   //   });
 });
