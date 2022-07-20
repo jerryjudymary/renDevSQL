@@ -12,7 +12,9 @@ const Router = require("./routes");
 
 app.use(
   cors({
-    credentials: "true",
+    origin: true, //["http://localhost:3001"],
+    credentials: true,
+    methods: "GET, HEAD, PUT, PATCH, POST, DELETE",
   })
 );
 
@@ -25,11 +27,11 @@ sequelize
     console.log(error);
   });
 
+app.use(cookieParser());
 app.use(morganMiddleware);
 app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false, crossOriginResourcePolicy: false }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
 app.use("/api", Router);
 
 module.exports = app;

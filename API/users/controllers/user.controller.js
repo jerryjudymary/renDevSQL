@@ -140,19 +140,18 @@ exports.login = async (req, res) => {
           userId: users.userId,
           nickname: users.nickname,
         };
-        
-        const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
-          expiresIn: "1h",
-        });
-        
-        // const refreshToken = jwt.sign(payload, process.env.JWT_SECRET_REFRESH, {
-        //   expiresIn: "2d",
-        // });
 
-        // console.log(refreshToken);
-        // await User.update({ refreshToken }, { where: { userId } });
-        // res.cookie("refreshToken", refreshToken, { httpOnly: true, sameSite: "None", expires: new Date(Date.now() + 3600000 * 2) });
-        return res.status(200).send({ message: "로그인 하셨습니다.", token });
+        const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
+          expiresIn: "1m",
+        });
+
+        const refreshToken = jwt.sign(payload, process.env.JWT_SECRET_REFRESH, {
+          expiresIn: "2d",
+        });
+
+        await User.update({ refreshToken }, { where: { userId } });
+
+        return res.status(200).cookie("refreshToken", refreshToken, { httpOnly: true }).send({ message: "로그인 하셨습니다.", token });
       }
     }
   } catch (err) {
@@ -334,4 +333,3 @@ exports.profileImage = async (req, res) => {
     res.status(400).send({ errorMessage: "사진업로드 실패-파일 형식과 크기(1.5Mb 이하) 를 확인해주세요." });
   }
 };
-
