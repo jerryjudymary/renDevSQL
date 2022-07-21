@@ -1,0 +1,13 @@
+{
+	"id":"1",
+	"userId":"mne9691@gmail.com",
+	"nickname":"DevDream",
+	"resumeImage":"",
+	"content": "안녕하세요 나는...",
+	"start": "2022-07-10",
+	"end": "2022-09-20",
+	"role": "BackEnd 개발자",
+	"skill":["Java","PHP"],
+	"content2": "https://github.com/engin9803/node-abstract-site.git",
+	"content3": "Jest 유닛테스트 코드 작성"
+}

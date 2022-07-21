@@ -1,4 +1,3 @@
-
 const express = require("express");
 const app = express();
 const helmet = require("helmet");
@@ -29,15 +28,6 @@ sequelize
   });
 
 app.use(cookieParser());
-// app.use(function(req, res, next) {
-//   res.header('Content-Type', 'application/json;charset=UTF-8')
-//   res.header('Access-Control-Allow-Credentials', true)
-//   res.header(
-//     'Access-Control-Allow-Headers',
-//     'Origin, X-Requested-With, Content-Type, Accept'
-//   )
-//   next()
-// })
 app.use(morganMiddleware);
 app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false, crossOriginResourcePolicy: false }));
 app.use(express.json());

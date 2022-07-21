@@ -140,7 +140,6 @@ exports.login = async (req, res) => {
           userId: users.userId,
           nickname: users.nickname,
         };
-        
         const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
           expiresIn: "1h",
         });
@@ -323,4 +322,3 @@ exports.profileImage = async (req, res) => {
     res.status(400).send({ errorMessage: "사진업로드 실패-파일 형식과 크기(1.5Mb 이하) 를 확인해주세요." });
   }
 };
-
