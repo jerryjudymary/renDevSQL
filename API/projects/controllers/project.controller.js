@@ -105,7 +105,7 @@ exports.projectInfo = async (req, res) => {
       JSON_ARRAYAGG(skill) AS skills ${/* inner join으로 가져오고 쿼리 말미에 그룹화하는 project_skill 테이블의 skill을 skills라는 alias로 받아옵니다. */''}
       FROM project INNER JOIN project_skill
       ON project.projectId = project_skill.projectId
-      GROUP BY project.projectId`; // 자식 테이블의 컬럼(skill)을 그룹화할 것이기 때문에, 자식 테이블의 FK 기준으로 GROUP BY 해야 합니다!
+      GROUP BY project.projectId`; // skill 컬럼을 그룹화하는 기준을 project 테이블의 projectId로 설정
     const projects = await sequelize.query(query, { type: QueryTypes.SELECT });
 
     if (!projects.length) {
@@ -172,7 +172,7 @@ exports.projectDetail = async (req, res) => {
     }
   
     // 캐시 부적중(cache miss)시 DB에 쿼리 전송, setex 메서드로 설정한 기본 만료시간까지 redis 캐시 저장
-    redisClient.setex(`projects:${projectId}`, DEFAULT_EXPIRATION, JSON.stringify(project));
+    redisClient.setex(`projects:${projectId}`, DEFAULT_EXPIRATION, JSON.stringify(project[0]));
     res.send({ project: project[0] });
   });
 };
