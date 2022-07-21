@@ -129,9 +129,11 @@ exports.projectDetail = async (req, res) => {
 
     const query = ` ${/* 이중 서브쿼리이므로 가운데부터 봐 주세요. */''}
       SELECT secondQ.*, JSON_ARRAYAGG(JSON_OBJECT( ${/* JSON_OBJECT만 쓰면 GROUP BY 메서드로 사용하지 못합니다 */''}
-        'applicationId', applicationId, 'available', available,
+        'applicationId', applicationId,
+        'available', available,
         'schedule', DATE_FORMAT(schedule,'%Y-%m-%d %H:%i:%S'),
-        'status', status, 'interviewCode', interviewCode
+        'status', status,
+        'interviewCode', interviewCode
       )) AS applications
       FROM(
 
@@ -171,7 +173,7 @@ exports.projectDetail = async (req, res) => {
   
     // 캐시 부적중(cache miss)시 DB에 쿼리 전송, setex 메서드로 설정한 기본 만료시간까지 redis 캐시 저장
     redisClient.setex(`projects:${projectId}`, DEFAULT_EXPIRATION, JSON.stringify(project));
-    res.send({ project });
+    res.send({ project: project[0] });
   });
 };
 
