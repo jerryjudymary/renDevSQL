@@ -1,6 +1,6 @@
-const express = require("express");
 const logger = require("../../../config/logger");
 const { Project, ProjectSkill, ProjectPhoto, Application, sequelize } = require("../../../models");
+const { QueryTypes } = require("sequelize");
 const { projectPostSchema } = require("../controllers/projectValidation.controller");
 const multer = require("multer");
 const multerS3 = require("multer-s3");
@@ -97,43 +97,21 @@ exports.project = async (req, res) => {
 // 프로젝트 조회
 
 exports.projectInfo = async (req, res) => {
-  redisClient.get("projects", async (err, data) => {
-    // 레디스 서버에서 데이터 체크, 레디스에 저장되는 키 값은 projects
+  redisClient.get("projects", async (err, data) => { // 레디스 서버에서 데이터 체크, 레디스에 저장되는 키 값은 projects
     if (err) console.error(error);
     if (data) return res.json({ projects: JSON.parse(data) }); // 캐시 적중(cache hit)시 response!
+  
+    const query = `SELECT project.projectId, nickname, title, subscript, role, start, end, createdAt,
+      JSON_ARRAYAGG(skill) AS skills ${/* inner join으로 가져오고 쿼리 말미에 그룹화하는 project_skill 테이블의 skill을 skills라는 alias로 받아옵니다. */''}
+      FROM project INNER JOIN project_skill
+      ON project.projectId = project_skill.projectId
+      GROUP BY project.projectId`; // 자식 테이블의 컬럼(skill)을 그룹화할 것이기 때문에, 자식 테이블의 FK 기준으로 GROUP BY 해야 합니다!
+    const projects = await sequelize.query(query, { type: QueryTypes.SELECT });
 
-    const projectsQuery = await Project.findAll({
-      include: {
-        model: ProjectSkill,
-        attributes: ["skill"],
-        required: true, // 자식 테이블로 ProjectSkill row가 존재하는 projects만 불러옵니다
-      },
-    });
-
-    if (!projectsQuery) {
+    if (!projects.length) {
       return res.status(404).json({ errorMessage: "프로젝트가 존재하지 않습니다." });
-    }
+    };
 
-    const projectSkills = projectsQuery.map((project) => project.ProjectSkills.map((skill) => skill["skill"]));
-
-    let projects = [];
-
-    projectsQuery.forEach((project, index) => {
-      let createdAt = moment(project.createdAt).format("YYYY-MM-DD HH:mm:ss");
-      let projectObject = {};
-
-      projectObject.projectid = project.projectId;
-      projectObject.nickname = project.nickname;
-      projectObject.title = project.title;
-      projectObject.subscript = project.subscript;
-      projectObject.role = project.role;
-      projectObject.start = project.start;
-      projectObject.end = project.end;
-      projectObject.createdAt = createdAt;
-      projectObject.skills = projectSkills[index];
-
-      projects.push(projectObject);
-    });
     // 캐시 부적중(cache miss)시 DB에 쿼리 전송, setex 메서드로 설정한 기본 만료시간까지 redis 캐시 저장
     redisClient.setex("projects", DEFAULT_EXPIRATION, JSON.stringify(projects));
     res.send({ projects });
@@ -148,65 +126,49 @@ exports.projectDetail = async (req, res) => {
   redisClient.get(`projects:${projectId}`, async (err, data) => {
     if (err) console.error(error);
     if (data) return res.json({ project: JSON.parse(data) }); // 캐시 적중(cache hit)시 response!
-    const projectQuery = await Project.findOne({
-      where: {
-        projectId,
-      },
-      include: [
-        {
-          model: ProjectSkill,
-          attributes: ["skill"],
-        },
-        {
-          model: ProjectPhoto,
-          attributes: ["photo"],
-        },
-        {
-          model: Application,
-          attributes: ["applicationId", "schedule", "available", "status", "interviewCode"],
-        },
-      ],
-    });
 
-    if (!projectQuery) {
+    const query = ` ${/* 이중 서브쿼리이므로 가운데부터 봐 주세요. */''}
+      SELECT secondQ.*, JSON_ARRAYAGG(JSON_OBJECT( ${/* JSON_OBJECT만 쓰면 GROUP BY 메서드로 사용하지 못합니다 */''}
+        'applicationId', applicationId, 'available', available,
+        'schedule', DATE_FORMAT(schedule,'%Y-%m-%d %H:%i:%S'),
+        'status', status, 'interviewCode', interviewCode
+      )) AS applications
+      FROM(
+
+        SELECT mainQ.*, JSON_ARRAYAGG(photo) AS photos ${/* 이렇게 두 번째 join 부터 인라인 뷰 서브쿼리를 쓰는 이유는, */''}
+        FROM( ${/* 단순히 나열하여 join할 경우 테이블의 결과값마다 서로 카티젼 곱이 되어 중복된 레코드를 출력하기 때문이죠! */''}
+
+          SELECT project.*,
+          JSON_ARRAYAGG(skill) AS skills
+          FROM project
+
+          INNER JOIN project_skill ${/* project_skill 테이블부터 join 후 그루핑 */''}
+          ON project.projectId = project_skill.projectId
+
+          WHERE project.projectId = '${projectId}'
+          GROUP BY project.projectId
+
+        ) mainQ ${/* 인라인 뷰 서브쿼리의 경우 무조건 alias를 붙여 줘야 구문 오류가 생기지 않습니다 */''}
+      
+        LEFT JOIN project_photo ${/* photo의 경우 null 값도 존재하므로 LEFT JOIN 해 줍니다 */''}
+        ON mainQ.projectId = project_photo.projectId
+
+        GROUP BY mainQ.projectId
+
+      ) secondQ
+
+      INNER JOIN application
+      ON secondQ.projectId = application.projectId
+
+      GROUP BY secondQ.projectId
+    `; 
+
+    const project = await sequelize.query(query, { type: QueryTypes.SELECT });
+
+    if (!project.length) {
       return res.status(404).json({ errorMessage: "프로젝트 정보가 존재하지 않습니다." });
     }
-
-    const skills = projectQuery.ProjectSkills.map((eachSkill) => eachSkill.skill);
-    const photos = projectQuery.ProjectPhotos.map((eachPhoto) => eachPhoto.photo);
-    const createdAt = moment(projectQuery.createdAt).format("YYYY-MM-DD HH:mm:ss");
-
-    let applications = [];
-
-    projectQuery.Applications.forEach((eachApp, index) => {
-      let schedule = moment(eachApp.schedule).format("YYYY-MM-DD HH:mm:ss");
-      let application = {};
-
-      application.applicationId = eachApp.applicationId;
-      application.schedule = schedule;
-      application.available = eachApp.available;
-      application.status = eachApp.status;
-      application.interviewCode = eachApp.interviewCode;
-
-      applications.push(application);
-    });
-
-    const project = {
-      projectId: projectQuery.projectId,
-      id: projectQuery.id,
-      title: projectQuery.title,
-      details: projectQuery.details,
-      role: projectQuery.role,
-      email: projectQuery.email,
-      start: projectQuery.start,
-      end: projectQuery.end,
-      subscript: projectQuery.subscript,
-      nickname: projectQuery.nickname,
-      createdAt,
-      applications,
-      photos,
-      skills,
-    };
+  
     // 캐시 부적중(cache miss)시 DB에 쿼리 전송, setex 메서드로 설정한 기본 만료시간까지 redis 캐시 저장
     redisClient.setex(`projects:${projectId}`, DEFAULT_EXPIRATION, JSON.stringify(project));
     res.send({ project });
