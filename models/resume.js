@@ -76,7 +76,9 @@ module.exports = (sequelize, DataTypes) => {
     {
       sequelize,
       tableName: "resume",
-      timestamps: false,
+      timestamps: true,
+      createdAt: true,
+      updatedAt: false,
       indexes: [
         {
           name: "PRIMARY",
