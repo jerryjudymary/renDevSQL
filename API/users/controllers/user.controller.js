@@ -21,7 +21,6 @@ const upload = multer({
 });
 
 const { postLoginSchema, postUsersSchema, postNicknameSchema, postUserIdSchema } = require("../controllers/userValidation.controller");
-const { BadRequestError, ValidationError} = require("../../../class")
 
 exports.signUp = async (req, res) => {
   try {
