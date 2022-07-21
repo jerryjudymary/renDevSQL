@@ -2,6 +2,7 @@ const express = require("express");
 const multer = require("multer");
 const { Op } = require("sequelize");
 const { User, Resume, ResumeSkill, sequelize } = require("../../../models");
+const { QueryTypes } = require("sequelize");
 const multerS3 = require("multer-s3");
 const aws = require("aws-sdk");
 const logger = require("../../../config/logger");
@@ -42,11 +43,10 @@ exports.resume = async (req, res) => {
 
   if (start >= end) return res.status(400).send({ errorMessage: "날짜 형식이 잘못되었습니다." });
 
-  try {
-    const createdAt = new Date();
-    let resumeImage = profileImage;
+  const resumeImage = profileImage;
 
-    await Resume.create({ id, userId, nickname, content, start, end, role, content2, content3, resumeImage, createdAt }).then((result) => {
+  try {
+    await Resume.create({ id, userId, nickname, content, start, end, role, content2, content3, resumeImage }).then((result) => {
       for (let i = 0; i < skill.length; i++) {
         ResumeSkill.create({ resumeId: result.resumeId, skill: skill[i] });
       }
@@ -57,8 +57,8 @@ exports.resume = async (req, res) => {
     // });
 
     res.status(200).send({ message: "나의 정보를 등록 했습니다." });
-  } catch (err) {
-    logger.error(err);
+  } catch (error) {
+    console.log(error);
     res.status(400).send({ errormessage: "등록 실패" });
   }
 };
@@ -69,49 +69,19 @@ exports.resumeInfo = async (req, res) => {
   //   // 레디스 서버에서 데이터 체크, 레디스에 저장되는 키 값은 projects
   //   if (err) logger.error(error);
   //   if (data) return res.status(200).json({ returnResumes: JSON.parse(data) }); // 캐시 적중(cache hit)시 response!
-  // try {
-  const resumes = await Resume.findAll({
-    //   // ResumeSkill 모델에서 skill를 찾은 후 resumes 에 담음
-    include: [
-      {
-        model: ResumeSkill,
-        attributes: ["skill"],
-      },
-    ],
-    // offset: 3,
-    // limit: 9, // 하나의 페이지 9개 조회
-    order: [["createdAt", "DESC"]],
-  });
 
-  // [{skill},{skill}]부분을 -> [skill,skill]로 map함수를 사용하여 새로 정의
-  const resumeskills = resumes.map((resume) => resume.ResumeSkills.map((skill) => skill["skill"]));
+  const query = `SELECT resume.resumeId, nickname, content, resumeImage, start, end, role, createdAt,
+      JSON_ARRAYAGG(skill) AS skill  ${/* inner join으로 가져오고 쿼리 말미에 그룹화하는 project_skill 테이블의 skill을 skills라는 alias로 받아옵니다. */ ""}
+      FROM resume INNER JOIN resume_skill
+      ON resume.resumeId = resume_skill.resumeId
+      GROUP BY resume.resumeId`; // skill 컬럼을 그룹화하는 기준을 project 테이블의 projectId로 설정
+  const resumes = await sequelize.query(query, { type: QueryTypes.SELECT });
 
-  let returnResumes = [];
+  if (!resumes.length) return res.status(404).json({ errorMessage: "정보가 존재하지 않습니다." });
 
-  resumes.forEach((resume, index) => {
-    let a_resume = {};
-
-    a_resume.resumeId = resume.resumeId;
-    a_resume.nickname = resume.nickname;
-    a_resume.resumeImage = resume.resumeImage;
-    a_resume.content = resume.content;
-    a_resume.start = resume.start;
-    a_resume.end = resume.end;
-    a_resume.role = resume.role;
-    a_resume.resumeskills = resumeskills[index];
-    a_resume.createdAt = resume.createdAt;
-
-    returnResumes.push(a_resume);
-  });
-
+  res.status(200).send({ resumes });
   // 캐시 부적중(cache miss)시 DB에 쿼리 전송, setex 메서드로 설정한 기본 만료시간까지 redis 캐시 저장
   // redisClient.setex("resumes", DEFAULT_EXPIRATION, JSON.stringify(returnResumes));
-  res.status(200).send({ returnResumes });
-  // } catch (error) {
-  // logger.error(err);
-  // res.status(400).send({});
-  // }
-  // });
 };
 
 // 팀원 찾기 상세조회
@@ -122,41 +92,18 @@ exports.resumeDetail = async (req, res) => {
   //   if (err) logger.error(err);
   //   if (data) return res.status(200).json({ resumes: JSON.parse(data) }); // 캐시 적중(cache hit)시 response!
 
-  try {
-    const existresumes = await Resume.findOne({
-      include: [
-        {
-          model: ResumeSkill,
-          attributes: ["skill"],
-        },
-      ],
-      where: { resumeId },
-    });
-    // map을 이용하여 배열 안에 객체
-    const resumeskills = existresumes.ResumeSkills.map((skills) => skills.skill);
+  const query = `SELECT resume.resumeId, userId, nickname, content, start, end, role, content2, content3, resumeImage, createdAt,
+      JSON_ARRAYAGG(skill) AS skill  ${/* inner join으로 가져오고 쿼리 말미에 그룹화하는 project_skill 테이블의 skill을 skills라는 alias로 받아옵니다. */ ""}
+      FROM resume INNER JOIN resume_skill
+      ON resume.resumeId = resume_skill.resumeId
+      WHERE resume.resumeId = '${resumeId}'
+      GROUP BY resume.resumeId`;
 
-    const resumes = {
-      resumeId: existresumes.resumeId,
-      userId: existresumes.userId,
-      nickname: existresumes.nickname,
-      content: existresumes.content,
-      start: existresumes.start,
-      end: existresumes.end,
-      role: existresumes.role,
-      content2: existresumes.content2,
-      content3: existresumes.content3,
-      resumeImage: existresumes.resumeImage,
-      resumeskills,
-    };
+  const resumes = await sequelize.query(query, { type: QueryTypes.SELECT });
 
-    // 캐시 부적중(cache miss)시 DB에 쿼리 전송, setex 메서드로 설정한 기본 만료시간까지 redis 캐시 저장
-    // redisClient.setex(`resumes:${resumeId}`, DEFAULT_EXPIRATION, JSON.stringify(resumes));
-    res.status(200).send({ resumes });
-  } catch (error) {
-    logger.error(err);
-    res.status(400).send({ errorMessage: "정보가 존재하지 않습니다." });
-  }
-  // });
+  if (!resumes.length) return res.status(404).json({ errorMessage: "정보가 존재하지 않습니다." });
+
+  res.status(200).send({ resumes });
 };
 
 // 팀원 찾기 정보 수정
