@@ -142,7 +142,7 @@ exports.login = async (req, res) => {
         };
 
         const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
-          expiresIn: "1m",
+          expiresIn: "1h",
         });
 
         const refreshToken = jwt.sign(payload, process.env.JWT_SECRET_REFRESH, {
