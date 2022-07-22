@@ -139,6 +139,7 @@ exports.login = async (req, res) => {
         const payload = {
           userId: users.userId,
           nickname: users.nickname,
+          profileImage: users.profileImage
         };
         const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
           expiresIn: "1h",
