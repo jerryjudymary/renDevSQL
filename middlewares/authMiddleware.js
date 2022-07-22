@@ -107,6 +107,7 @@ module.exports = async (req, res, next) => {
                 const payload = {
                   userId: refreshToken.userId,
                   nickname: refreshToken.nickname,
+                  profileImage: refreshToken.profileImage
                 };
                 const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
                   expiresIn: "1h",
