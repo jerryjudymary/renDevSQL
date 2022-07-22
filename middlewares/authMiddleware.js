@@ -120,7 +120,7 @@ module.exports = async (req, res, next) => {
           );
         }
       } catch (err) {
-        if (error.name === "TokenExpiredError") {
+        if (err.name === "TokenExpiredError") {
           return res
             .status(401)
             .json({ errorMessage: "refreshToken is expired" });
