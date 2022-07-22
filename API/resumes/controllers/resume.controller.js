@@ -75,11 +75,11 @@ exports.resumeInfo = async (req, res) => {
       FROM resume INNER JOIN resume_skill
       ON resume.resumeId = resume_skill.resumeId
       GROUP BY resume.resumeId`; // skill 컬럼을 그룹화하는 기준을 project 테이블의 projectId로 설정
-  const resumes = await sequelize.query(query, { type: QueryTypes.SELECT });
+  const returnResumes = await sequelize.query(query, { type: QueryTypes.SELECT });
 
-  if (!resumes.length) return res.status(404).json({ errorMessage: "정보가 존재하지 않습니다." });
+  if (!returnResumes.length) return res.status(404).json({ errorMessage: "정보가 존재하지 않습니다." });
 
-  res.status(200).send({ resumes });
+  res.status(200).send({ returnResumes });
   // 캐시 부적중(cache miss)시 DB에 쿼리 전송, setex 메서드로 설정한 기본 만료시간까지 redis 캐시 저장
   // redisClient.setex("resumes", DEFAULT_EXPIRATION, JSON.stringify(returnResumes));
 };
