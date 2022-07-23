@@ -79,7 +79,7 @@ exports.project = async (req, res) => {
 
       skills.forEach((skill) => ProjectSkill.create({ projectId: result.projectId, skill }));
 
-      if (photos || photos.length) {
+      if (photos) {
         photos.forEach((photo) => ProjectPhoto.create({ projectId: result.projectId, photo }));
       };
     });
