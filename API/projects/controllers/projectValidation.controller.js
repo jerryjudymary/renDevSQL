@@ -29,6 +29,7 @@ const projectPostSchema = Joi.object({
   // 19xx || 20xx년 - xx월 -- xx일
   photos: Joi.array(),
   // 배열
+  applications: Joi.array(),
   createdAt: Joi.string(),
   schedule: Joi.array()
 });
