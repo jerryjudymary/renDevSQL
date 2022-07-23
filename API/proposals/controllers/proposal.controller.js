@@ -1,4 +1,3 @@
-const express = require("express");
 const moment = require("moment");
 const { Project, Application, ProjectSkill, Resume, Proposal } = require("../../../models");
 const { InterviewProposal } = require("../../../API/applications/controllers/notices.controller");

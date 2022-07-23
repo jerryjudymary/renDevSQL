@@ -265,7 +265,7 @@ exports.projectUpdate = async (req, res) => {
  *  ------ applications 수정 파트 ------
  */
     
-    const newScheduleArray = applications.map((app) => app.schedule)
+    const newScheduleArray = applications.map((app) => app.schedule);
     const setCollection = new Set(newScheduleArray); // Set 메서드로 중복된 값이 배열에 존재하는지 비교
     const isReqDuplicate = setCollection.size < newScheduleArray.length;
 
@@ -279,15 +279,15 @@ exports.projectUpdate = async (req, res) => {
     });
     
     const newAvailableApps = applications.filter((app) => app.available === 1 || app.available === true );
-    const validSchedules = newAvailableApps.map((app) => moment(app.schedule, 'YYYY년MM월DD일 HH:mm').format("YYYY-MM-DD HH:mm:ss"))
-    const existUnavailableSchedules = existUnavailableApps.map((app) => app.schedule)
+    const validSchedules = newAvailableApps.map((app) => moment(app.schedule, 'YYYY년MM월DD일 HH:mm').format("YYYY-MM-DD HH:mm:ss"));
+    const existUnavailableSchedules = existUnavailableApps.map((app) => app.schedule);
     const alreadyExistApps = validSchedules.filter((time) => existUnavailableSchedules.includes(time));
     
 
     // 이미 예약된 스케쥴의 시간과 새로운 스케쥴의 시간이 중복된다면 throw
     if (alreadyExistApps.length) {
       throw res.status(400).json({ errorMessage: "이미 예약된 시간대는 추가할 수 없습니다." });
-    }
+    };
  
     // 예약된 스케쥴을 삭제하고 새로 덮어쓰기 해야 할 경우에서 고려해야 할 예외처리의 반복문을 줄이기 위해,
     // 중복 여부만 검사하여 예약된 스케쥴은 삭제하지 않고, 추가하지 않아 기존 예약 데이터의 영속성 유지와 연산 비용 단축
@@ -311,7 +311,7 @@ exports.projectUpdate = async (req, res) => {
     await ProjectSkill.destroy({ where: { projectId }, transaction: t });
     for (let i = 0; i < skills.length; i++) {
       await ProjectSkill.create({ projectId, skill: skills[i] }, { transaction: t });
-    }
+    };
 
     await t.commit();
 
