@@ -1,14 +1,18 @@
 const httpMocks = require("node-mocks-http");
 const MockDate = require("mockdate");
 const locals = require("../data/locals.json");
+// jest.mock 그룹 모킹화
 jest.mock("../../models");
+// jest.mock 밑에 써야 모킹화 가능
 const { Resume, ResumeSkill } = require("../../models");
+const { QueryTypes } = require("sequelize");
 const resumeController = require("../../API/resumes/controllers/resume.controller");
 const newResume = require("../data/new-resume.json");
 
 // model 에서 exports된 모델을 jest.fn() <- mock 함수를 이용하여 불러옴
 Resume.create = jest.fn();
-Resume.findAll = jest.fn();
+// Resume.findAll = jest.fn();
+returnResumes = jest.fn();
 
 ResumeSkill.create = jest.fn();
 ResumeSkill.findAll = jest.fn();
@@ -76,6 +80,6 @@ describe("팀원 찾기 전체 조회 테스트", () => {
 
   it("전체 조회 호출", async () => {
     await resumeController.resumeInfo(req, res, next);
-    expect(Resume.findAll).toHaveBeenCalledWith({});
+    expect(returnResumes).toHaveBeenCalled();
   });
 });

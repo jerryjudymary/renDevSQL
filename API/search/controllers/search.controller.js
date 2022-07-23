@@ -32,7 +32,7 @@ function skillFilter(inputItems, requiredSkills) {
 // 프로젝트 검색 API
 exports.projectSearch = async (req, res) => {
   try {
-    const { role, skill, start, end } = req.body;
+    const { role, skill, start, end } = req.query;
     // DB에서 role로 필터링해 가져오면서, 앞으로 필터링할 객체 배열에는 필요한 요소들만 넣어 놓기
     const roleFilter = role
       ? await Project.findAll({
@@ -44,26 +44,6 @@ exports.projectSearch = async (req, res) => {
           include: [{ model: ProjectSkill, attributtes: ["skill"] }],
           order: [["createdAt", "DESC"]],
         });
-
-    // let resume;
-    // if (role) {
-    //   const query = `SELECT resume.resumeId, userId, nickname, content, start, end, role, content2, content3, resumeImage, createdAt,
-    //   JSON_ARRAYAGG(skill) AS skill  ${/* inner join으로 가져오고 쿼리 말미에 그룹화하는 project_skill 테이블의 skill을 skills라는 alias로 받아옵니다. */ ""}
-    //   FROM resume INNER JOIN resume_skill
-    //   ON resume.resumeId = resume_skill.resumeId
-    //   WHERE resume.role = '${role}'
-    //   ORDER BY start ASC, createdAt DESC
-    //   GROUP BY resume.resumeId`;
-    //   resume = await sequelize.query(query, { type: QueryTypes.SELECT });
-    // } else {
-    //   const query = `SELECT resume.resumeId, userId, nickname, content, start, end, role, content2, content3, resumeImage, createdAt,
-    //   JSON_ARRAYAGG(skill) AS skill  ${/* inner join으로 가져오고 쿼리 말미에 그룹화하는 project_skill 테이블의 skill을 skills라는 alias로 받아옵니다. */ ""}
-    //   FROM resume INNER JOIN resume_skill
-    //   ON resume.resumeId = resume_skill.resumeId
-    //   ORDER BY start ASC, createdAt DESC
-    //   GROUP BY resume.resumeId`;
-    //   resume = await sequelize.query(query, { type: QueryTypes.SELECT });
-    // }
 
     // Project의 정보 중 필요한 요소들만 빼내기 위한 부분,
     // 특히 skills 배열의 데이터 형태를 보기 좋게 가공한다.
@@ -105,7 +85,7 @@ exports.projectSearch = async (req, res) => {
 // Resume 찾기 API
 exports.resumeSearch = async (req, res) => {
   try {
-    const { role, skill, start, end } = req.body;
+    const { role, skill, start, end } = req.query;
     // DB에서 role로 필터링해 가져오면서, 앞으로 필터링할 객체 배열에는 필요한 요소들만 넣어 놓기
     const roleFilter = role
       ? await Resume.findAll({
@@ -117,21 +97,6 @@ exports.resumeSearch = async (req, res) => {
           include: [{ model: ResumeSkill, attributtes: ["skill"] }],
           order: [["createdAt", "DESC"]],
         });
-
-    // ?  const queryone = `SELECT resume.resumeId, userId, nickname, content, start, end, role, content2, content3, resumeImage, createdAt,
-    //     JSON_ARRAYAGG(skill) AS skill  ${/* inner join으로 가져오고 쿼리 말미에 그룹화하는 project_skill 테이블의 skill을 skills라는 alias로 받아옵니다. */ ""}
-    //     FROM resume INNER JOIN resume_skill
-    //     ON resume.resumeId = resume_skill.resumeId
-    //     WHERE resume.role = '${role}'
-    //     ORDER BY start ASC, createdAt DESC
-    //     GROUP BY resume.resumeId)`;
-
-    // : const query = `SELECT resume.resumeId, userId, nickname, content, start, end, role, content2, content3, resumeImage, createdAt,
-    //   JSON_ARRAYAGG(skill) AS skill  ${/* inner join으로 가져오고 쿼리 말미에 그룹화하는 project_skill 테이블의 skill을 skills라는 alias로 받아옵니다. */ ""}
-    //   FROM resume INNER JOIN resume_skill
-    //   ON resume.resumeId = resume_skill.resumeId
-    //   ORDER BY start ASC, createdAt DESC
-    //   GROUP BY resume.resumeId`;
 
     // Resume의 정보 중 필요한 요소들만 빼내기 위한 부분,
     // 특히 skills 배열의 데이터 형태를 보기 좋게 가공한다.
@@ -153,6 +118,26 @@ exports.resumeSearch = async (req, res) => {
 
       roleFilteredResumes.push(resumeObject);
     });
+
+    // let resume;
+    // if (role) {
+    //   const query = `SELECT resume.resumeId, userId, nickname, content, start, end, role, content2, content3, resumeImage, createdAt,
+    //   JSON_ARRAYAGG(skill) AS skill  ${/* inner join으로 가져오고 쿼리 말미에 그룹화하는 project_skill 테이블의 skill을 skills라는 alias로 받아옵니다. */ ""}
+    //   FROM resume INNER JOIN resume_skill
+    //   ON resume.resumeId = resume_skill.resumeId
+    //   WHERE resume.role = '${role}'
+    //   ORDER BY start ASC, createdAt DESC
+    //   GROUP BY resume.resumeId`;
+    //   resume = await sequelize.query(query, { type: QueryTypes.SELECT });
+    // } else {
+    //   const query = `SELECT resume.resumeId, userId, nickname, content, start, end, role, content2, content3, resumeImage, createdAt,
+    //   JSON_ARRAYAGG(skill) AS skill  ${/* inner join으로 가져오고 쿼리 말미에 그룹화하는 project_skill 테이블의 skill을 skills라는 alias로 받아옵니다. */ ""}
+    //   FROM resume INNER JOIN resume_skill
+    //   ON resume.resumeId = resume_skill.resumeId
+    //   ORDER BY start ASC, createdAt DESC
+    //   GROUP BY resume.resumeId`;
+    //   resume = await sequelize.query(query, { type: QueryTypes.SELECT });
+    // }
 
     if (start >= end) return res.status(400).send({ errorMessage: "날짜 검색이 잘못되었습니다" });
 
