@@ -139,19 +139,22 @@ exports.login = async (req, res) => {
         const payload = {
           userId: users.userId,
           nickname: users.nickname,
+          profileImage: users.profileImage
         };
-
         const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
-          expiresIn: "1m",
+          expiresIn: "1h",
         });
-
+        
         const refreshToken = jwt.sign(payload, process.env.JWT_SECRET_REFRESH, {
           expiresIn: "2d",
         });
 
+        res.cookie("Test", "입니다")
         await User.update({ refreshToken }, { where: { userId } });
-
-        return res.status(200).cookie("refreshToken", refreshToken, { httpOnly: true, sameSite: "strict" }).send({ message: "로그인 하셨습니다.", token });
+        // res.cookie("refreshToken", refreshToken, { httpOnly: true, SameSite : "None" });
+        return res.status(200).
+        cookie("refreshToken", refreshToken, { httpOnly : true }).
+        send({ message: "로그인 하셨습니다.", token });
       }
     }
   } catch (err) {
@@ -163,6 +166,8 @@ exports.login = async (req, res) => {
 };
 
 // exports.refresh = async (req, res) => {
+//   console.log("refreshToken:", req.cookies.refreshToken)
+
 //   const refreshToken = req.cookies.refreshToken;
 
 //   console.log("refresh 입니다: ", refreshToken);
@@ -172,7 +177,6 @@ exports.login = async (req, res) => {
 //   }
 
 //   const users = await User.findAll({ where: { refreshToken } });
-//   console.log("users입니다:", users);
 
 //   try {
 //     if (!users) {
@@ -309,23 +313,9 @@ exports.profileImage = async (req, res) => {
 
     const { nickname } = req.params;
 
-    const user = await User.findOne({ where: { nickname } });
-
-    s3.deleteObject(
-      {
-        Bucket: "jerryjudymary",
-        Key: user.profileImage,
-      },
-      (err, data) => {
-        if (err) {
-          console.log(err);
-        }
-      }
-    );
-
     const updateImage = await User.update({ profileImage: profileImage }, { where: { nickname } });
 
-    //   await User.update({ refreshToken }, { where: { userId } });
+      // await User.update({ refreshToken }, { where: { userId } });
 
     return res.status(200).json({ message: "사진을 업로드 했습니다.", updateImage });
   } catch (err) {

@@ -46,7 +46,11 @@ const { User } = require("../models");
 
 module.exports = async (req, res, next) => {
   try {
-    if (!req.headers.authorization && req.headers.authorization === undefined && req.headers.authorization === null) {
+    if (
+      !req.headers.authorization &&
+      req.headers.authorization === undefined &&
+      req.headers.authorization === null
+    ) {
       res.status(401).json({ errorMessage: "토큰의 값이 유효하지 않습니다." });
 
       return next();
@@ -60,7 +64,9 @@ module.exports = async (req, res, next) => {
     const [tokenType, tokenValue] = authorization.split(" ");
 
     if (tokenType !== "Bearer") {
-      return res.status(401).json({ errorMessage: "로그인이 필요한 기능입니다." });
+      return res
+        .status(401)
+        .json({ errorMessage: "로그인이 필요한 기능입니다." });
     }
 
     const { userId } = jwt.verify(tokenValue, process.env.JWT_SECRET_KEY);
@@ -78,33 +84,46 @@ module.exports = async (req, res, next) => {
       console.log("refresh 입니다: ", refreshToken);
 
       if (!refreshToken) {
-        return res.status(401).send({ errorMessage: "Token is expired" });
+        return res.status(401).send({ errorMessage: "TokenExpiredError" });
       }
 
       const users = await User.findAll({ where: { refreshToken } });
 
       try {
         if (!users) {
-          return res.status(401).json({ errorMessage: "refreshToken is unvalidate" });
+          return res
+            .status(401)
+            .json({ errorMessage: "refreshToken is unvalidate" });
         } else {
-          jwt.verify(refreshToken, process.env.JWT_SECRET_REFRESH, (err, data) => {
-            if (err) {
-              return res.status(403).send({ errorMessage: "refreshToken is unvalidate" });
-            } else {
-              const payload = {
-                userId: refreshToken.userId,
-                nickname: refreshToken.nickname,
-              };
-              const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
-                expiresIn: "1h",
-              });
-              return res.status(200).send({ message: "토큰이 재발급 됐습니다.", token });
+          jwt.verify(
+            refreshToken,
+            process.env.JWT_SECRET_REFRESH,
+            (err, data) => {
+              if (err) {
+                return res
+                  .status(403)
+                  .send({ errorMessage: "refreshToken is unvalidate" });
+              } else {
+                const payload = {
+                  userId: data.userId,
+                  nickname: data.nickname,
+                  profileImage: data.profileImage
+                };
+                const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
+                  expiresIn: "1h",
+                });
+                return res
+                  .status(200)
+                  .send({ message: "토큰이 재발급 됐습니다.", token });
+              }
             }
-          });
+          );
         }
       } catch (err) {
-        if (error.name === "TokenExpiredError") {
-          return res.status(401).json({ errorMessage: "refreshToken is expired" });
+        if (err.name === "TokenExpiredError") {
+          return res
+            .status(401)
+            .json({ errorMessage: "refreshToken is expired" });
         } else {
         }
       }

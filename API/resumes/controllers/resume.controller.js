@@ -36,16 +36,16 @@ exports.resumeImage = async (req, res) => {
 exports.resume = async (req, res) => {
   const { id, userId, nickname, profileImage } = res.locals.user;
   const { content, start, end, role, skill, content2, content3 } = req.body;
-
-  if (!userId) return res.status(401).send({ errorMessage: "로그인 후 사용하세요." });
-
-  if (!content || !start || !end || !role || !skill || !content2 || !content3) return res.status(400).send({ errorMessage: "작성란을 모두 기입해주세요." });
-
-  if (start >= end) return res.status(400).send({ errorMessage: "날짜 형식이 잘못되었습니다." });
-
-  const resumeImage = profileImage;
-
+  // const { content, start, end, role, content2, content3 } = req.body;
   try {
+    if (!userId) return res.status(401).send({ errorMessage: "로그인 후 사용하세요." });
+
+    if (!content || !start || !end || !role || !skill || !content2 || !content3) return res.status(400).send({ errorMessage: "작성란을 모두 기입해주세요." });
+
+    if (start >= end) return res.status(400).send({ errorMessage: "날짜 형식이 잘못되었습니다." });
+
+    const resumeImage = profileImage;
+
     await Resume.create({ id, userId, nickname, content, start, end, role, content2, content3, resumeImage }).then((result) => {
       for (let i = 0; i < skill.length; i++) {
         ResumeSkill.create({ resumeId: result.resumeId, skill: skill[i] });
@@ -58,8 +58,8 @@ exports.resume = async (req, res) => {
 
     res.status(200).send({ message: "나의 정보를 등록 했습니다." });
   } catch (error) {
-    console.log(error);
-    res.status(400).send({ errormessage: "등록 실패" });
+    // console.log(error);
+    res.status(400).send({ errorMessage: "등록 실패" });
   }
 };
 
@@ -103,7 +103,7 @@ exports.resumeDetail = async (req, res) => {
 
   if (!resumes.length) return res.status(404).json({ errorMessage: "정보가 존재하지 않습니다." });
 
-  res.status(200).send({ resumes });
+  res.status(200).send({ resumes: resumes[0] });
 };
 
 // 팀원 찾기 정보 수정
@@ -141,7 +141,7 @@ exports.resumeUpdate = async (req, res) => {
     // });
   } catch (error) {
     logger.error(error);
-    res.status(401).send({ errormessage: "정보 수정 실패" });
+    res.status(400).send({ errormessage: "정보 수정 실패" });
     await tran.rollback(); // 트랜젝션 실패시 시작부분까지 되돌리기
   }
 };
@@ -172,7 +172,6 @@ exports.resumeDelete = async (req, res) => {
       //       console.log("s3 deleteObject ", data);
       //     }
       //   );
-      console.log(existResume.resumeImage);
       await existResume.destroy({});
 
       // 수정시 해당 지원서, 전체조회 캐싱용 Redis 키 삭제
@@ -185,6 +184,6 @@ exports.resumeDelete = async (req, res) => {
     res.status(200).send({ message: "나의 정보를 삭제했습니다." });
   } catch (error) {
     logger.error(error);
-    res.status(401).send({ errormessage: "작성자만 삭제할 수 있습니다." });
+    res.status(400).send({ errormessage: "삭제 실패" });
   }
 };
