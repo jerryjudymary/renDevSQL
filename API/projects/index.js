@@ -7,7 +7,6 @@ const aws = require("aws-sdk");
 const s3 = new aws.S3();
 const { v4 } = require("uuid");
 const projectController = require("./controllers/project.controller")
-const proposalController = require("./controllers/proposal.controller")
 
 // multer - S3 이미지 업로드 설정
 
@@ -46,13 +45,5 @@ router.put("/:projectId", authMiddleware, projectController.projectUpdate)
 // 프로젝트 삭제
 
 router.delete("/:projectId", authMiddleware, projectController.projectDelete)
-
-// 지원서에 면접 제안시 내 프로젝트 목록 조회
-
-router.get("/projects", authMiddleware, proposalController.proposalProject)
-
-// 지원서에 선택한 프로젝트 면접 제안
-
-router.post("/:resumeId/:projectId", authMiddleware, proposalController.proposalResume)
 
 module.exports = router;
