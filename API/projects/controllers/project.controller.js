@@ -69,6 +69,10 @@ exports.project = async (req, res) => {
   const createdAt = moment().format("YYYY-MM-DD HH:mm:ss");
   const email = userId;
 
+  redisClient.del(`projects`, function(err, response) {
+    if (response == 1) console.log("새 프로젝트 등록으로 전체조회 캐시 삭제")
+  });
+
   // 시퀄라이즈 쿼리의 반환값은 promise로 반환되므로 .then을 붙여 이용해 줍니다
 
   try {
@@ -80,11 +84,6 @@ exports.project = async (req, res) => {
       if (photos && photos.length) {
         photos.forEach((photo) => ProjectPhoto.create({ projectId: result.projectId, photo }));
       };
-    });
-
-    redisClient.del(`projects`, function(err, response) {
-      if (response == 1) console.log("새 프로젝트 등록으로 전체조회 캐시 삭제")
-
     });
 
     await res.status(200).json({ message: "프로젝트 게시글을 작성했습니다." });
@@ -215,6 +214,12 @@ exports.projectUpdate = async (req, res) => {
   const endMsec = Date.parse(end);
   if (startMsec >= endMsec) return res.status(400).json({ errorMessage: "날짜 형식이 잘못되었습니다." });
 
+  // 수정시 해당 프로젝트, 전체조회 캐싱용 Redis 키 삭제
+  redisClient.del(`projects:${projectId}`, `projects`, function (err, response) {
+    if (response == 1) console.log("1 Redis key deleted");
+    if (response == 2) console.log("2 Redis key deleted");
+  });
+
   // --- 기존 이미지 선별적 다중 삭제
 
   const existPhotos = await ProjectPhoto.findAll({
@@ -319,12 +324,6 @@ exports.projectUpdate = async (req, res) => {
       }
     };
 
-    // 수정시 해당 프로젝트, 전체조회 캐싱용 Redis 키 삭제
-    redisClient.del(`projects:${projectId}`, `projects`, function (err, response) {
-      if (response == 1) console.log("1 Redis key deleted");
-      if (response == 2) console.log("2 Redis key deleted");
-    });
-
     await t.commit();
 
     return res.status(200).json({
@@ -358,6 +357,12 @@ exports.projectDelete = async (req, res) => {
   if (id !== existProject.id) {
     return res.status(401).send({ errorMessage: "작성자만 삭제할 수 있습니다." });
   }
+
+  // 삭제시 해당 프로젝트, 전체조회 캐싱용 Redis 키 삭제
+  redisClient.del(`projects:${projectId}`, `projects`, function (err, response) {
+    if (response == 1) console.log("1 Redis key deleted");
+    if (response == 2) console.log("2 Redis key deleted");
+  });
 
   // --- 기존 이미지 다중 삭제
 
@@ -394,12 +399,6 @@ exports.projectDelete = async (req, res) => {
   Project.destroy({
     // ON DELETE CASCADE 적용으로 자식 테이블의 데이터도 지워집니다
     where: { projectId, id },
-  });
-
-  // 삭제시 해당 프로젝트, 전체조회 캐싱용 Redis 키 삭제
-  redisClient.del(`projects:${projectId}`, `projects`, function (err, response) {
-    if (response == 1) console.log("1 Redis key deleted");
-    if (response == 2) console.log("2 Redis key deleted");
   });
 
   res.status(200).json({
