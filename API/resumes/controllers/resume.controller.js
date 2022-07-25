@@ -105,7 +105,7 @@ exports.resumeDetail = async (req, res) => {
     if (!resumes.length) return res.status(404).json({ errorMessage: "정보가 존재하지 않습니다." });
 
     // 캐시 부적중(cache miss)시 DB에 쿼리 전송, setex 메서드로 설정한 기본 만료시간까지 redis 캐시 저장
-    redisClient.setex(`resumes:${resumeId}`, DEFAULT_EXPIRATION, JSON.stringify(resumes));
+    redisClient.setex(`resumes:${resumeId}`, DEFAULT_EXPIRATION, JSON.stringify(resumes[0]));
 
     res.status(200).send({ resumes: resumes[0] });
   })
