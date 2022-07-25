@@ -235,17 +235,13 @@ exports.myApply = async(req, res) => {
     const proId = apply.map(data => data.projectId).toString()
     
       const sql =
-      `  SELECT A.*, JSON_ARRAYAGG(JSON_OBJECT( 
-        'applicationId', applicationId, 'available', available,
-        'schedule', DATE_FORMAT(schedule,'%Y-%m-%d %H:%i:%S'),
-        'status', status, 'interviewCode', interviewCode
-      )) AS applications
-      FROM( SELECT B.* FROM( SELECT C.*, JSON_ARRAYAGG(skill) AS ProjectSkills FROM project C
-
-          INNER JOIN project_skill D ON C.projectId = D.projectId where C.projectId IN (${proId}) GROUP BY C.projectId) B
-
-          ) A INNER JOIN application E ON A.projectId = E.projectId GROUP BY E.applicationId
-    `; 
+      `SELECT A.*, JSON_ARRAYAGG(JSON_OBJECT( 
+       'applicationId', applicationId, 'available', available,
+       'schedule', DATE_FORMAT(schedule,'%Y-%m-%d %H:%i:%S'),
+       'status', status, 'interviewCode', interviewCode)) AS applications
+       FROM( SELECT B.* FROM( SELECT C.*, JSON_ARRAYAGG(skill) AS ProjectSkills FROM project C
+       INNER JOIN project_skill D ON C.projectId = D.projectId where C.projectId IN (${proId}) GROUP BY C.projectId) B
+       ) A INNER JOIN application E ON A.projectId = E.projectId GROUP BY E.applicationId`; 
 
     const projects = await sequelize.query(sql, { type: QueryTypes.SELECT });
 
@@ -311,91 +307,120 @@ exports.myApply = async(req, res) => {
   };
 exports.recruit = async(req, res) => {
     try {
-      const { userId } = res.locals.user;
-      if(userId === undefined) {
+      const user = res.locals.user;
+      if(user === undefined) {
         return res.status(401).send({ errorMessage: "로그인이 필요합니다." });
       } 
-      const { nickname } = req.params;
+      // user의 id값으로 user가 작성한 project를 불러온다.
+      // 유저가 작성한 projectId값으로 지원서를 조회한다. => 유저의 프로젝트에 묶여있는 지원서들을 조회
+      // 그리고 그 유저의 프로젝트에 묶여있는 지원서들 중 resumeId만 가져온다.
+      // 그리고 그 유저의 프로젝트에 묶여있는 지원서들 중 resumeId만 가져와서 resume table을 조회한다.
+      // 그리고 필터링된 resume테이블의 지원서들의 resumeId값을 뽑아낸다.
+      // 그리고 application에서 user가 작성한 프로젝트들을 불러오는데, 프로젝트 지원자에 대한 정보는
+      // 위에서 불러온 resumeId로 필터링하고 group화해서 가져온다.
+
+    const sql = `select A.projectId from project A inner join user B on A.id = B.id where A.id=${user.id}`
+    const query = await sequelize.query(sql, { type: QueryTypes.SELECT });
+    const proId = query.map(data => data.projectId).toString()
+    const sql2 = `select A.resumeId from application A inner join project B
+    on A.projectId = B.projectId where A.projectId in (${proId})`
+    const query2 = await sequelize.query(sql2, { type: QueryTypes.SELECT });
+    const recruit = query2.map(data => data.resumeId).filter((el) => {
+      return el !== null
+    }).toString()
+
+    const sql3 =
+    `SELECT A.*, JSON_OBJECT('nickname', resume.nickname, 'role', resume.role, 'resumeId', resume.resumeId ) as Resume
+    FROM (
+      SELECT B.*, C.applicationId, C.schedule, C.available, C.interviewCode, C.resumeId
+      FROM (
+        SELECT X.projectId, id, nickname, title, details, role, start, end, createdAt,
+        JSON_ARRAYAGG(skill) as ProjectSkills FROM project X INNER JOIN project_skill Y
+        ON X.projectId = Y.projectId where X.projectId IN (${proId}) GROUP BY X.projectId)
+      B INNER JOIN application C ON B.projectId = C.projectId where B.projectId IN (${proId}) GROUP BY C.applicationId)
+    A INNER JOIN resume ON A.resumeId = resume.resumeId where A.resumeId IN (${recruit}) GROUP BY A.applicationId`
+
+    const recruits = await sequelize.query(sql3, { type: QueryTypes.SELECT });
+
+    return res.status(200).send(recruits);
+
+    //   const project = await Project.findAll({ where: { id : user.id }, include :
+    //     [ 
+    //       {
+    //         model: ProjectSkill
+    //       }
+    //     ]
+    //   })
+
+    //   if(!project){
+    //     return res.status(401).send({ errorMessage: "내 Project를 찾을 수 없습니다."})
+    //   }
+
+    //   const proId = project.map(data => data.projectId)
+
+    //   if(!user){
+    //       return res.status(401).send({ errorMessage: "존재하지 않는 유저입니다."}); 
+    //   };
+
+    //   const app = await Application.findAll({ where: { projectId : proId }})
+
+    //   if(!app){
+    //     return res.status(400).send({ errorMessage: "내 Project에 지원기록을 찾을 수 없습니다."})
+    //   }
+
+    //   const apps = app.map(data => data.resumeId)
+
+    //   const Res = await Resume.findAll({ where: { resumeId : apps}})
+
+    //   if(!Res){
+    //     return res.status(400).send({ errorMessage: "지원서를 찾을 수 없습니다."})
+    //   }
+
+    //   // Application과 관계를 맺은 테이블 Project, Resume
+    //   // 지원자 status의 nickname, role은 resume nickname role이다.
+    //   // 한개의 App당 하나의 project 정보와 선별된 resume정보가 담겨야 한다.
+    //   // 이 프로젝트에 지원한 resume를 어떻게 Resume테이블에서 긁어오나?
+    //   // App에 담긴 resume Id로 긁어온다.
+    //   // 해야할일은 먼저 app을 매핑하는 것
+
+    //   const resumeId = Res.map( data => data.resumeId )
   
-      const user = await User.findOne({ where: { nickname } });
-      
-      const project = await Project.findAll({ where: { id : user.id }, include :
-        [ 
-          {
-            model: ProjectSkill
-          }
-        ]
-      })
+    //   const App = await Application.findAll({ where: { projectId : proId } ,
+    //     include : [
+    //       {
+    //         model : Project,
+    //         attributes: ['nickname', 'title', 'details', 'role', 'start', 'end', 'createdAt']
+    //       },
+    //       {
+    //         model: Resume,
+    //         where: { resumeId : resumeId},
+    //         attributes: ['nickname', 'role']
+    //       }
+    //     ]   
+    //   });
 
-      if(!project){
-        return res.status(401).send({ errorMessage: "내 Project를 찾을 수 없습니다."})
-      }
-
-      const proId = project.map(data => data.projectId)
-
-      if(!user){
-          return res.status(401).send({ errorMessage: "존재하지 않는 유저입니다."}); 
-      };
-
-      const app = await Application.findAll({ where: { projectId : proId }})
-
-      if(!app){
-        return res.status(400).send({ errorMessage: "내 Project에 지원기록을 찾을 수 없습니다."})
-      }
-
-      const apps = app.map(data => data.resumeId)
-
-      const Res = await Resume.findAll({ where: { resumeId : apps}})
-
-      if(!Res){
-        return res.status(400).send({ errorMessage: "지원서를 찾을 수 없습니다."})
-      }
-
-      // Application과 관계를 맺은 테이블 Project, Resume
-      // 지원자 status의 nickname, role은 resume nickname role이다.
-      // 한개의 App당 하나의 project 정보와 선별된 resume정보가 담겨야 한다.
-      // 이 프로젝트에 지원한 resume를 어떻게 Resume테이블에서 긁어오나?
-      // App에 담긴 resume Id로 긁어온다.
-      // 해야할일은 먼저 app을 매핑하는 것
-
-      const resumeId = Res.map( data => data.resumeId )
-  
-      const App = await Application.findAll({ where: { projectId : proId } ,
-        include : [
-          {
-            model : Project,
-            attributes: ['nickname', 'title', 'details', 'role', 'start', 'end', 'createdAt']
-          },
-          {
-            model: Resume,
-            where: { resumeId : resumeId},
-            attributes: ['nickname', 'role']
-          }
-        ]   
-      });
-
-    const proSkills = project.map(data => data.ProjectSkills.map(data2 => data2["skill"]))
+    // const proSkills = project.map(data => data.ProjectSkills.map(data2 => data2["skill"]))
     
-    const Apps = []
-        App.forEach((data, idx) => {
-            let projects = {}
+    // const Apps = []
+    //     App.forEach((data, idx) => {
+    //         let projects = {}
             
-            projects.schedule = data.schedule
-            projects.available = data.available
-            projects.status = data.status
-            projects.interviewCode = data.interviewCode
-            projects.Project = data.Project
-            projects.Resume = data.Resume
-            projects.ProjectSkills = proSkills[idx]
+    //         projects.schedule = data.schedule
+    //         projects.available = data.available
+    //         projects.status = data.status
+    //         projects.interviewCode = data.interviewCode
+    //         projects.Project = data.Project
+    //         projects.Resume = data.Resume
+    //         projects.ProjectSkills = proSkills[idx]
 
-            return Apps.push(projects)
-        })
+    //         return Apps.push(projects)
+    //     })
    
-      // 프로젝트들에 대한 유저들의 지원상태
-      // 프로젝트 Id를 기준으로 reserve된 id를 모두 가져와야한다.
-      // 프로젝트 Id 1개당 1개의 지원서를 불러와야 한다. 
+    //   // 프로젝트들에 대한 유저들의 지원상태
+    //   // 프로젝트 Id를 기준으로 reserve된 id를 모두 가져와야한다.
+    //   // 프로젝트 Id 1개당 1개의 지원서를 불러와야 한다. 
   
-      return res.status(200).send(Apps)
+    //   return res.status(200).send(Apps)
   
     } catch(err){
       if(err){
