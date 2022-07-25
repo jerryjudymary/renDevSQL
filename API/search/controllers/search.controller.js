@@ -70,7 +70,7 @@ exports.projectSearch = async (req, res) => {
     if (start >= end) return res.status(400).send({ errorMessage: "날짜 검색이 잘못되었습니다" });
 
     // 기간 필터링 함수 실행
-    const periodFilteredProjects = start && end ? await periodFilter(roleFilter, start, end) : roleFilter;
+    const periodFilteredProjects = start && end ? await periodFilter(roleFilteredProjects, start, end) : roleFilteredProjects;
 
     // 요구스킬 필터링 함수 실행
     const skillFilteredProjects = skill ? await skillFilter(periodFilteredProjects, skill) : periodFilteredProjects;
@@ -119,30 +119,10 @@ exports.resumeSearch = async (req, res) => {
       roleFilteredResumes.push(resumeObject);
     });
 
-    // let resume;
-    // if (role) {
-    //   const query = `SELECT resume.resumeId, userId, nickname, content, start, end, role, content2, content3, resumeImage, createdAt,
-    //   JSON_ARRAYAGG(skill) AS skill  ${/* inner join으로 가져오고 쿼리 말미에 그룹화하는 project_skill 테이블의 skill을 skills라는 alias로 받아옵니다. */ ""}
-    //   FROM resume INNER JOIN resume_skill
-    //   ON resume.resumeId = resume_skill.resumeId
-    //   WHERE resume.role = '${role}'
-    //   ORDER BY start ASC, createdAt DESC
-    //   GROUP BY resume.resumeId`;
-    //   resume = await sequelize.query(query, { type: QueryTypes.SELECT });
-    // } else {
-    //   const query = `SELECT resume.resumeId, userId, nickname, content, start, end, role, content2, content3, resumeImage, createdAt,
-    //   JSON_ARRAYAGG(skill) AS skill  ${/* inner join으로 가져오고 쿼리 말미에 그룹화하는 project_skill 테이블의 skill을 skills라는 alias로 받아옵니다. */ ""}
-    //   FROM resume INNER JOIN resume_skill
-    //   ON resume.resumeId = resume_skill.resumeId
-    //   ORDER BY start ASC, createdAt DESC
-    //   GROUP BY resume.resumeId`;
-    //   resume = await sequelize.query(query, { type: QueryTypes.SELECT });
-    // }
-
     if (start >= end) return res.status(400).send({ errorMessage: "날짜 검색이 잘못되었습니다" });
 
     // 기간 필터링 함수 실행
-    const periodFilteredResumes = start && end ? await periodFilter(roleFilter, start, end) : roleFilter;
+    const periodFilteredResumes = start && end ? await periodFilter(roleFilteredResumes, start, end) : roleFilteredResumes;
 
     // 요구스킬 필터링 함수 실행
     const skillFilteredResumes = skill ? await skillFilter(periodFilteredResumes, skill) : periodFilteredResumes;
