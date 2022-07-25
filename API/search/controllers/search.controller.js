@@ -1,6 +1,5 @@
 const express = require("express");
 const logger = require("../../../config/logger");
-const { QueryTypes } = require("sequelize");
 const { Project, ProjectSkill, Resume, ResumeSkill, sequelize } = require("../../../models");
 
 // Project검색API, Resume검색API 둘 다 공용으로 사용할 함수 periodFilter와 skillFilter를 먼저 선언한다.
@@ -38,11 +37,17 @@ exports.projectSearch = async (req, res) => {
       ? await Project.findAll({
           where: { role: role },
           include: [{ model: ProjectSkill, attributtes: ["skill"] }],
-          order: [["start", "ASC"]],
+          order: [
+            ["start", "ASC"],
+            ["createdAt", "DESC"],
+          ],
         })
       : await Project.findAll({
           include: [{ model: ProjectSkill, attributtes: ["skill"] }],
-          order: [["createdAt", "DESC"]],
+          order: [
+            ["start", "ASC"],
+            ["createdAt", "DESC"],
+          ],
         });
 
     // Project의 정보 중 필요한 요소들만 빼내기 위한 부분,
@@ -75,7 +80,7 @@ exports.projectSearch = async (req, res) => {
     // 요구스킬 필터링 함수 실행
     const skillFilteredProjects = skill ? await skillFilter(periodFilteredProjects, skill) : periodFilteredProjects;
 
-    return res.status(200).json(skillFilteredProjects);
+    res.status(200).send({ skillFilteredProjects });
   } catch (error) {
     logger.error(error);
     res.status(400).send({ errorMessage: "검색 실패" });
@@ -127,7 +132,7 @@ exports.resumeSearch = async (req, res) => {
     // 요구스킬 필터링 함수 실행
     const skillFilteredResumes = skill ? await skillFilter(periodFilteredResumes, skill) : periodFilteredResumes;
 
-    return res.status(200).json(skillFilteredResumes);
+    res.status(200).send({ skillFilteredResumes });
   } catch {
     logger.error(error);
     res.status(400).send({ errorMessage: "검색 실패" });
