@@ -96,11 +96,17 @@ exports.resumeSearch = async (req, res) => {
       ? await Resume.findAll({
           where: { role: role },
           include: [{ model: ResumeSkill, attributtes: ["skill"] }],
-          order: [["start", "ASC"]],
+          order: [
+            ["start", "ASC"],
+            ["createdAt", "DESC"],
+          ],
         })
       : await Resume.findAll({
           include: [{ model: ResumeSkill, attributtes: ["skill"] }],
-          order: [["createdAt", "DESC"]],
+          order: [
+            ["start", "ASC"],
+            ["createdAt", "DESC"],
+          ],
         });
 
     // Resume의 정보 중 필요한 요소들만 빼내기 위한 부분,
