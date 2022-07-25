@@ -19,7 +19,7 @@ function skillFilter(inputItems, requiredSkills) {
   let skillFilteredItems = [];
   let allSkill;
   inputItems.forEach((item) => {
-    allSkill = requiredSkills.every((specificSkill) => item["skills"].includes(specificSkill));
+    allSkill = requiredSkills.some((specificSkill) => item["skills"].includes(specificSkill));
     if (allSkill) skillFilteredItems.push(item);
   });
   return skillFilteredItems;
@@ -65,7 +65,7 @@ exports.projectSearch = async (req, res) => {
 
       roleFilteredProjects.push(projectObject);
     });
-    console.log(roleFilteredProjects);
+    // console.log(roleFilteredProjects);
 
     if (start >= end) return res.status(400).send({ errorMessage: "날짜 검색이 잘못되었습니다" });
 
@@ -75,7 +75,7 @@ exports.projectSearch = async (req, res) => {
     // 요구스킬 필터링 함수 실행
     const skillFilteredProjects = skill ? await skillFilter(periodFilteredProjects, skill) : periodFilteredProjects;
 
-    return res.json(skillFilteredProjects);
+    return res.status(200).json(skillFilteredProjects);
   } catch (error) {
     logger.error(error);
     res.status(400).send({ errorMessage: "검색 실패" });
@@ -127,7 +127,7 @@ exports.resumeSearch = async (req, res) => {
     // 요구스킬 필터링 함수 실행
     const skillFilteredResumes = skill ? await skillFilter(periodFilteredResumes, skill) : periodFilteredResumes;
 
-    return res.json(skillFilteredResumes);
+    return res.status(200).json(skillFilteredResumes);
   } catch {
     logger.error(error);
     res.status(400).send({ errorMessage: "검색 실패" });
