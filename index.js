@@ -10,26 +10,9 @@ const logger = require("./config/logger");
 
 const Router = require("./routes");
 
-const whitelist = ["https://rendev99.com", "http://localhost:3000"];
-const corsOptions = {
-  origin: function (origin, callback) {
-    console.log(origin);
-    if (whitelist.indexOf(origin) !== -1) {
-      // 만일 whitelist 배열에 origin인자가 있을 경우
-      callback(null, true); // cors 허용
-    } else {
-      callback(new Error("Not Allowed Origin!")); // cors 비허용
-    }
-  },
-  credentials: true,
-  methods: "GET, HEAD, PUT, PATCH, POST, DELETE",
-};
-
-app.use(cors(corsOptions));
-
 app.use(
   cors({
-    origin: "https://rendev99.com", //["http://localhost:3001"],
+    origin: true, //["http://localhost:3001"],
     credentials: true,
     methods: "GET, HEAD, PUT, PATCH, POST, DELETE",
   })
