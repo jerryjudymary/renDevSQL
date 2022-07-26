@@ -114,7 +114,7 @@ exports.resumeDetail = async (req, res) => {
 exports.resumeUpdate = async (req, res) => {
   const { userId } = res.locals.user;
   const { resumeId } = req.params;
-  const { content, start, end, role, skills, content2, content3, resumeImage } = req.body;
+  const { content, start, end, role, skills, content2, content3 } = req.body;
 
   try {
     const existResume = await Resume.findOne({ where: { resumeId } });
@@ -127,7 +127,7 @@ exports.resumeUpdate = async (req, res) => {
 
     const tran = await sequelize.transaction(); // 트랙잭션 시작
 
-    existResume.update({ content, start, end, role, content2, content3, resumeImage }, { where: { resumeId } });
+    existResume.update({ content, start, end, role, content2, content3 }, { where: { resumeId } });
     // 등록 당시의 개수와 수정 당시의 개수가 다르면 update 사용 곤란으로 삭제 후 재등록 처리
     if (skills.length) {
       await ResumeSkill.destroy({ where: { resumeId }, transaction: tran });
