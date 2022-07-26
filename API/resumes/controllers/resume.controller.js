@@ -35,21 +35,19 @@ exports.resumeImage = async (req, res) => {
 // 팀원 찾기 등록
 exports.resume = async (req, res) => {
   const { id, userId, nickname, profileImage } = res.locals.user;
-  const { content, start, end, role, skill, content2, content3 } = req.body;
+  const { content, start, end, role, skills, content2, content3 } = req.body;
   // const { content, start, end, role, content2, content3 } = req.body;
   try {
     if (!userId) return res.status(401).json({ errorMessage: "로그인 후 사용하세요." });
 
-    if (!content || !start || !end || !role || !skill || !content2 || !content3) return res.status(400).json({ errorMessage: "작성란을 모두 기입해주세요." });
+    if (!content || !start || !end || !role || !skills || !content2 || !content3) return res.status(400).json({ errorMessage: "작성란을 모두 기입해주세요." });
 
     if (start >= end) return res.status(400).json({ errorMessage: "날짜 형식이 잘못되었습니다." });
 
     const resumeImage = profileImage;
 
     await Resume.create({ id, userId, nickname, content, start, end, role, content2, content3, resumeImage }).then((result) => {
-      for (let i = 0; i < skill.length; i++) {
-        ResumeSkill.create({ resumeId: result.resumeId, skill: skill[i] });
-      }
+      skills.forEach((skill) => ProjectSkill.create({ resumeId: result.resumeId, skill }));
     });
 
     redisClient.del(`resumes`, function (err, response) {
@@ -71,7 +69,7 @@ exports.resumeInfo = async (req, res) => {
     if (data) return res.status(200).json({ returnResumes: JSON.parse(data) }); // 캐시 적중(cache hit)시 response!
 
     const query = `SELECT resume.resumeId, nickname, content, resumeImage, start, end, role, createdAt,
-        JSON_ARRAYAGG(skill) AS skill  ${/* inner join으로 가져오고 쿼리 말미에 그룹화하는 project_skill 테이블의 skill을 skills라는 alias로 받아옵니다. */ ""}
+        JSON_ARRAYAGG(skill) AS skills  ${/* inner join으로 가져오고 쿼리 말미에 그룹화하는 project_skill 테이블의 skill을 skills라는 alias로 받아옵니다. */ ""}
         FROM resume INNER JOIN resume_skill
         ON resume.resumeId = resume_skill.resumeId
         GROUP BY resume.resumeId`; // skill 컬럼을 그룹화하는 기준을 project 테이블의 projectId로 설정
@@ -79,9 +77,10 @@ exports.resumeInfo = async (req, res) => {
 
     if (!returnResumes) return res.status(404).json({ errorMessage: "정보가 존재하지 않습니다." });
 
-    res.status(200).json({ returnResumes }); // 이거 응답 변수명 나중에 수정하시면 밑에 레디스 stringify 안에도 바꿔주세요!
     // 캐시 부적중(cache miss)시 DB에 쿼리 전송, setex 메서드로 설정한 기본 만료시간까지 redis 캐시 저장
     redisClient.setex("resumes", DEFAULT_EXPIRATION, JSON.stringify(returnResumes));
+
+    res.status(200).json({ returnResumes }); // 이거 응답 변수명 나중에 수정하시면 밑에 레디스 stringify 안에도 바꿔주세요!
   });
 };
 
@@ -94,7 +93,7 @@ exports.resumeDetail = async (req, res) => {
     if (data) return res.status(200).json({ resumes: JSON.parse(data) }); // 캐시 적중(cache hit)시 response!
 
     const query = `SELECT resume.resumeId, userId, nickname, content, start, end, role, content2, content3, resumeImage, createdAt,
-        JSON_ARRAYAGG(skill) AS skill  ${/* inner join으로 가져오고 쿼리 말미에 그룹화하는 project_skill 테이블의 skill을 skills라는 alias로 받아옵니다. */ ""}
+        JSON_ARRAYAGG(skill) AS skills  ${/* inner join으로 가져오고 쿼리 말미에 그룹화하는 project_skill 테이블의 skill을 skills라는 alias로 받아옵니다. */ ""}
         FROM resume INNER JOIN resume_skill
         ON resume.resumeId = resume_skill.resumeId
         WHERE resume.resumeId = '${resumeId}'
@@ -102,7 +101,7 @@ exports.resumeDetail = async (req, res) => {
 
     const resumes = await sequelize.query(query, { type: QueryTypes.SELECT });
 
-    if (!resumes.length) return res.status(404).json({ errorMessage: "정보가 존재하지 않습니다." });
+    if (!resumes) return res.status(404).json({ errorMessage: "정보가 존재하지 않습니다." });
 
     // 캐시 부적중(cache miss)시 DB에 쿼리 전송, setex 메서드로 설정한 기본 만료시간까지 redis 캐시 저장
     redisClient.setex(`resumes:${resumeId}`, DEFAULT_EXPIRATION, JSON.stringify(resumes[0]));
@@ -115,25 +114,25 @@ exports.resumeDetail = async (req, res) => {
 exports.resumeUpdate = async (req, res) => {
   const { userId } = res.locals.user;
   const { resumeId } = req.params;
-  const { content, start, end, role, skill, content2, content3, resumeImage } = req.body;
-
-  const existResume = await Resume.findOne({ where: { resumeId } });
-
-  if (userId !== existResume.userId) return res.status(400).json({ errormessage: "내 게시글이 아닙니다" });
-
-  if (!content || !start || !end || !role || !skill || !content2 || !content3) return res.status(400).json({ errorMessage: "작성란을 모두 기입해주세요" });
-
-  if (start >= end) return res.status(400).json({ errorMessage: "날짜 형식이 잘못되었습니다." });
-
-  const tran = await sequelize.transaction(); // 트랙잭션 시작
+  const { content, start, end, role, skills, content2, content3, resumeImage } = req.body;
 
   try {
+    const existResume = await Resume.findOne({ where: { resumeId } });
+
+    if (userId !== existResume.userId) return res.status(400).json({ errormessage: "내 게시글이 아닙니다" });
+
+    if (!content || !start || !end || !role || !skills || !content2 || !content3) return res.status(400).json({ errorMessage: "작성란을 모두 기입해주세요" });
+
+    if (start >= end) return res.status(400).json({ errorMessage: "날짜 형식이 잘못되었습니다." });
+
+    const tran = await sequelize.transaction(); // 트랙잭션 시작
+
     existResume.update({ content, start, end, role, content2, content3, resumeImage }, { where: { resumeId } });
     // 등록 당시의 개수와 수정 당시의 개수가 다르면 update 사용 곤란으로 삭제 후 재등록 처리
-    if (skill.length) {
+    if (skills.length) {
       await ResumeSkill.destroy({ where: { resumeId }, transaction: tran });
-      for (let i = 0; i < skill.length; i++) {
-        await ResumeSkill.create({ resumeId, skill: skill[i] }, { transaction: tran });
+      for (let i = 0; i < skills.length; i++) {
+        await ResumeSkill.create({ resumeId, skill: skills[i] }, { transaction: tran });
       }
     }
     res.status(200).json({ message: "나의 정보를 수정했습니다." });
@@ -164,19 +163,6 @@ exports.resumeDelete = async (req, res) => {
     if (userId !== existResume.userId) {
       return res.status(400).json({ errormessage: "내 게시글이 아닙니다" });
     } else {
-      // if (existResume.resumeImage === resumeImage) {
-      //   s3.deleteObject(
-      //     {
-      //       bucket: "jerryjudymary",
-      //       Key: "resumeImage/" + existResume.resumeImage,
-      //     },
-      //     (err, data) => {
-      //       if (err) {
-      //         throw err;
-      //       }
-      //       console.log("s3 deleteObject ", data);
-      //     }
-      //   );
       await existResume.destroy({});
 
       // 수정시 해당 지원서, 전체조회 캐싱용 Redis 키 삭제
