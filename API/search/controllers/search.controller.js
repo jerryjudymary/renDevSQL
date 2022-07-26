@@ -18,7 +18,7 @@ function skillFilter(inputItems, requiredSkills) {
   let skillFilteredItems = [];
   let allSkill;
   inputItems.forEach((item) => {
-    allSkill = requiredSkills.some((specificSkill) => item["skills"].includes(specificSkill));
+    allSkill = requiredSkills.every((specificSkill) => item["skills"].includes(specificSkill));
     if (allSkill) skillFilteredItems.push(item);
   });
   return skillFilteredItems;
@@ -37,17 +37,11 @@ exports.projectSearch = async (req, res) => {
       ? await Project.findAll({
           where: { role: role },
           include: [{ model: ProjectSkill, attributtes: ["skill"] }],
-          order: [
-            ["start", "ASC"],
-            ["createdAt", "DESC"],
-          ],
+          order: [["createdAt", "DESC"]],
         })
       : await Project.findAll({
           include: [{ model: ProjectSkill, attributtes: ["skill"] }],
-          order: [
-            ["start", "ASC"],
-            ["createdAt", "DESC"],
-          ],
+          order: [["createdAt", "DESC"]],
         });
 
     // Project의 정보 중 필요한 요소들만 빼내기 위한 부분,
@@ -72,7 +66,7 @@ exports.projectSearch = async (req, res) => {
     });
     // console.log(roleFilteredProjects);
 
-    if (start >= end) return res.status(400).send({ errorMessage: "날짜 검색이 잘못되었습니다" });
+    if (start >= end) return res.status(400).json({ errorMessage: "날짜 검색이 잘못되었습니다" });
 
     // 기간 필터링 함수 실행
     const periodFilteredProjects = start && end ? await periodFilter(roleFilteredProjects, start, end) : roleFilteredProjects;
@@ -80,10 +74,10 @@ exports.projectSearch = async (req, res) => {
     // 요구스킬 필터링 함수 실행
     const skillFilteredProjects = skill ? await skillFilter(periodFilteredProjects, skill) : periodFilteredProjects;
 
-    res.status(200).send({ skillFilteredProjects });
+    res.status(200).json({ skillFilteredProjects });
   } catch (error) {
     logger.error(error);
-    res.status(400).send({ errorMessage: "검색 실패" });
+    res.status(400).json({ errorMessage: "검색 실패" });
   }
 };
 
@@ -96,17 +90,11 @@ exports.resumeSearch = async (req, res) => {
       ? await Resume.findAll({
           where: { role: role },
           include: [{ model: ResumeSkill, attributtes: ["skill"] }],
-          order: [
-            ["start", "ASC"],
-            ["createdAt", "DESC"],
-          ],
+          order: [["createdAt", "DESC"]],
         })
       : await Resume.findAll({
           include: [{ model: ResumeSkill, attributtes: ["skill"] }],
-          order: [
-            ["start", "ASC"],
-            ["createdAt", "DESC"],
-          ],
+          order: [["createdAt", "DESC"]],
         });
 
     // Resume의 정보 중 필요한 요소들만 빼내기 위한 부분,
@@ -130,7 +118,7 @@ exports.resumeSearch = async (req, res) => {
       roleFilteredResumes.push(resumeObject);
     });
 
-    if (start >= end) return res.status(400).send({ errorMessage: "날짜 검색이 잘못되었습니다" });
+    if (start >= end) return res.status(400).json({ errorMessage: "날짜 검색이 잘못되었습니다" });
 
     // 기간 필터링 함수 실행
     const periodFilteredResumes = start && end ? await periodFilter(roleFilteredResumes, start, end) : roleFilteredResumes;
@@ -138,9 +126,9 @@ exports.resumeSearch = async (req, res) => {
     // 요구스킬 필터링 함수 실행
     const skillFilteredResumes = skill ? await skillFilter(periodFilteredResumes, skill) : periodFilteredResumes;
 
-    res.status(200).send({ skillFilteredResumes });
+    res.status(200).json({ skillFilteredResumes });
   } catch {
     logger.error(error);
-    res.status(400).send({ errorMessage: "검색 실패" });
+    res.status(400).json({ errorMessage: "검색 실패" });
   }
 };

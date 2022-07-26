@@ -1,5 +1,4 @@
 const express = require("express");
-const router = express.Router();
 const logger = require("../../../config/logger");
 const { Project, ProjectSkill, Resume, ResumeSkill, sequelize } = require("../../../models");
 
@@ -25,10 +24,10 @@ function skillFilter(inputItems, requiredSkills) {
 
 // "Resume의 조건에 맞는 Projects" 매칭 API
 exports.projectMatches = async (req, res) => {
-  // const { userId } = res.locals.user;
+  const { userId } = res.locals.user;
   const { resumeId } = req.params;
   try {
-    // if (!userId) return res.status(401).send({ errorMessage: "로그인 후 사용하세요." });
+    if (!userId) return res.status(401).send({ errorMessage: "로그인 후 사용하세요." });
 
     // 선택한 resume의 role, start, end, skill 조건을 추출한다.
     const resumeStandard = await Resume.findOne({
@@ -91,10 +90,10 @@ exports.projectMatches = async (req, res) => {
 
 // "Project의 조건에 맞는 Resumes" 매칭 API
 exports.resumeMatches = async (req, res) => {
-  // const { userId } = res.locals.user;
+  const { userId } = res.locals.user;
   const { projectId } = req.params;
   try {
-    // if (!userId) return res.status(401).send({ errorMessage: "로그인 후 사용하세요." });
+    if (!userId) return res.status(401).send({ errorMessage: "로그인 후 사용하세요." });
 
     // 선택한 resume의 role, start, end, skill 조건을 추출한다.
     const projectStandard = await Project.findOne({

@@ -28,7 +28,7 @@ exports.resumeImage = async (req, res) => {
     return res.status(200).json({ message: "사진을 업로드 했습니다.", resumeImage });
   } catch (err) {
     logger.error(err);
-    res.status(400).send({ errorMessage: "사진업로드 실패-파일 형식과 크기(1.5Mb 이하) 를 확인해주세요." });
+    res.status(400).json({ errorMessage: "사진업로드 실패-파일 형식과 크기(1.5Mb 이하) 를 확인해주세요." });
   }
 };
 
@@ -38,11 +38,11 @@ exports.resume = async (req, res) => {
   const { content, start, end, role, skill, content2, content3 } = req.body;
   // const { content, start, end, role, content2, content3 } = req.body;
   try {
-    if (!userId) return res.status(401).send({ errorMessage: "로그인 후 사용하세요." });
+    if (!userId) return res.status(401).json({ errorMessage: "로그인 후 사용하세요." });
 
-    if (!content || !start || !end || !role || !skill || !content2 || !content3) return res.status(400).send({ errorMessage: "작성란을 모두 기입해주세요." });
+    if (!content || !start || !end || !role || !skill || !content2 || !content3) return res.status(400).json({ errorMessage: "작성란을 모두 기입해주세요." });
 
-    if (start >= end) return res.status(400).send({ errorMessage: "날짜 형식이 잘못되었습니다." });
+    if (start >= end) return res.status(400).json({ errorMessage: "날짜 형식이 잘못되었습니다." });
 
     const resumeImage = profileImage;
 
@@ -56,10 +56,10 @@ exports.resume = async (req, res) => {
       if (response == 1) console.log("새 지원서 등록으로 전체조회 캐시 삭제");
     });
 
-    res.status(200).send({ message: "나의 정보를 등록 했습니다." });
+    res.status(200).json({ message: "나의 정보를 등록 했습니다." });
   } catch (error) {
     // console.log(error);
-    res.status(400).send({ errorMessage: "등록 실패" });
+    res.status(400).json({ errorMessage: "등록 실패" });
   }
 };
 
@@ -77,9 +77,9 @@ exports.resumeInfo = async (req, res) => {
         GROUP BY resume.resumeId`; // skill 컬럼을 그룹화하는 기준을 project 테이블의 projectId로 설정
     const returnResumes = await sequelize.query(query, { type: QueryTypes.SELECT });
 
-    if (!returnResumes.length) return res.status(404).send({ errorMessage: "정보가 존재하지 않습니다." });
+    if (!returnResumes.length) return res.status(404).json({ errorMessage: "정보가 존재하지 않습니다." });
 
-    res.status(200).send({ returnResumes }); // 이거 응답 변수명 나중에 수정하시면 밑에 레디스 stringify 안에도 바꿔주세요!
+    res.status(200).json({ returnResumes }); // 이거 응답 변수명 나중에 수정하시면 밑에 레디스 stringify 안에도 바꿔주세요!
     // 캐시 부적중(cache miss)시 DB에 쿼리 전송, setex 메서드로 설정한 기본 만료시간까지 redis 캐시 저장
     redisClient.setex("resumes", DEFAULT_EXPIRATION, JSON.stringify(returnResumes));
   });
@@ -107,8 +107,8 @@ exports.resumeDetail = async (req, res) => {
     // 캐시 부적중(cache miss)시 DB에 쿼리 전송, setex 메서드로 설정한 기본 만료시간까지 redis 캐시 저장
     redisClient.setex(`resumes:${resumeId}`, DEFAULT_EXPIRATION, JSON.stringify(resumes[0]));
 
-    res.status(200).send({ resumes: resumes[0] });
-  })
+    res.status(200).json({ resumes: resumes[0] });
+  });
 };
 
 // 팀원 찾기 정보 수정
@@ -119,11 +119,11 @@ exports.resumeUpdate = async (req, res) => {
 
   const existResume = await Resume.findOne({ where: { resumeId } });
 
-  if (userId !== existResume.userId) return res.status(400).send({ errormessage: "내 게시글이 아닙니다" });
+  if (userId !== existResume.userId) return res.status(400).json({ errormessage: "내 게시글이 아닙니다" });
 
-  if (!content || !start || !end || !role || !skill || !content2 || !content3) return res.status(400).send({ errorMessage: "작성란을 모두 기입해주세요" });
+  if (!content || !start || !end || !role || !skill || !content2 || !content3) return res.status(400).json({ errorMessage: "작성란을 모두 기입해주세요" });
 
-  if (start >= end) return res.status(400).send({ errorMessage: "날짜 형식이 잘못되었습니다." });
+  if (start >= end) return res.status(400).json({ errorMessage: "날짜 형식이 잘못되었습니다." });
 
   const tran = await sequelize.transaction(); // 트랙잭션 시작
 
@@ -136,18 +136,17 @@ exports.resumeUpdate = async (req, res) => {
         await ResumeSkill.create({ resumeId, skill: skill[i] }, { transaction: tran });
       }
     }
-    res.status(200).send({ message: "나의 정보를 수정했습니다." });
+    res.status(200).json({ message: "나의 정보를 수정했습니다." });
     await tran.commit();
 
     //수정시 해당 지원서, 전체조회 캐싱용 Redis 키 삭제
     redisClient.del(`resumes:${resumeId}`, `resumes`, function (err, response) {
-      if (response == 1) console.log("1 Redis key deleted");
-      if (response == 2) console.log("2 Redis key deleted");
+      if (response == 1) logger.log("1 Redis key deleted");
+      if (response == 2) logger.log("2 Redis key deleted");
     });
-    
   } catch (error) {
     logger.error(error);
-    res.status(400).send({ errormessage: "정보 수정 실패" });
+    res.status(400).json({ errormessage: "정보 수정 실패" });
     await tran.rollback(); // 트랜젝션 실패시 시작부분까지 되돌리기
   }
 };
@@ -163,7 +162,7 @@ exports.resumeDelete = async (req, res) => {
     const existResume = await Resume.findOne({ include: [{ model: ResumeSkill, where: { resumeId } }], where: { resumeId } });
 
     if (userId !== existResume.userId) {
-      return res.status(400).send({ errormessage: "내 게시글이 아닙니다" });
+      return res.status(400).json({ errormessage: "내 게시글이 아닙니다" });
     } else {
       // if (existResume.resumeImage === resumeImage) {
       //   s3.deleteObject(
@@ -187,9 +186,9 @@ exports.resumeDelete = async (req, res) => {
       });
     }
     // }
-    res.status(200).send({ message: "나의 정보를 삭제했습니다." });
+    res.status(200).json({ message: "나의 정보를 삭제했습니다." });
   } catch (error) {
     logger.error(error);
-    res.status(400).send({ errormessage: "삭제 실패" });
+    res.status(400).json({ errormessage: "삭제 실패" });
   }
 };
