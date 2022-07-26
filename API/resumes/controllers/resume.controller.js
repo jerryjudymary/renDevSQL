@@ -127,7 +127,7 @@ exports.resumeUpdate = async (req, res) => {
 
     const tran = await sequelize.transaction(); // 트랙잭션 시작
 
-    await existResume.update({ content, start, end, role, content2, content3 }, { where: { resumeId } });
+    existResume.update({ content, start, end, role, content2, content3 }, { where: { resumeId } });
     // 등록 당시의 개수와 수정 당시의 개수가 다르면 update 사용 곤란으로 삭제 후 재등록 처리
     if (skills.length) {
       await ResumeSkill.destroy({ where: { resumeId }, transaction: tran });
