@@ -47,7 +47,7 @@ exports.resume = async (req, res) => {
     const resumeImage = profileImage;
 
     await Resume.create({ id, userId, nickname, content, start, end, role, content2, content3, resumeImage }).then((result) => {
-      skills.forEach((skill) => ProjectSkill.create({ resumeId: result.resumeId, skill }));
+      skills.forEach((skill) => ResumeSkill.create({ resumeId: result.resumeId, skill }));
     });
 
     redisClient.del(`resumes`, function (err, response) {
