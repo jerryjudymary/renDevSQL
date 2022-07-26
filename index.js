@@ -27,13 +27,13 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-// app.use(
-//   cors({
-//     origin: true, //["http://localhost:3001"],
-//     credentials: true,
-//     methods: "GET, HEAD, PUT, PATCH, POST, DELETE",
-//   })
-// );
+app.use(
+  cors({
+    origin: "https://rendev99.com", //["http://localhost:3001"],
+    credentials: true,
+    methods: "GET, HEAD, PUT, PATCH, POST, DELETE",
+  })
+);
 
 sequelize
   .sync({ force: false })
