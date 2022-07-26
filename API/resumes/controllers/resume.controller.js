@@ -47,7 +47,7 @@ exports.resume = async (req, res) => {
     const resumeImage = profileImage;
 
     await Resume.create({ id, userId, nickname, content, start, end, role, content2, content3, resumeImage }).then((result) => {
-      skills.forEach((skill) => ProjectSkill.create({ resumeId: result.resumeId, skill }));
+      skills.forEach((skill) => ResumeSkill.create({ resumeId: result.resumeId, skill }));
     });
 
     redisClient.del(`resumes`, function (err, response) {
@@ -56,7 +56,7 @@ exports.resume = async (req, res) => {
 
     res.status(200).json({ message: "나의 정보를 등록 했습니다." });
   } catch (error) {
-    // console.log(error);
+    logger.log(error);
     res.status(400).json({ errorMessage: "등록 실패" });
   }
 };
@@ -127,7 +127,7 @@ exports.resumeUpdate = async (req, res) => {
 
     const tran = await sequelize.transaction(); // 트랙잭션 시작
 
-    existResume.update({ content, start, end, role, content2, content3 }, { where: { resumeId } });
+    await existResume.update({ content, start, end, role, content2, content3 }, { where: { resumeId } });
     // 등록 당시의 개수와 수정 당시의 개수가 다르면 update 사용 곤란으로 삭제 후 재등록 처리
     if (skills.length) {
       await ResumeSkill.destroy({ where: { resumeId }, transaction: tran });
