@@ -65,24 +65,24 @@ exports.resume = async (req, res) => {
 
 // 팀원 찾기 전체 조회
 exports.resumeInfo = async (req, res) => {
-  // redisClient.get("resumes", async (err, data) => {
-  // 레디스 서버에서 데이터 체크, 레디스에 저장되는 키 값은 projects
-  // if (err) logger.error(error);
-  // if (data) return res.status(200).json({ returnResumes: JSON.parse(data) }); // 캐시 적중(cache hit)시 response!
+  redisClient.get("resumes", async (err, data) => {
+    // 레디스 서버에서 데이터 체크, 레디스에 저장되는 키 값은 projects
+    if (err) logger.error(error);
+    if (data) return res.status(200).json({ returnResumes: JSON.parse(data) }); // 캐시 적중(cache hit)시 response!
 
-  const query = `SELECT resume.resumeId, nickname, content, resumeImage, start, end, role, createdAt,
+    const query = `SELECT resume.resumeId, nickname, content, resumeImage, start, end, role, createdAt,
         JSON_ARRAYAGG(skill) AS skill  ${/* inner join으로 가져오고 쿼리 말미에 그룹화하는 project_skill 테이블의 skill을 skills라는 alias로 받아옵니다. */ ""}
         FROM resume INNER JOIN resume_skill
         ON resume.resumeId = resume_skill.resumeId
         GROUP BY resume.resumeId`; // skill 컬럼을 그룹화하는 기준을 project 테이블의 projectId로 설정
-  const returnResumes = await sequelize.query(query, { type: QueryTypes.SELECT });
+    const returnResumes = await sequelize.query(query, { type: QueryTypes.SELECT });
 
-  if (!returnResumes) return res.status(404).json({ errorMessage: "정보가 존재하지 않습니다." });
+    if (!returnResumes) return res.status(404).json({ errorMessage: "정보가 존재하지 않습니다." });
 
-  res.status(200).json({ returnResumes }); // 이거 응답 변수명 나중에 수정하시면 밑에 레디스 stringify 안에도 바꿔주세요!
-  // 캐시 부적중(cache miss)시 DB에 쿼리 전송, setex 메서드로 설정한 기본 만료시간까지 redis 캐시 저장
-  // redisClient.setex("resumes", DEFAULT_EXPIRATION, JSON.stringify(returnResumes));
-  // });
+    res.status(200).json({ returnResumes }); // 이거 응답 변수명 나중에 수정하시면 밑에 레디스 stringify 안에도 바꿔주세요!
+    // 캐시 부적중(cache miss)시 DB에 쿼리 전송, setex 메서드로 설정한 기본 만료시간까지 redis 캐시 저장
+    redisClient.setex("resumes", DEFAULT_EXPIRATION, JSON.stringify(returnResumes));
+  });
 };
 
 // 팀원 찾기 상세조회

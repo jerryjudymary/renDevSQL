@@ -12,7 +12,7 @@ const Router = require("./routes");
 
 app.use(
   cors({
-    origin: "*", //["http://localhost:3001"],
+    origin: true, //["http://localhost:3001"],
     credentials: true,
     methods: "GET, HEAD, PUT, PATCH, POST, DELETE",
   })
