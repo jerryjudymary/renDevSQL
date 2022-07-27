@@ -230,23 +230,28 @@ exports.myApply = async(req, res) => {
         // 그리고 B의 모든값과 프로젝트 photo를 이너조인해서 photo값만 arrayagg한 값을 포함한 값이
         // A가되고, A와 application (프로젝트 ID로 그룹화한) 값을 최종적으로 출력하게 된다.
 
+        // user의 id값을 기준으로 app에서 projectId를 뽑아낸다. 
+        // 그리고 project에서 위에서 뽑아낸 projectId를 기준으로 데이터를 가져오는데, app의 id는 user의 id이다.
     const sql2 = `SELECT A.projectId FROM application A inner join user B ON A.id = B.id where A.id=${user.id}`
     const apply = await sequelize.query(sql2, { type: QueryTypes.SELECT });
     const proId = apply.map(data => data.projectId).toString()
     
+    if(proId){
       const sql =
       `SELECT A.*, JSON_ARRAYAGG(JSON_OBJECT( 
-       'applicationId', applicationId, 'available', available,
-       'schedule', DATE_FORMAT(schedule,'%Y-%m-%d %H:%i:%S'),
-       'status', status, 'interviewCode', interviewCode)) AS applications
+       'applicationId', E.applicationId, 'available', E.available,
+       'schedule', DATE_FORMAT(E.schedule,'%Y-%m-%d %H:%i:%S'),
+       'status', E.status, 'interviewCode', E.interviewCode, 'id', E.id)) AS applications
        FROM( SELECT B.* FROM( SELECT C.*, JSON_ARRAYAGG(skill) AS ProjectSkills FROM project C
        INNER JOIN project_skill D ON C.projectId = D.projectId where C.projectId IN (${proId}) GROUP BY C.projectId) B
-       ) A INNER JOIN application E ON A.projectId = E.projectId GROUP BY E.applicationId`; 
+       ) A INNER JOIN application E ON A.projectId = E.projectId where E.id IN (${user.id}) GROUP BY E.applicationId`; 
 
     const projects = await sequelize.query(sql, { type: QueryTypes.SELECT });
 
     return res.status(200).send(projects)
-
+      } else {
+        return res.status(401).send({ errorMessage: "아직 내가 지원한 프로젝트가 없습니다."})
+      }
     // const { nickname } = req.params;
   
         // const user = await User.findOne({ where: { nickname } })
@@ -328,7 +333,8 @@ exports.recruit = async(req, res) => {
     const recruit = query2.map(data => data.resumeId).filter((el) => {
       return el !== null
     }).toString()
-
+    
+    if(recruit){
     const sql3 =
     `SELECT A.*, JSON_OBJECT('nickname', resume.nickname, 'role', resume.role, 'resumeId', resume.resumeId ) as Resume
     FROM (
@@ -343,6 +349,9 @@ exports.recruit = async(req, res) => {
     const recruits = await sequelize.query(sql3, { type: QueryTypes.SELECT });
 
     return res.status(200).send(recruits);
+    } else {
+      return res.status(401).send({errorMessage: "아직 프로젝트에 지원한 지원자가 없습니다."})
+    }
 
     //   const project = await Project.findAll({ where: { id : user.id }, include :
     //     [ 
