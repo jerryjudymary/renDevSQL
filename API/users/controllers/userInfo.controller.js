@@ -41,7 +41,7 @@ exports.userInfo = async (req, res) => {
       if (!users) {
         return res.status(401).send({ errorMessage: "로그인이 필요합니다." });
       } else {
-        return res.status(200).send({ userId: users.userId, nickname: users.nickname });
+        return res.status(200).send({ userId: users.userId, nickname: users.nickname, profileImage: users.profileImage });
       }
     }
   } catch (err) {
