@@ -8,7 +8,9 @@ const aws = require("aws-sdk");
 const s3 = new aws.S3();
 const moment = require("moment");
 const { v4 } = require("uuid");
-const { redisClient, DEFAULT_EXPIRATION } = require("../../../config/redis");
+const { DEFAULT_EXPIRATION } = require("../../../config/redis");
+const env = process.env.NODE_ENV || "development";
+const redisClient = require("../../../config/redis.js")[env];
 
 // multer - S3 이미지 업로드 설정
 
@@ -102,7 +104,8 @@ exports.projectInfo = async (req, res) => {
   
     const query = `SELECT project.projectId, nickname, title, subscript, role, start, end, createdAt,
       JSON_ARRAYAGG(skill) AS skills ${/* inner join으로 가져오고 쿼리 말미에 그룹화하는 project_skill 테이블의 skill을 skills라는 alias로 받아옵니다. */''}
-      FROM project INNER JOIN project_skill
+      FROM project 
+      INNER JOIN project_skill
       ON project.projectId = project_skill.projectId
       GROUP BY project.projectId`; // skill 컬럼을 그룹화하는 기준을 project 테이블의 projectId로 설정
     const projects = await sequelize.query(query, { type: QueryTypes.SELECT });
