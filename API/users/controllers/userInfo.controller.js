@@ -338,7 +338,7 @@ exports.recruit = async(req, res) => {
     const sql3 =
     `SELECT A.*, JSON_OBJECT('nickname', resume.nickname, 'role', resume.role, 'resumeId', resume.resumeId ) as Resume
     FROM (
-      SELECT B.*, C.applicationId, C.schedule, C.available, C.interviewCode, C.resumeId
+      SELECT B.*, C.applicationId, C.schedule, C.available, C.interviewCode, C.resumeId, C.status
       FROM (
         SELECT X.projectId, id, nickname, title, details, role, start, end, createdAt,
         JSON_ARRAYAGG(skill) as ProjectSkills FROM project X INNER JOIN project_skill Y
