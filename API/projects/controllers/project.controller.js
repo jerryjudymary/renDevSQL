@@ -8,7 +8,9 @@ const aws = require("aws-sdk");
 const s3 = new aws.S3();
 const moment = require("moment");
 const { v4 } = require("uuid");
-const { redisClient, DEFAULT_EXPIRATION } = require("../../../config/redis");
+const { DEFAULT_EXPIRATION } = require("../../../config/redis");
+const env = process.env.NODE_ENV || "development";
+const redisClient = require("../../../config/redis.js")[env];
 
 // multer - S3 이미지 업로드 설정
 
@@ -63,7 +65,7 @@ exports.project = async (req, res) => {
 
   const startMsec = Date.parse(start);
   const endMsec = Date.parse(end);
-  if (startMsec >= endMsec) return res.status(400).json({ errorMessage: "날짜 형식이 잘못되었습니다." });
+  if (startMsec >= endMsec) return res.status(400).json({ errorMessage: "프로젝트 기간 형식이 잘못되었습니다." });
 
   const available = true;
   const createdAt = moment().format("YYYY-MM-DD HH:mm:ss");
@@ -77,14 +79,13 @@ exports.project = async (req, res) => {
 
       skills.forEach((skill) => ProjectSkill.create({ projectId: result.projectId, skill }));
 
-      if (photos || photos.length) {
+      if (photos && photos.length) {
         photos.forEach((photo) => ProjectPhoto.create({ projectId: result.projectId, photo }));
-      }
+      };
     });
 
     redisClient.del(`projects`, function(err, response) {
       if (response == 1) console.log("새 프로젝트 등록으로 전체조회 캐시 삭제")
-
     });
 
     await res.status(200).json({ message: "프로젝트 게시글을 작성했습니다." });
@@ -103,7 +104,8 @@ exports.projectInfo = async (req, res) => {
   
     const query = `SELECT project.projectId, nickname, title, subscript, role, start, end, createdAt,
       JSON_ARRAYAGG(skill) AS skills ${/* inner join으로 가져오고 쿼리 말미에 그룹화하는 project_skill 테이블의 skill을 skills라는 alias로 받아옵니다. */''}
-      FROM project INNER JOIN project_skill
+      FROM project 
+      INNER JOIN project_skill
       ON project.projectId = project_skill.projectId
       GROUP BY project.projectId`; // skill 컬럼을 그룹화하는 기준을 project 테이블의 projectId로 설정
     const projects = await sequelize.query(query, { type: QueryTypes.SELECT });
@@ -200,13 +202,14 @@ exports.projectUpdate = async (req, res) => {
   }
 
   try {
-    var { title, details, subscript, role, start, end, skills, photos } = await projectPostSchema.validateAsync(req.body);
+    var { title, details, subscript, role, start, end, skills, photos, applications }
+    = await projectPostSchema.validateAsync(req.body);
   } catch (err) {
-    logger.error(error);
+    logger.error(err);
     return res.status(400).json({ errorMessage: "작성 형식을 확인해주세요." });
   }
 
-  if (!title || !details || !subscript || !role || !start || !end || !skills) {
+  if (!title || !details || !subscript || !role || !start || !end || !skills || !applications) {
     return res.status(400).json({ errorMessage: "작성란을 모두 기입해주세요." });
   }
 
@@ -214,13 +217,14 @@ exports.projectUpdate = async (req, res) => {
   const endMsec = Date.parse(end);
   if (startMsec >= endMsec) return res.status(400).json({ errorMessage: "날짜 형식이 잘못되었습니다." });
 
+
   // --- 기존 이미지 선별적 다중 삭제
 
   const existPhotos = await ProjectPhoto.findAll({
     where: { projectId },
   });
 
-  if (existPhotos.length) {
+  if (existPhotos.length || !existPhotos[0] === null) {
     let deletePhotos = [];
     let photoUrl;
     let photo;
@@ -253,34 +257,70 @@ exports.projectUpdate = async (req, res) => {
 
   // ---
 
-  // 예외처리 문제로 트랜잭션 밖으로 빼 줍니다.
-  if (photos || photos.length) {
-    await ProjectPhoto.destroy({ where: { projectId } });
-    for (let i = 0; i < photos.length; i++) {
-      await ProjectPhoto.create({ projectId, photo: photos[i] });
-    }
-  }
-
   const t = await sequelize.transaction(); // 이하 쿼리들 트랜잭션 처리
 
   try {
     await Project.update({ title, details, subscript, role, start, end, nickname }, { where: { projectId }, transaction: t });
+  
+/**
+ *  ------ applications 수정 파트 ------
+ */
+    
+    const newScheduleArray = applications.map((app) => app.schedule);
+    const setCollection = new Set(newScheduleArray); // Set 메서드로 중복된 값이 배열에 존재하는지 비교
+    const isReqDuplicate = setCollection.size < newScheduleArray.length;
 
-    /* 현재 스케쥴부분 MVP까지 수정 제외로 주석처리합니다 
+    // body값에 중복된 스케쥴이 존재한다면 throw
+    if (isReqDuplicate === true) {
+      throw res.status(400).json({ errorMessage: "중복된 예약 시간대가 존재합니다." });
+    };
 
-    // 등록 당시의 개수와 수정 당시의 개수가 다르면 update 사용 곤란으로 삭제 후 재등록 처리
-    //현재 스케쥴을 등록하면 이전 스케쥴은 무조건 사라지는 문제 해결해야 함( 프론트에서 해결 가능..? )
-    await Application.destroy({ where: { projectId }, transaction: t }); // delete로 지워주고 새로 등록
-    for (let i = 0; i < schedule.length; i++) {
-      await Application.create({ projectId, schedule : schedule[i] }, { transaction: t });
-    }; // 추후 available등 수정 시 사항 추가 가능하게? -> 면접시간 수정용 API가 하나 더 있어야할 것 같다.
-    */
+    const existUnavailableApps = await Application.findAll({
+      where: { projectId, available: false }, 
+    });
+    
+    const newAvailableApps = applications.filter((app) => app.available === 1 || app.available === true );
+    const validSchedules = newAvailableApps.map((app) => moment(app.schedule, 'YYYY-MM-DD HH:mm').format("YYYY-MM-DD HH:mm:ss"));
+    const existUnavailableSchedules = existUnavailableApps.map((app) => app.schedule);
+    const alreadyExistApps = validSchedules.filter((time) => existUnavailableSchedules.includes(time));
+    
 
-    // 스케쥴과 동일한 문제 있음
+    // 이미 예약된 스케쥴의 시간과 새로운 스케쥴의 시간이 중복된다면 throw
+    if (alreadyExistApps.length) {
+      throw res.status(400).json({ errorMessage: "이미 예약된 시간대는 추가할 수 없습니다." });
+    };
+ 
+    // 예약된 스케쥴을 삭제하고 새로 덮어쓰기 해야 할 경우에서 고려해야 할 예외처리의 반복문을 줄이기 위해,
+    // 중복 여부만 검사하여 예약된 스케쥴은 삭제하지 않고, 추가하지 않아 기존 예약 데이터의 영속성 유지와 연산 비용 단축
+
+  
+    await Application.destroy({ where: { projectId, available: true }, transaction: t });
+    for (let i = 0; i < validSchedules.length; i++) {
+      await Application.create({
+        projectId,
+        schedule: validSchedules[i],
+        available: true
+      },
+      { transaction: t });
+    };
+
+
+/**
+ *  ------
+ */
+
     await ProjectSkill.destroy({ where: { projectId }, transaction: t });
     for (let i = 0; i < skills.length; i++) {
       await ProjectSkill.create({ projectId, skill: skills[i] }, { transaction: t });
-    }
+    };
+
+    // 예외처리 문제로 트랜잭션 밖으로 빼 줍니다.
+    if (photos && photos.length && !photos[0] === null) {
+      await ProjectPhoto.destroy({ where: { projectId } });
+      for (let i = 0; i < photos.length; i++) {
+        await ProjectPhoto.create({ projectId, photo: photos[i] });
+      }
+    };
 
     await t.commit();
 
@@ -321,6 +361,7 @@ exports.projectDelete = async (req, res) => {
   if (id !== existProject.id) {
     return res.status(401).send({ errorMessage: "작성자만 삭제할 수 있습니다." });
   }
+
 
   // --- 기존 이미지 다중 삭제
 

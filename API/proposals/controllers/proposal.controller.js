@@ -1,4 +1,3 @@
-const express = require("express");
 const moment = require("moment");
 const { Project, Application, ProjectSkill, Resume, Proposal } = require("../../../models");
 const { InterviewProposal } = require("../../../API/applications/controllers/notices.controller");
@@ -92,17 +91,17 @@ exports.proposalResume = async (req, res) => {
     if(existProposal.proposalCount === 0) {
       await Proposal.update({ proposalCount: 1 }, { where: { resumeId, projectId } });
       InterviewProposal (projectId, resumeId);
-      return res.status(200).json({ message : '두 번째 제안을 보냈습니다. 제안은 한 이력서에 세 번만 가능합니다.' });
+      return res.status(200).json({ message : '두 번째 메일을 보냈습니다. 제안은 한 이력서에 세 번만 가능합니다.' });
     };
 
     if(existProposal.proposalCount === 1) {
       await Proposal.update({ proposalCount: 2 }, { where: { resumeId, projectId } });
       InterviewProposal (projectId, resumeId);
-      return res.status(200).json({ message : '세 번째 제안을 보냈습니다. 해당 이력서에 더 이상 제안할 수 없습니다.' });
+      return res.status(200).json({ message : '세 번째 메일을 보냈습니다. 해당 이력서에 더 이상 제안할 수 없습니다.' });
     };
 
     if(existProposal.proposalCount === 2) {
-      return res.status(403).json({ errorMessage : '해당 이력서에 더 이상 제안할 수 없습니다.' });
+      return res.status(403).json({ errorMessage : '해당 이력서에 더 이상 제안 메일을 보내실 수 없습니다.' });
     };
   };
 
@@ -110,6 +109,6 @@ exports.proposalResume = async (req, res) => {
 
   InterviewProposal (projectId, resumeId); // 제안 상대에게 이메일 발송
 
-  res.status(200).send({ message : '이력서에 제안을 발송했습니다. 제안은 한 이력서에 세 번만 가능합니다.' });
+  res.status(200).send({ message : '📧 해당 이력서에 제안 메일을 발송했습니다.한 이력서에 세 번만 보내실 수 있습니다.' });
 
 };

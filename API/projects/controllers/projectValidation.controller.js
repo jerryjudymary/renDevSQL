@@ -27,8 +27,9 @@ const projectPostSchema = Joi.object({
   //  .pattern(new RegExp(/^(19[0-9][0-9]|20\d{2})-(0[0-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/))
     .required(),
   // 19xx || 20xx년 - xx월 -- xx일
-  photos: Joi.array(),
+  photos: Joi.any(),
   // 배열
+  applications: Joi.array(),
   createdAt: Joi.string(),
   schedule: Joi.array()
 });

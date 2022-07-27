@@ -139,17 +139,16 @@ exports.login = async (req, res) => {
         const payload = {
           userId: users.userId,
           nickname: users.nickname,
-          profileImage: users.profileImage
+          profileImage: users.profileImage,
         };
         const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
           expiresIn: "1h",
         });
-        
+
         const refreshToken = jwt.sign(payload, process.env.JWT_SECRET_REFRESH, {
           expiresIn: "2d",
         });
 
-        res.cookie("Test", "입니다")
         await User.update({ refreshToken }, { where: { userId } });
         // res.cookie("refreshToken", refreshToken, { httpOnly: true, SameSite : "None" });
         return res.status(200).
@@ -315,7 +314,7 @@ exports.profileImage = async (req, res) => {
 
     const updateImage = await User.update({ profileImage: profileImage }, { where: { nickname } });
 
-      // await User.update({ refreshToken }, { where: { userId } });
+    // await User.update({ refreshToken }, { where: { userId } });
 
     return res.status(200).json({ message: "사진을 업로드 했습니다.", updateImage });
   } catch (err) {
