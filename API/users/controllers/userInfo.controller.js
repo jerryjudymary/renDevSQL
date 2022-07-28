@@ -40,23 +40,29 @@ exports.userDetail = async (req, res) => {
   };
   
 exports.userInfo = async (req, res) => {
-    try {
-      const user = res.locals.user;
-      if (user === undefined) {
-        return res.status(401).send({ errorMessage: "로그인이 필요합니다." });
-      } else {
-        const { userId } = res.locals.user;
+    // try {
+    //   const user = res.locals.user;
+    //   if (user === undefined) {
+    //     return res.status(401).send({ errorMessage: "로그인이 필요합니다." });
+    //   } else {
+    //     const { userId } = res.locals.user;
   
-        const users = await User.findOne({ where: { userId } });
-        if (!users) {
-          return res.status(401).send({ errorMessage: "로그인이 필요합니다." });
-        } else {
-          return res.status(200).send({ userId: users.userId, nickname: users.nickname, profileImage: users.profileImage });
-        }
-      }
-    } catch (err) {
-      res.status(400).send({ errorMessage: "유저 정보를 찾을 수 없습니다." });
-    }
+    //     const users = await User.findOne({ where: { userId } });
+    //     if (!users) {
+    //       return res.status(401).send({ errorMessage: "로그인이 필요합니다." });
+    //     } else {
+    //       return res.status(200).send({ userId: users.userId, nickname: users.nickname, profileImage: users.profileImage });
+    //     }
+    //   }
+    // } catch (err) {
+    //   res.status(400).send({ errorMessage: "유저 정보를 찾을 수 없습니다." });
+    // }
+    const user = res.locals.user;
+    res.send({
+      userId : user.userId,
+      nickname: user.nickname,
+      profileImage: user.profileImage
+    })
   };
 
 exports.userProject = async(req,res) => {
