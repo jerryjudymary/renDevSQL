@@ -75,7 +75,7 @@ exports.userProject = async(req,res) => {
 
         const sql =
         `SELECT A.projectId, id, nickname, title, details, role, start, end, createdAt,
-        JSON_ARRAYAGG(skill) as ProjectSkills FROM project A INNER JOIN
+        JSON_ARRAYAGG(skill) as skills FROM project A INNER JOIN
         project_skill B ON A.projectId = B.projectId where A.id=${user.id} GROUP BY A.projectId`
 
         const projects = await sequelize.query(sql, { type: QueryTypes.SELECT });
@@ -84,7 +84,7 @@ exports.userProject = async(req,res) => {
           return res.status(401).send({ errorMessage: "내가 작성한 Project가 없습니다."})
         };
 
-        return res.status(200).send({ message : projects });
+        return res.status(200).send(projects);
         // JSON_ARRAYAGG()는 원하는 항목을 JSON array로 추출한다.
         // skill이라는 key : value형태를 JSON array형태로 뱉어내기 위해 사용된다.
         // as skills 이기 때문에 출력형태는 project_skill = [ { key : value }]에서 skills : [ ]형태가 된다.
