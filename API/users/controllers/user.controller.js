@@ -142,7 +142,7 @@ exports.login = async (req, res) => {
           profileImage: users.profileImage,
         };
         const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
-          expiresIn: "1h",
+          expiresIn: "1m",
         });
 
         const refreshToken = jwt.sign(payload, process.env.JWT_SECRET_REFRESH, {
@@ -151,9 +151,10 @@ exports.login = async (req, res) => {
 
         await User.update({ refreshToken }, { where: { userId } });
         // res.cookie("refreshToken", refreshToken, { httpOnly: true, SameSite : "None" });
-        return res.status(200).
-        cookie("refreshToken", refreshToken, { httpOnly : true, sameSite: 'None', secure: true }).
-        send({ message: "로그인 하셨습니다.", token });
+        return res
+          .status(200)
+          .cookie("refreshToken", refreshToken, { httpOnly: true, sameSite: "None", secure: true })
+          .send({ message: "로그인 하셨습니다.", token });
       }
     }
   } catch (err) {
