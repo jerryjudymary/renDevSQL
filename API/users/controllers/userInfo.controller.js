@@ -51,7 +51,7 @@ exports.userInfo = async (req, res) => {
         if (!users) {
           return res.status(401).send({ errorMessage: "로그인이 필요합니다." });
         } else {
-          return res.status(200).send({ userId: users.userId, nickname: users.nickname });
+          return res.status(200).send({ userId: users.userId, nickname: users.nickname, profileImage: users.profileImage });
         }
       }
     } catch (err) {
@@ -164,7 +164,7 @@ exports.userResume =  async(req,res) => {
 
         const sql =
         `SELECT A.resumeId, id, nickname, content, content2, content3, role, start, end, createdAt,
-        JSON_ARRAYAGG(skill) as ResumeSkills FROM resume A INNER JOIN
+        JSON_ARRAYAGG(skill) as skills FROM resume A INNER JOIN
         resume_skill B ON A.resumeId = B.resumeId where A.id=${user.id} GROUP BY A.resumeId`
 
         const resumes = await sequelize.query(sql, { type: QueryTypes.SELECT });
