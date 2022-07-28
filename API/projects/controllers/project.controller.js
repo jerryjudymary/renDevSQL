@@ -8,9 +8,7 @@ const aws = require("aws-sdk");
 const s3 = new aws.S3();
 const moment = require("moment");
 const { v4 } = require("uuid");
-const { DEFAULT_EXPIRATION } = require("../../../config/redis");
-const env = process.env.NODE_ENV || "development";
-const redisClient = require("../../../config/redis.js")[env];
+const { redisClient, DEFAULT_EXPIRATION } = require("../../../config/redis");
 
 // multer - S3 이미지 업로드 설정
 
