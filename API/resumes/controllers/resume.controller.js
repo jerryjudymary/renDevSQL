@@ -3,9 +3,7 @@ const { Op } = require("sequelize");
 const { User, Resume, ResumeSkill, sequelize } = require("../../../models");
 const { QueryTypes } = require("sequelize");
 const logger = require("../../../config/logger");
-const { DEFAULT_EXPIRATION } = require("../../../config/redis");
-const env = process.env.NODE_ENV || "development";
-const redisClient = require("../../../config/redis.js")[env];
+const { redisClient, DEFAULT_EXPIRATION } = require("../../../config/redis");
 
 // 팀원 찾기 등록
 exports.resume = async (req, res) => {
@@ -67,24 +65,24 @@ exports.resumeDetail = async (req, res) => {
   const { resumeId } = req.params;
   try {
     // 레디스 서버에서 데이터 체크, 레디스에 저장되는 키 값은 resumes:resumeId
-    // redisClient.get(`resumes:${resumeId}`, async (err, data) => {
-    //   if (err) logger.error(err);
-    //   if (data) return res.status(200).json({ resumes: JSON.parse(data) }); // 캐시 적중(cache hit)시 response!
+    redisClient.get(`resumes:${resumeId}`, async (err, data) => {
+      if (err) logger.error(err);
+      if (data) return res.status(200).json({ resumes: JSON.parse(data) }); // 캐시 적중(cache hit)시 response!
 
-    const query = `SELECT resume.resumeId, userId, nickname, content, start, end, role, content2, content3, resumeImage, createdAt,
-        JSON_ARRAYAGG(skill) AS skills  ${/* inner join으로 가져오고 쿼리 말미에 그룹화하는 project_skill 테이블의 skill을 skills라는 alias로 받아옵니다. */ ""}
-        FROM resume INNER JOIN resume_skill
-        ON resume.resumeId = resume_skill.resumeId
-        WHERE resume.resumeId = '${resumeId}'
-        GROUP BY resume.resumeId`;
+      const query = `SELECT resume.resumeId, userId, nickname, content, start, end, role, content2, content3, resumeImage, createdAt,
+          JSON_ARRAYAGG(skill) AS skills  ${/* inner join으로 가져오고 쿼리 말미에 그룹화하는 project_skill 테이블의 skill을 skills라는 alias로 받아옵니다. */ ""}
+          FROM resume INNER JOIN resume_skill
+          ON resume.resumeId = resume_skill.resumeId
+          WHERE resume.resumeId = '${resumeId}'
+          GROUP BY resume.resumeId`;
 
-    const resumes = await sequelize.query(query, { type: QueryTypes.SELECT });
+      const resumes = await sequelize.query(query, { type: QueryTypes.SELECT });
 
-    // 캐시 부적중(cache miss)시 DB에 쿼리 전송, setex 메서드로 설정한 기본 만료시간까지 redis 캐시 저장
-    // redisClient.setex(`resumes:${resumeId}`, DEFAULT_EXPIRATION, JSON.stringify(resumes[0]));
+      // 캐시 부적중(cache miss)시 DB에 쿼리 전송, setex 메서드로 설정한 기본 만료시간까지 redis 캐시 저장
+      redisClient.setex(`resumes:${resumeId}`, DEFAULT_EXPIRATION, JSON.stringify(resumes[0]));
 
-    res.status(200).json({ resumes: resumes[0] });
-    // });
+      res.status(200).json({ resumes: resumes[0] });
+    });
   } catch (e) {
     logger.error(e);
     res.status(404).json({ errorMessage: "정보가 존재하지 않습니다." });
