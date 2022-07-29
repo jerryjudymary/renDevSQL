@@ -30,7 +30,7 @@ async function noteProjectOwner (projectId, resumeId, applicationId) {
     <br>
     인터뷰 일정 : ${application.schedule}<br>
     지원하신 분 : ${resume.nickname}<br>
-    지원자 소개 : <a href="http://rendev.도메인/resumes/${resumeId}">http://rendev.도메인/resumes/${resumeId}</a><br>
+    지원자 소개 : <a href="https://rendev99.com/resumes/${resumeId}">https://rendev99.com/resumes/${resumeId}</a><br>
     지원자 연락 : <a href="mailto:${resume.email}">mailto:${resume.email}</a><br>
     <br>
     인터뷰 코드 : ${application.interviewCode}<br>
@@ -64,7 +64,7 @@ async function noteApplicant (projectId, resumeId, applicationId) {
     <br>
     인터뷰 일정 : ${application.schedule}<br>
     프로젝트 기획자 : ${project.nickname}<br>
-    프로젝트 소개 : <a href="http://rendev.도메인/projects/${projectId}">http://rendev.도메인/projects/${projectId}</a><br>
+    프로젝트 소개 : <a href="https://rendev99.com/projects/${projectId}">https://rendev99.com/projects/${projectId}</a><br>
     기획자 연락 : <a href=mailto:"${project.email}">${project.email}</a><br>
     <br>
     인터뷰 코드 : ${application.interviewCode}<br>
@@ -96,7 +96,7 @@ async function InterviewProposal (projectId, resumeId) {
     프로젝트 : ${project.title}<br>
     <br>
     프로젝트 기획자 : ${project.nickname}<br>
-    프로젝트 소개 : <a href="http://rendev.도메인/projects/${projectId}">http://rendev.도메인/projects/${projectId}</a><br>
+    프로젝트 소개 : <a href="https://rendev99.com/projects/${projectId}">https://rendev99.com/projects/${projectId}</a><br>
     기획자 연락 : <a href="mailto:${project.email}">${project.email}</a><br>
     <br>
     프로젝트 내용을 확인하시고 마음에 드신다면, <br>
