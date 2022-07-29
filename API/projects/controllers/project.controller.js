@@ -170,6 +170,16 @@ exports.projectDetail = async (req, res) => {
     if (!project.length) {
       return res.status(404).json({ errorMessage: "프로젝트 정보가 존재하지 않습니다." });
     }
+
+    const projectOwnerIdQuery = `SELECT id FROM project WHERE projectId=${projectId}`
+    const projectOwnerIdResult = await sequelize.query(projectOwnerIdQuery, { type: QueryTypes.SELECT });
+    const projectOwnerId = projectOwnerIdResult[0].id
+
+    const profileImageQuery = `SELECT profileImage FROM user WHERE id=${projectOwnerId}`
+    const profileImageResult = await sequelize.query(profileImageQuery, { type: QueryTypes.SELECT });
+    const profileImage = profileImageResult[0].profileImage
+
+    project[0].profileImage = profileImage;
   
     // 캐시 부적중(cache miss)시 DB에 쿼리 전송, setex 메서드로 설정한 기본 만료시간까지 redis 캐시 저장
     redisClient.setex(`projects:${projectId}`, DEFAULT_EXPIRATION, JSON.stringify(project[0]));
