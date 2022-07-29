@@ -31,7 +31,7 @@ async function noteProjectOwner (projectId, resumeId, applicationId) {
     인터뷰 일정 : ${application.schedule}<br>
     지원하신 분 : ${resume.nickname}<br>
     지원자 소개 : <a href="https://rendev99.com/employmentprofile/${resumeId}">https://rendev99.com/employmentprofile/${resumeId}</a><br>
-    지원자 연락 : <a href="mailto:${resume.userId}">mailto:${resume.userId}</a><br>
+    지원자 연락 : <a href="mailto:${resume.userId}">${resume.userId}</a><br>
     <br>
     인터뷰 코드 : ${application.interviewCode}<br>
     <br>
