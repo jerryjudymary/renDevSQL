@@ -7,7 +7,7 @@ require("dotenv").config();
 const production = {
   host: process.env.REDIS_HOST,
   port: process.env.REDIS_PORT,
-  db: 2,
+  db: 0,
   password: process.env.REDIS_PASSWORD,
 };
 
