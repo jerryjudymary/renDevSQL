@@ -70,7 +70,9 @@ exports.resumeDetail = async (req, res) => {
       if (data) return res.status(200).json({ resumes: JSON.parse(data) }); // 캐시 적중(cache hit)시 response!
 
       const query = `SELECT resume.resumeId, userId, nickname, content, start, end, role, content2, content3, resumeImage, createdAt,
-          JSON_ARRAYAGG(skill) AS skills  ${/* inner join으로 가져오고 쿼리 말미에 그룹화하는 project_skill 테이블의 skill을 skills라는 alias로 받아옵니다. */ ""}
+          JSON_ARRAYAGG(skill) AS skills  ${
+            /* inner join으로 가져오고 쿼리 말미에 그룹화하는 project_skill 테이블의 skill을 skills라는 alias로 받아옵니다. */ ""
+          }
           FROM resume INNER JOIN resume_skill
           ON resume.resumeId = resume_skill.resumeId
           WHERE resume.resumeId = '${resumeId}'
@@ -78,14 +80,16 @@ exports.resumeDetail = async (req, res) => {
 
       const resumes = await sequelize.query(query, { type: QueryTypes.SELECT });
 
+      if (!resumes[0]) return res.status(400).json({ errorMessage: "정보가 존재하지 않습니다." });
+
       // 캐시 부적중(cache miss)시 DB에 쿼리 전송, setex 메서드로 설정한 기본 만료시간까지 redis 캐시 저장
       redisClient.setex(`resumes:${resumeId}`, DEFAULT_EXPIRATION, JSON.stringify(resumes[0]));
 
       res.status(200).json({ resumes: resumes[0] });
     });
-  } catch (e) {
-    logger.error(e);
-    res.status(404).json({ errorMessage: "정보가 존재하지 않습니다." });
+  } catch (error) {
+    logger.error(error);
+    res.status(404).json({ errorMessage: "조회 실패" });
   }
 };
 
@@ -118,10 +122,9 @@ exports.resumeUpdate = async (req, res) => {
     await tran.commit();
 
     //수정시 해당 지원서, 전체조회 캐싱용 Redis 키 삭제
-    redisClient.del(`resumes:${resumeId}`, `resumes`, function (err, response) {
-      if (response == 1) logger.log("1 Redis key deleted");
-      if (response == 2) logger.log("2 Redis key deleted");
-    });
+    redisClient.del(`resumes:${resumeId}`, `resumes`, function (err, response) {});
+    // if (response == 1) logger.log("1 Redis key deleted");
+    // if (response == 2) logger.log("2 Redis key deleted");
   } catch (error) {
     logger.error(error);
     res.status(400).json({ errormessage: "정보 수정 실패" });
@@ -139,21 +142,18 @@ exports.resumeDelete = async (req, res) => {
 
     const existResume = await Resume.findOne({ include: [{ model: ResumeSkill, where: { resumeId } }], where: { resumeId } });
 
-    if (userId !== existResume.userId) {
-      return res.status(400).json({ errormessage: "내 게시글이 아닙니다" });
-    } else {
-      await existResume.destroy({});
+    if (userId !== existResume.userId) return res.status(400).json({ errormessage: "내 게시글이 아닙니다" });
+    await existResume.destroy({});
 
-      // 수정시 해당 지원서, 전체조회 캐싱용 Redis 키 삭제
-      redisClient.del(`resumes:${resumeId}`, `resumes`, function (err, response) {
-        if (response == 1) console.log("1 Redis key deleted");
-        if (response == 2) console.log("2 Redis key deleted");
-      });
-    }
+    // 수정시 해당 지원서, 전체조회 캐싱용 Redis 키 삭제
+    redisClient.del(`resumes:${resumeId}`, `resumes`, function (err, response) {});
+    // if (response == 1) console.log("1 Redis key deleted");
+    // if (response == 2) console.log("2 Redis key deleted");
+    // }
     // }
     res.status(200).json({ message: "나의 정보를 삭제했습니다." });
   } catch (error) {
     logger.error(error);
-    res.status(400).json({ errormessage: "삭제 실패" });
+    res.status(400).json({ errormessage: "해당 기능을 점검중입니다..." });
   }
 };
