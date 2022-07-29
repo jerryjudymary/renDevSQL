@@ -57,7 +57,7 @@ exports.project = async (req, res) => {
     return res.status(400).json({ errorMessage: "작성 형식을 확인해주세요." });
   }
 
-  if (!title || !details || !subscript || !role || !start || !end || !skills || !schedule) {
+  if (!title || !details || !subscript || !role || !start || !end || !skills || !schedule || !schedule.length) {
     return res.status(400).json({ errorMessage: "작성란을 모두 기입해주세요." });
   }
 
