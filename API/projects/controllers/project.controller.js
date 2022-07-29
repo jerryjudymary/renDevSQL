@@ -171,13 +171,13 @@ exports.projectDetail = async (req, res) => {
       return res.status(404).json({ errorMessage: "프로젝트 정보가 존재하지 않습니다." });
     }
 
-    const projectOwnerIdQuery = `SELECT id FROM project WHERE projectId=${projectId}`
+    const projectOwnerIdQuery = `SELECT id FROM project WHERE projectId=${projectId}`;
     const projectOwnerIdResult = await sequelize.query(projectOwnerIdQuery, { type: QueryTypes.SELECT });
-    const projectOwnerId = projectOwnerIdResult[0].id
+    const projectOwnerId = projectOwnerIdResult[0].id;
 
-    const profileImageQuery = `SELECT profileImage FROM user WHERE id=${projectOwnerId}`
+    const profileImageQuery = `SELECT profileImage FROM user WHERE id=${projectOwnerId}`;
     const profileImageResult = await sequelize.query(profileImageQuery, { type: QueryTypes.SELECT });
-    const profileImage = profileImageResult[0].profileImage
+    const profileImage = profileImageResult[0].profileImage;
 
     project[0].profileImage = profileImage;
   

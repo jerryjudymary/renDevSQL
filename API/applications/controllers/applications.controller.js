@@ -1,6 +1,7 @@
 const { Project, Application, Resume, ResumeSkill, sequelize } = require("../../../models");
 const { QueryTypes, Op } = require("sequelize");
 const { noteProjectOwner, noteApplicant } = require("./notices.controller");
+const { redisClient } = require("../../../config/redis");
 
 
 // 필요시 유효성 검사 관련 import 추가 예정
@@ -65,8 +66,9 @@ exports.reserveApp = async (req, res) => {
   await noteApplicant( projectId, resumeId, applicationId );
    
 
-  res.status(200).send({ message : '성공적으로 예약되었습니다.' });
+  redisClient.del(`projects:${projectId}`, function (err, response) {});
 
+  res.status(200).send({ message : '성공적으로 예약되었습니다.' });
 };
 
 
