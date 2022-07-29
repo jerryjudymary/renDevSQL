@@ -80,7 +80,7 @@ exports.userProject = async(req,res) => {
         };
 
         const sql =
-        `SELECT A.projectId, id, nickname, title, details, role, start, end, createdAt,
+        `SELECT A.projectId, id, nickname, title, details, role, start, end, createdAt, subscript,
         JSON_ARRAYAGG(skill) as skills FROM project A INNER JOIN
         project_skill B ON A.projectId = B.projectId where A.id=${user.id} GROUP BY A.projectId`
 
