@@ -143,6 +143,7 @@ exports.resumeDelete = async (req, res) => {
     const existResume = await Resume.findOne({ include: [{ model: ResumeSkill, where: { resumeId } }], where: { resumeId } });
 
     if (userId !== existResume.userId) return res.status(400).json({ errormessage: "내 게시글이 아닙니다" });
+
     await existResume.destroy({});
 
     // 수정시 해당 지원서, 전체조회 캐싱용 Redis 키 삭제
