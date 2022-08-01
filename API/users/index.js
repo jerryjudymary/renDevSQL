@@ -28,7 +28,11 @@ router.post("/signup/checkUserId", userController.checkUserId); //아이디 중�
 
 router.post("/signup/checkNickname", userController.checkNickname); // 닉네임 중복
 
+// router.post("/signup/checkEmail", userController.checkEmailNum); // 이메일 인증번호
+
 router.post("/login", userController.login); // 로그인
+
+// router.get("/logout", userController.clearCookie); // 로그아웃 시 쿠키 삭제
 
 // router.post("/refresh", userController.refresh); // 토큰 재발급
 
