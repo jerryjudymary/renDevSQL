@@ -48,6 +48,13 @@ renDev에서 마음에 맞는 프로젝트와 팀원을 만나 보세요 🙂
 
 <br> 
 
+🖥 renDev Interview GitHub <br> [https://github.com/alpha-fly/rendevchat] <br>
+
+* renDev 메인 서비스의 하위 기능인 인터뷰 기능(영상통화 및 텍스트 채팅)의 GitHub repository 입니다. 
+
+
+<br> 
+
 ## 🌒 프로젝트 기간
 
 - 2022년 06월 24일 ~ 2022년 08월 05일
