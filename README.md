@@ -14,7 +14,7 @@
 1. [renDev 서비스 소개](#-renDev-서비스-소개)
 2. [팀 구성](#-팀-구성)
 3. [Features](#-Features)
-4. [기술 스택 라이브러리](#-기술-스택과-라이브러리)
+4. [기술 스택과 라이브러리](#-기술-스택과-라이브러리)
 5. [Architecture](#-Architecture)
 6. [ERD](#-ERD)
 7. [Trouble Shooting](#-Trouble-Shooting)
