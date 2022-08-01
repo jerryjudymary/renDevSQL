@@ -164,15 +164,16 @@ renDev에서 마음에 맞는 프로젝트와 팀원을 만나 보세요 🙂
 
 기술스택 | 설명
 ---|:---:
-Node.js | 자바스크립트 런타임
-Express | 웹 프레임워크
-MySQL (RDS) | RDBMS 클라우드 인스턴스
-Redis (Azure) | 인메모리 저장소(완전관리형)
-Github Action - AWS CodeDeploy | CI/CD 툴
-Nginx | Proxy 서버
-WebRTC - socket.io | 영상통화, 실시간 채팅 구현
-coturn | 자체 TURN 서버 구축
-
+![NodeJS](https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white) | 자바스크립트 런타임
+![Express.js](https://img.shields.io/badge/express.js-%23404d59.svg?style=for-the-badge&logo=express&logoColor=%2361DAFB) | 웹 프레임워크
+![MySQL](https://img.shields.io/badge/mysql-%2300f.svg?style=for-the-badge&logo=mysql&logoColor=white) | RDBMS 클라우드 인스턴스 (RDS)
+![Redis](https://img.shields.io/badge/redis-%23DD0031.svg?style=for-the-badge&logo=redis&logoColor=white) | 인메모리 저장소 (Azure)
+![Sequelize](https://img.shields.io/badge/Sequelize-52B0E7?style=for-the-badge&logo=Sequelize&logoColor=white) | ORM
+![GitHub Actions](https://img.shields.io/badge/GitHubActions-4479a1?style=for-the-badge&logo=GitHubActions&logoColor=%2361DAFB) | CI/CD 툴 (AWS CodeDeploy 연계)
+![NginX](https://img.shields.io/badge/nginx-green?style=for-the-badge&logo=nginx&logoColor=white) | Proxy 서버
+![WebRTC](https://img.shields.io/badge/webrtc-333333?style=for-the-badge&logo=webrtc&logoColor=white) ![Socket.io](https://img.shields.io/badge/Socket.io-010101?style=for-the-badge&logo=Socket.io&logoColor=white) | 영상통화, 실시간 채팅 구현
+![coturn](https://img.shields.io/badge/coturn-333333?style=for-the-badge&logo=coturn&logoColor=white) | 자체 TURN 서버 구축
+![Jest](https://img.shields.io/badge/Jest-C21325?style=for-the-badge&logo=Jest&logoColor=white) | 유닛, 통합테스트
 
 #### 📚 라이브러리
 
