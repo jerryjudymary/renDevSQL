@@ -43,6 +43,60 @@ renDev를 소개합니다.
 
 #### 
 
+
+<table>
+  <tr>
+  <td colspan='1' align="center">
+  Backend
+  </td>
+  <td colspan='1' align="center">
+  Frontend
+  </td>
+  <td colspan='1' align="center">
+  Designer
+  </td>
+  <tr>
+    <td align="center" >
+    <b>우재영</b></a><br>
+    <a href="https://github.com/jeangho293">Github</a>
+    <br><img src="https://img.shields.io/badge/Node.js-339933?style=flat&logo=Node.js&logoColor=white"/><br>
+    </td>
+    <td align="center">
+    <b>이천희</b></a><br />
+    <a href="https://github.com/gabmin" >Github</a>
+    <br><img src="https://img.shields.io/badge/React-61DAFB?style=flat&logo=React&logoColor=white"/><br>
+    </td>
+    <td align="center">
+    <b>김나정</b></a><br />
+    </td>
+    <tr>
+    <td align="center">
+    <b>김주혁</b></a><br /> 
+    <a href="https://github.com/Yunjaejo">Github</a>
+    <br><img src="https://img.shields.io/badge/Node.js-339933?style=flat&logo=Node.js&logoColor=white"/><br>
+    </td>
+    <td align="center">
+    <b>유승연</b></a><br /> 
+    <a href="https://github.com/larisms">Github</a>
+    <br><img src="https://img.shields.io/badge/React-61DAFB?style=flat&logo=React&logoColor=white"/><br>
+    </td>
+    </tr>
+    <tr>
+    <td align="center">
+    <b>유승재</b></a><br /> 
+    <a href="https://github.com/changchanghwang">Github</a>
+    <br><img src="https://img.shields.io/badge/Node.js-339933?style=flat&logo=Node.js&logoColor=white"/><br>
+    </td>
+    <td align="center">
+    <b>윤형진</b></a><br /> 
+    <a href="https://github.com/calvin9150">Github</a>
+    <br><img src="https://img.shields.io/badge/Node.js-339933?style=flat&logo=Node.js&logoColor=white"/><br>
+    </td>
+    <td colspan='1'></td>
+    </tr>
+</table>
+
+
 <br>
 
 ## **🛰️ Features**
