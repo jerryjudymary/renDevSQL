@@ -127,7 +127,21 @@ renDev에서 마음에 맞는 프로젝트와 팀원을 만나 보세요 🙂
 
 ## **🛰️ Features**
 
-#### 
+### ([도입 이유 링크]([https://spark-stove-6bf.notion.site/cf6de263fec844ba8c989b4c9a6dd32e](https://www.notion.so/renDev-b4158b77a39343feab8a22ef0fa3e30c)))
+
+
+기술스택 | 설명
+---|:---:
+Node.js | 자바스크립트 런타임
+Express | 웹 프레임워크
+MySQL(RDS) | RDBMS 클라우드 인스턴스
+sequelize | ORM
+Redis(Azure) | 인메모리 저장소(완전관리형)
+Github Action - AWS CodeDeploy | CI/CD 툴
+Jest - Supertest | 유닛, 통합 테스트 메서드 지원
+Nginx | Proxy 서버
+WebRTC - socket.io | 영상통화, 실시간 채팅 구현
+coturn | 자체 TURN 서버 구축
 
 <br>
 
