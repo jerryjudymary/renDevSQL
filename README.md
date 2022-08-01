@@ -80,6 +80,8 @@ renDev를 소개합니다.
     <a href="https://github.com/larisms">Github</a>
     <br><img src="https://img.shields.io/badge/React-61DAFB?style=flat&logo=React&logoColor=white"/><br>
     </td>
+    <td align="center">
+    </td>
     </tr>
     <tr>
     <td align="center">
@@ -88,9 +90,19 @@ renDev를 소개합니다.
     <br><img src="https://img.shields.io/badge/Node.js-339933?style=flat&logo=Node.js&logoColor=white"/><br>
     </td>
     <td align="center">
+    </td>
+    <td align="center">
+    </td>
+    </tr>
+    <tr>
+    <td align="center">
     <b>윤형진</b></a><br /> 
     <a href="https://github.com/calvin9150">Github</a>
     <br><img src="https://img.shields.io/badge/Node.js-339933?style=flat&logo=Node.js&logoColor=white"/><br>
+    </td>
+    <td align="center">
+    </td>
+    <td align="center">
     </td>
     </tr>
 </table>
