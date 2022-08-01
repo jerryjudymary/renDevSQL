@@ -127,7 +127,7 @@ renDev에서 마음에 맞는 프로젝트와 팀원을 만나 보세요 🙂
 
 ## **🛰️ Features**
 
-### ([도입 이유 링크]([https://spark-stove-6bf.notion.site/cf6de263fec844ba8c989b4c9a6dd32e](https://www.notion.so/renDev-b4158b77a39343feab8a22ef0fa3e30c)))
+### [[도입 이유 링크]([https://www.notion.so/renDev-b4158b77a39343feab8a22ef0fa3e30c])]
 
 
 기술스택 | 설명
