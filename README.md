@@ -12,7 +12,7 @@
 
 1. [renDev 서비스 소개](#-renDev-서비스-소개)
 2. [팀 구성](#-팀-구성)
-3. [주요 Features](#-주요-Features)
+3. [Features](#-Features)
 4. [Libraries](#-Libraries)
 5. [Architecture](#-Architecture)
 6. [ERD](#-ERD)
@@ -44,7 +44,7 @@ renDev를 소개합니다.
 
 <br>
 
-## ** 🛰️ 주요 Features**
+## **🛰️ Features**
 
 #### 
 
