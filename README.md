@@ -14,7 +14,7 @@
 1. [renDev 서비스 소개](#-renDev-서비스-소개)
 2. [팀 구성](#-팀-구성)
 3. [Features](#-Features)
-4. [Libraries](#-Libraries)
+4. [기술 스택, 라이브러리](#-기술 스택,-)
 5. [Architecture](#-Architecture)
 6. [ERD](#-ERD)
 7. [Trouble Shooting](#-Trouble-Shooting)
@@ -156,7 +156,7 @@ renDev에서 마음에 맞는 프로젝트와 팀원을 만나 보세요 🙂
 
 <br>
 
-## **📂 Libraries**
+## **📡 기술 스택, 라이브러리**
 
 ### [[도입 이유](https://www.notion.so/renDev-b4158b77a39343feab8a22ef0fa3e30c)]
 
