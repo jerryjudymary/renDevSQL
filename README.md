@@ -219,7 +219,20 @@ coturn | 자체 TURN 서버 구축
 
 ## **🌠 Trouble Shooting**
 
-####
+#### ✅ 자체 TURN 서버 구축
+
+
+#### ✅ 비즈니스 로직, 쿼리 수정으로 API 연산 복잡도, 코드 가독성 개선
+
+
+#### ✅ 부하 테스트시 병목 개선을 위한 Redis 캐싱 도입
+
+
+####아래 링크를 클릭하시면 renDev BE팀의 상세한 트러블 슈팅 기록을 보실 수 있습니다 :)
+
+#### [트러블 슈팅 기록 보러가기](https://www.notion.so/renDev-Trouble-Shooting-BE-d0878fe1cc57469d9f160f92eca6b7fe)]
+
+
 
 <br>
 
