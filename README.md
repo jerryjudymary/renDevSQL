@@ -158,7 +158,7 @@ renDev에서 마음에 맞는 프로젝트와 팀원을 만나 보세요 🙂
 
 ## **📡 기술 스택과 라이브러리**
 
-### [[도입 이유](https://www.notion.so/renDev-b4158b77a39343feab8a22ef0fa3e30c)]
+### [[도입 이유](https://www.notion.so/renDev-BE-53c4bd215e9441c7929211491db35483)]
 
 #### 🔧 기술 스택
 
