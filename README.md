@@ -4,7 +4,8 @@
 <br>
 
 <div align="center">
-  <a href="https://user-images.githubusercontent.com/103410051/182140573-62a62e72-15f0-4ab4-8297-2f082b8af344.png"/><br>이미지를 클릭하시면 renDev 서비스로 이동합니다.</a>
+  <a href="https://rendev99.com"><img src="https://user-images.githubusercontent.com/99331753/182140980-c4ac7e64-bc80-4888-993e-4ad036c0b63c.png"/>
+  <br>이미지를 클릭하시면 renDev 서비스로 이동합니다.</a>
 </div>
 <br>
 <hr>
