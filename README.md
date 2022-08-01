@@ -64,7 +64,7 @@ renDev를 소개합니다.
 <br>
 
 ## **🔀 ERD**
-
+![ERD_FINAL_RENDEV](https://user-images.githubusercontent.com/105159616/182063012-359a16b8-434f-40ae-8a99-1148723ec75a.png)
 ####
 
 <br>
