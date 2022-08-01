@@ -1,6 +1,6 @@
 const express = require("express");
 const { Op } = require("sequelize");
-const { User, Resume, ResumeSkill, sequelize } = require("../../../models");
+const { User, Resume, ResumeSkill, Application, sequelize } = require("../../../models");
 const { QueryTypes } = require("sequelize");
 const logger = require("../../../config/logger");
 const { redisClient, DEFAULT_EXPIRATION } = require("../../../config/redis");
@@ -144,6 +144,10 @@ exports.resumeDelete = async (req, res) => {
 
     if (userId !== existResume.userId) return res.status(400).json({ errormessage: "내 게시글이 아닙니다" });
 
+    const existApplication = await Application.findOne({ where: { resumeId } });
+
+    if (existApplication) return res.status(400).json({ errorMessage: "이미 지원한 지원서는 삭제할 수 없습니다." });
+
     await existResume.destroy({});
 
     // 수정시 해당 지원서, 전체조회 캐싱용 Redis 키 삭제
@@ -155,6 +159,6 @@ exports.resumeDelete = async (req, res) => {
     res.status(200).json({ message: "나의 정보를 삭제했습니다." });
   } catch (error) {
     logger.error(error);
-    res.status(400).json({ errormessage: "해당 기능을 점검중입니다..." });
+    res.status(400).json({ errormessage: "삭제 실패" });
   }
 };
