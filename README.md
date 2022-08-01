@@ -12,11 +12,11 @@
 
 1. [renDev 서비스 소개](#-renDev-서비스-소개)
 2. [팀 구성](#-팀-구성)
-3. [주요 Features](#주요-Features)
-4. [Libraries](#Libraries)
+3. [주요 Features](#-주요-Features)
+4. [Libraries](#-Libraries)
 5. [Architecture](#-Architecture)
-6. [ERD](#ERD)
-7. [Trouble Shooting](#Trouble-Shooting)
+6. [ERD](#-ERD)
+7. [Trouble Shooting](#-Trouble-Shooting)
 
 <hr>
 <br>
