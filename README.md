@@ -58,12 +58,12 @@ renDev를 소개합니다.
   <tr>
     <td align="center" >
     <b>우재영</b></a><br>
-    <a href="https://github.com/jeangho293">Github</a>
+    <a href="https://github.com/alpha-fly">Github</a>
     <br><img src="https://img.shields.io/badge/Node.js-339933?style=flat&logo=Node.js&logoColor=white"/><br>
     </td>
     <td align="center">
     <b>이천희</b></a><br />
-    <a href="https://github.com/gabmin" >Github</a>
+    <a href="https://github.com/FrostALee" >Github</a>
     <br><img src="https://img.shields.io/badge/React-61DAFB?style=flat&logo=React&logoColor=white"/><br>
     </td>
     <td align="center">
@@ -72,12 +72,12 @@ renDev를 소개합니다.
     <tr>
     <td align="center">
     <b>김주혁</b></a><br /> 
-    <a href="https://github.com/Yunjaejo">Github</a>
+    <a href="https://github.com/playhuck">Github</a>
     <br><img src="https://img.shields.io/badge/Node.js-339933?style=flat&logo=Node.js&logoColor=white"/><br>
     </td>
     <td align="center">
     <b>유승연</b></a><br /> 
-    <a href="https://github.com/larisms">Github</a>
+    <a href="https://github.com/qoqomi">Github</a>
     <br><img src="https://img.shields.io/badge/React-61DAFB?style=flat&logo=React&logoColor=white"/><br>
     </td>
     <td align="center">
@@ -86,7 +86,7 @@ renDev를 소개합니다.
     <tr>
     <td align="center">
     <b>유승재</b></a><br /> 
-    <a href="https://github.com/changchanghwang">Github</a>
+    <a href="https://github.com/jerryjudymary">Github</a>
     <br><img src="https://img.shields.io/badge/Node.js-339933?style=flat&logo=Node.js&logoColor=white"/><br>
     </td>
     <td align="center">
@@ -97,7 +97,7 @@ renDev를 소개합니다.
     <tr>
     <td align="center">
     <b>윤형진</b></a><br /> 
-    <a href="https://github.com/calvin9150">Github</a>
+    <a href="https://github.com/engin9803">Github</a>
     <br><img src="https://img.shields.io/badge/Node.js-339933?style=flat&logo=Node.js&logoColor=white"/><br>
     </td>
     <td align="center">
