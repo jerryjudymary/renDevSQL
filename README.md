@@ -92,7 +92,6 @@ renDev를 소개합니다.
     <a href="https://github.com/calvin9150">Github</a>
     <br><img src="https://img.shields.io/badge/Node.js-339933?style=flat&logo=Node.js&logoColor=white"/><br>
     </td>
-    <td colspan='1'></td>
     </tr>
 </table>
 
