@@ -10,11 +10,13 @@
 ## **목차 | Contents**
 
 1. [renDev 서비스 소개](#renDev-서비스-소개)
-2. [팀원소개](#팀원소개)
-3. [Git 운영 전략](#Git-운영-전략)
-4. [주요 라이브러리](#주요-라이브러리)
-5. [Architecture](#Architecture)
-6. [ERD](#ERD)
+2. [프로젝트 소개](#프로젝트-소개) 
+3. [팀 구성](#팀-구성)
+4. [주요 Features](#주요-Features)
+5. [Libraries](#Libraries)
+6. [Architecture](#Architecture)
+7. [ERD](#ERD)
+8. [Trouble Shooting](#Trouble-Shooting)
 
 ---------------
 
