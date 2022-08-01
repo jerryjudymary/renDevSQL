@@ -11,13 +11,12 @@
 ## **목차 | Contents**
 
 1. [renDev 서비스 소개](#-renDev-서비스-소개)
-2. [프로젝트 소개](#-프로젝트-소개) 
-3. [팀 구성](#팀-구성)
-4. [주요 Features](#주요-Features)
-5. [Libraries](#Libraries)
-6. [Architecture](#-Architecture)
-7. [ERD](#ERD)
-8. [Trouble Shooting](#Trouble-Shooting)
+2. [팀 구성](#-팀-구성)
+3. [주요 Features](#주요-Features)
+4. [Libraries](#Libraries)
+5. [Architecture](#-Architecture)
+6. [ERD](#ERD)
+7. [Trouble Shooting](#Trouble-Shooting)
 
 <hr>
 <br>
@@ -33,17 +32,42 @@ renDev를 소개합니다.
 
 <br> 
 
-## 🗓 프로젝트 기간
+## 🌒 프로젝트 기간
 
 - 2022년 06월 24일 ~ 2022년 08월 05일
 
 <br>
 
-##  프로젝트 소개
+## **👨‍🚀👩‍🚀 팀 구성**
 
 #### 
 
+<br>
 
+## **🛰️ 주요 Features**
 
-## **📊 Architecture**
+#### 
+
+<br>
+
+## **🌐 Libraries**
+
+####
+
+<br>
+
+## **🏗 Architecture**
 ![KakaoTalk_20220731_212444855](https://user-images.githubusercontent.com/105159616/182056813-506e7689-094c-4f3c-806b-2b3124b63ec5.png)
+#### 
+
+<br>
+
+## **🔀 ERD**
+
+####
+
+<br>
+
+## **🚀 Trouble Shooting**
+
+####
