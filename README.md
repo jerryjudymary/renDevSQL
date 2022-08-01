@@ -181,26 +181,26 @@ coturn | 자체 TURN 서버 구축
 <img src='https://img.shields.io/badge/artillery-1.7.9-lightgrey'> | 서버 스트레스 테스트
 <img src='https://img.shields.io/badge/bcrypt-5.0.1-lightgrey'> | 유저 비밀번호 암호화
 <img src='https://img.shields.io/badge/cors-2.8.5-lightgrey'> | 리소스 공유 CORS 정책 설정
-<img src='https://img.shields.io/badge/dotenv-10.0.0-lightgrey'>  | 환경변수 관리
+<img src='https://img.shields.io/badge/dotenv-16.0.1-lightgrey'>  | 환경변수 관리
 <img src='https://img.shields.io/badge/cross--env-7.0.3-lightgrey'>  | 스크립트 실행 환경변수 설정
-<img src='https://img.shields.io/badge/express-4.17.1-lightgrey'> | 서버 프레임워크
-<img src='https://img.shields.io/badge/helmet-4.6.0-lightgrey'>  | 서버 보안 취약점 방어
+<img src='https://img.shields.io/badge/express-4.18.1-lightgrey'> | 서버 프레임워크
+<img src='https://img.shields.io/badge/helmet-5.1.0-lightgrey'>  | 서버 보안 취약점 방어
 <img src='https://img.shields.io/badge/redis-3.1.2-lightgrey'>  | Redis Cli
 <img src='https://img.shields.io/badge/redis--delete--pattern-0.1.0-lightgrey'>  | Redis 키 패턴 삭제
 <img src='https://img.shields.io/badge/nodemailer-6.7.7-lightgrey'>  | 유저에게 메일 전송
 <img src='https://img.shields.io/badge/multer--s3-2.10.0-lightgrey'>  | S3 버킷 이미지 업로드
 <img src='https://img.shields.io/badge/joi-17.4.1-lightgrey'>  | 유효성 검사
-<img src='https://img.shields.io/badge/jest-27.3.1-lightgrey'>  | 테스트 코드
+<img src='https://img.shields.io/badge/jest-28.1.3-lightgrey'>  | 테스트 코드
 <img src='https://img.shields.io/badge/jsonwebtoken-8.5.1-lightgrey'>  | 토큰 암호화
 <img src='https://img.shields.io/badge/cookie--parser-1.4.6-lightgrey'>  | 서버 - 클라이언트 간 쿠키 파싱
 <img src='https://img.shields.io/badge/moment-2.29.1-lightgrey'> | Datetime 자료형 관리
 <img src='https://img.shields.io/badge/morgan-1.10.0-lightgrey'> | HTTP 로그 기록
 <img src='https://img.shields.io/badge/uuid-8.3.2-lightgrey'> | UUID 생성
-<img src='https://img.shields.io/badge/winston-3.3.3-lightgrey'> | 로그 파일 생성
-<img src='https://img.shields.io/badge/winston--daily--rotate--file-4.5.5-lightgrey'> | 로그 파일 관리
-<img src='https://img.shields.io/badge/mysql-2.3.2-lightgrey'> | MySQL 연동
-<img src='https://img.shields.io/badge/sequelize-6.7.0-lightgrey'>  | MySQL ORM
-<img src='https://img.shields.io/badge/sequelize--cli-6.2.0-lightgrey'> | MySQL ORM 콘솔
+<img src='https://img.shields.io/badge/winston-3.8.1-lightgrey'> | 로그 파일 생성
+<img src='https://img.shields.io/badge/winston--daily--rotate--file-4.7.1-lightgrey'> | 로그 파일 관리
+<img src='https://img.shields.io/badge/mysql-2.18.1-lightgrey'> | MySQL 연동
+<img src='https://img.shields.io/badge/sequelize-6.21.2-lightgrey'>  | MySQL ORM
+<img src='https://img.shields.io/badge/sequelize--cli-6.4.1-lightgrey'> | MySQL ORM 콘솔
 
 
 <br>
