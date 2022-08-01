@@ -149,7 +149,7 @@ renDev에서 마음에 맞는 프로젝트와 팀원을 만나 보세요 🙂
 
 <br>
 
-## **🚀 Trouble Shooting**
+## **🌠 Trouble Shooting**
 
 ####
 
