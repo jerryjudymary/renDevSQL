@@ -24,7 +24,7 @@ const { postLoginSchema, postUsersSchema, postNicknameSchema, postUserIdSchema }
 
 exports.signUp = async (req, res) => {
   try {
-    var { password, passwordCheck, name, birth, policy } = await postUsersSchema.validateAsync(req.body);
+    var { password, passwordCheck, policy } = await postUsersSchema.validateAsync(req.body);
   } catch (err) {
     return res.status(400).send({ errorMessage: "작성 형식을 확인해주세요" });
   }
@@ -32,8 +32,8 @@ exports.signUp = async (req, res) => {
   const profileImage = "";
   const refreshToken = "";
 
-  if (userId && nickname && password && birth && name && passwordCheck === "") {
-    res.status(400).send({ errorMessage: "작성란을 모두 기입해주세요." });
+  if (userId === ""|| nickname === ""|| password === ""|| passwordCheck === "") {
+    return res.status(400).send({ errorMessage: "작성란을 모두 기입해주세요." });
   }
 
   try {
@@ -45,7 +45,7 @@ exports.signUp = async (req, res) => {
       ]);
 
       if (!idExist && !nickExist) {
-        const users = await User.create({ userId, nickname, password: bcryptPw, name, birth, policy, profileImage, refreshToken });
+        const users = await User.create({ userId, nickname, password: bcryptPw, policy, profileImage, refreshToken });
 
         res.status(200).send({ users: users, message: "회원가입을 축하합니다." });
       } else if (idExist) {
@@ -267,8 +267,6 @@ exports.userDelete = async (req, res) => {
     if (hashed) {
       const ids = Math.random().toString(36).slice(-3) + "id";
       const nicks = Math.random().toString(36).slice(-3) + "nick";
-      const names = "";
-      const births = "";
       const profileImages = "";
       const refreshTokens = "";
       const passwords = "";
@@ -278,8 +276,6 @@ exports.userDelete = async (req, res) => {
         {
           userId: ids,
           nickname: nicks,
-          name: names,
-          birth: births,
           profileImage: profileImages,
           refreshToken: refreshTokens,
           password: passwords,

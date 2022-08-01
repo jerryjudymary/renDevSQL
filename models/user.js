@@ -32,16 +32,8 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         unique: true,
       },
-      name: {
-        type: DataTypes.STRING(30),
-        allowNull: false,
-      },
       password: {
         type: DataTypes.STRING(200),
-        allowNull: false,
-      },
-      birth: {
-        type: DataTypes.STRING(30),
         allowNull: false,
       },
       policy: {

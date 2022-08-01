@@ -10,12 +10,6 @@ exports.postUsersSchema = Joi.object({
     .pattern(new RegExp(/^(?=.*[a-zA-z])(?=.*[0-9])(?=.*[$`~!@$!%*#^?&\\(\\)\-_=+]).{4,16}$/))
     .required(),
   // 한글,영어,숫자, 특수문자 포함 가능 4~16자
-  birth: Joi.string()
-    .pattern(new RegExp(/^(19[0-9][0-9]|20\d{2})-(0[0-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/))
-    .required(),
-  // 19xx || 20xx년 - xx월 -- xx일
-  name: Joi.string().pattern(new RegExp("^[ㄱ-ㅎ|가-힣|a-z|A-Z|]{2,10}$")).required(),
-  // 한글,영어포함 가능 2~10자 (한글이름 2자, 영어이름 고려 10자)
   policy: Joi.boolean().required(),
 }).unknown(true);
 
