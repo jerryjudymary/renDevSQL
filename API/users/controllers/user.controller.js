@@ -94,7 +94,7 @@ exports.checkUserId = async (req, res) => {
       var emailNum = Math.random().toString(36).slice(-5)
       sendMail
           .sendMail({
-            from: `renDev <${process.env.MAILER}>`,
+            from: `renDev <${process.env.NODEMAILER_USER}>`,
             to: userId,
             subject: 'renDev 인증번호가 도착했습니다.',
             text: `사람과 미지의 조우 renDev입니다.`,
@@ -216,8 +216,8 @@ exports.login = async (req, res) => {
         });
 
         await User.update({ refreshToken }, { where: { userId } });
-        // res.cookie("refreshToken", refreshToken, { httpOnly: true, sameSite: "None", secure: true });
-        res.cookie("refreshToken", refreshToken);
+        res.cookie("refreshToken", refreshToken, { httpOnly: true, sameSite: "None", secure: true });
+        // res.cookie("refreshToken", refreshToken);
         return (
           res
             .status(200)
@@ -319,6 +319,10 @@ exports.updatePw = async (req, res) => {
     }
   }
 };
+
+exports.findId = async(req, res) => {
+  
+}
 
 exports.userDelete = async (req, res) => {
   const user = res.locals.user;
