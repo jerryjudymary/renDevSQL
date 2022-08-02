@@ -23,10 +23,10 @@ jobs:
      mysql:
       image: mysql:8
       env:
-        MYSQL_USER: judymary_user
-        MYSQL_PASSWORD: judymary_user
-        MYSQL_ROOT_PASSWORD: judymary123!
-        MYSQL_DATABASE: rendevSQLtestCode
+        MYSQL_USER: test_user
+        MYSQL_PASSWORD: test_user
+        MYSQL_ROOT_PASSWORD: root
+        MYSQL_DATABASE: test_db
         #MYSQL_HOST: database-1.cj2tg3os3jkh.ap-northeast-2.rds.amazonaws.com
       ports:
         - 3306:3306
