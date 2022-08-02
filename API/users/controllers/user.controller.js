@@ -7,7 +7,9 @@ const multerS3 = require("multer-s3");
 const aws = require("aws-sdk");
 const s3 = new aws.S3();
 require("dotenv").config();
-const { User } = require("../../../models");
+const { User, sequelize } = require("../../../models");
+const { QueryTypes } = require("sequelize");
+const sendMail = require('../../../config/mail');
 
 const upload = multer({
   storage: multerS3({
@@ -28,33 +30,43 @@ exports.signUp = async (req, res) => {
   } catch (err) {
     return res.status(400).send({ errorMessage: "작성 형식을 확인해주세요" });
   }
-  var { userId, nickname } = req.body;
+  var { userId, nickname, code } = req.body;
   const profileImage = "";
   const refreshToken = "";
 
-  if (userId === ""|| nickname === ""|| password === ""|| passwordCheck === "") {
-    return res.status(400).send({ errorMessage: "작성란을 모두 기입해주세요." });
+  if (userId === "" || nickname === "" || password === "" || passwordCheck === "" || code === "") {
+    res.status(400).send({ errorMessage: "작성란을 모두 기입해주세요." });
   }
-
+  
+  const sql = `SELECT * FROM email WHERE userId='${userId}'`;
+  const sql2 = `DELETE FROM email WHERE userId='${userId}'`
+  
   try {
     if (password === passwordCheck) {
-      const [bcryptPw, idExist, nickExist] = await Promise.all([
+      const [bcryptPw, idExist, nickExist, query] = await Promise.all([
         (password = bcrypt.hashSync(password, saltRounds)),
         User.findOne({ where: { userId } }),
         User.findOne({ where: { nickname } }),
+        sequelize.query(sql, { type: QueryTypes.SELECT })
       ]);
 
-      if (!idExist && !nickExist) {
-        const users = await User.create({ userId, nickname, password: bcryptPw, policy, profileImage, refreshToken });
+      const checkEmail = query.map(data => data.code).toString()
 
+      if (code !== checkEmail || code  === undefined || code === null || !code) {
+        return res.status(400).send({ errorMessage: "인증번호를 입력해 주세요" })
+      }
+
+      if (!idExist && !nickExist) {
+        const users =
+        await User.create({ userId, nickname, password: bcryptPw, policy, profileImage, refreshToken });
+        await sequelize.query(sql2 ,{type:sequelize.QueryTypes.DELETE});
         res.status(200).send({ users: users, message: "회원가입을 축하합니다." });
       } else if (idExist) {
         return res.status(400).send({ errorMessage: "중복 검사가 필요합니다." });
       } else if (nickExist) {
         return res.status(400).send({ errorMessage: "중복 검사가 필요합니다." });
-      }
-    } else {
-      res.status(400).send({ errorMessage: "비밀번호가 일치하지 않습니다." });
+      }} else {
+      return res.status(400).send({ errorMessage: "비밀번호가 일치하지 않습니다." });
     }
   } catch (err) {
     if (err) {
@@ -79,8 +91,37 @@ exports.checkUserId = async (req, res) => {
     if (user) {
       return res.status(400).send({ errorMessage: "중복된 아이디 입니다." });
     } else {
-      return res.status(200).send({ message: "사용 가능한 아이디 입니다." });
-    }
+      var emailNum = Math.random().toString(36).slice(-5)
+      sendMail
+          .sendMail({
+            from: `renDev <${process.env.MAILER}>`,
+            to: userId,
+            subject: 'renDev 인증번호가 도착했습니다.',
+            text: `사람과 미지의 조우 renDev입니다.`,
+            html: `
+            <div style="text-align: center;">
+            <img src=https://desklet.s3.ap-northeast-2.amazonaws.com/renDevvvvvvvvvvvvv.png>
+              <h1 style="color: #ECE0F8"></h1>
+              <br />
+              <h2>이메일 인증번호는 ${emailNum} 입니다.
+              </h2>
+            </div>
+          `,
+          })
+      };
+      const sql3 = `SELECT MAX(code) FROM email WHERE userId='${userId}'`
+      const existUser = await sequelize.query(sql3, { type: sequelize.QueryTypes.SELECT})
+      console.log(existUser)
+      if(existUser){
+      const sql2 = `DELETE FROM email WHERE userId='${userId}'`
+      await sequelize.query(sql2, { type: sequelize.QueryTypes.DELETE })
+      const sql = `INSERT INTO email (userId, code) VALUES ('${userId}', '${emailNum}');`;
+      await sequelize.query(sql, { type: sequelize.QueryTypes.INSERT })}
+      else {
+      const sql = `INSERT INTO email (userId, code) VALUES ('${userId}', '${emailNum}');`;
+      await sequelize.query(sql, { type: sequelize.QueryTypes.INSERT })
+      }
+      return res.status(200).send({ message: "사용 가능한 아이디 입니다. 메일이 발송 되었습니다." });
   } catch (err) {
     if (err) {
       console.log(err);
@@ -113,6 +154,31 @@ exports.checkNickname = async (req, res) => {
     }
   }
 };
+
+exports.checkEmailNum = async (req, res) => {
+  try{
+    const { code, userId } = req.body
+
+    if(code === "" || code === undefined || code === null || !code){
+      return res.status(400).send({ errorMessage: "인증번호를 입력해 주세요"})
+    }
+    const sql = `SELECT * FROM email where userId='${userId}'`
+    const query = await sequelize.query(sql, { type: QueryTypes.SELECT })
+    const querys = query.map(data => data.code);
+    const checkEmail = querys.reduce(function (acc, cur) {
+      return acc.concat(cur);
+    });
+    
+    if(code === checkEmail){
+      return res.status(200).send({ message: "인증번호가 일치합니다."});
+    } else {
+      return res.status(400).send({ errorMessage: "인증번호가 일치하지 않습니다." })
+    }
+  }catch(err){
+    console.log(err)
+    return res.status(400).send({ errorMessage: "인증번호가 일치하지 않습니다."})
+  }
+}
 
 exports.login = async (req, res) => {
   try {
@@ -150,8 +216,8 @@ exports.login = async (req, res) => {
         });
 
         await User.update({ refreshToken }, { where: { userId } });
-        res.cookie("refreshToken", refreshToken, { httpOnly: true, sameSite: "None", secure: true });
-        // res.cookie("refreshToken", refreshToken, { httpOnly: true, SameSite : "None" });
+        // res.cookie("refreshToken", refreshToken, { httpOnly: true, sameSite: "None", secure: true });
+        res.cookie("refreshToken", refreshToken);
         return (
           res
             .status(200)
@@ -167,6 +233,17 @@ exports.login = async (req, res) => {
     }
   }
 };
+
+exports.logout = async (req, res) => {
+  const refresh = req.cookies.refreshToken
+
+  if(refresh){
+    return res.cookie("refreshToken","").send({ message : "로그아웃에 성공 하셨습니다."})
+  } else {
+    return res.status(400).send({ errorMessage: "로그아웃에 실패 했습니다."})
+  }
+}
+
 
 // exports.refresh = async (req, res) => {
 //   console.log("refreshToken:", req.cookies.refreshToken)
@@ -247,8 +324,6 @@ exports.userDelete = async (req, res) => {
   const user = res.locals.user;
   const { nickname } = req.params;
   var { password } = req.body;
-  console.log(user.nickname);
-  console.log(nickname);
 
   if (user === undefined) {
     return res.status(401).send({ errorMessage: "로그인이 필요한 기능입니다." });
@@ -259,7 +334,7 @@ exports.userDelete = async (req, res) => {
   const users = await User.findOne({ where: { nickname } });
 
   if (users) {
-    if (!password && password === "" && password === undefined) {
+    if (!password || password === "" || password === undefined) {
       return res.status(401).send({ errorMessage: "비밀번호를 입력해 주세요" });
     }
 
@@ -295,7 +370,7 @@ exports.userDelete = async (req, res) => {
           }
         }
       );
-      return res.status(200).send({ message: "정상적으로 회원 탈퇴 됐습니다." });
+      return res.cookie("refreshToken","").status(200).send({ message: "정상적으로 회원 탈퇴 됐습니다." });
     } else {
       return res.status(401).send({ errorMessage: "비밀번호가 일치하지 않습니다." });
     }
