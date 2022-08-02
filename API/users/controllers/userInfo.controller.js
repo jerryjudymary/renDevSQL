@@ -58,11 +58,15 @@ exports.userInfo = async (req, res) => {
     //   res.status(400).send({ errorMessage: "유저 정보를 찾을 수 없습니다." });
     // }
     const user = res.locals.user;
+    if(user === null){
+      return res.send({ message : "토큰이 없습니다."})
+    } else {
     res.send({
       userId : user.userId,
       nickname: user.nickname,
       profileImage: user.profileImage
     })
+  }
   };
 
 exports.userProject = async(req,res) => {
