@@ -15,6 +15,10 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    
+    container:
+      image:  node:10.16-jessie
+    
     services:
      mysql:
       image: mysql:5.7
