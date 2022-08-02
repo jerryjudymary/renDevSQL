@@ -216,8 +216,8 @@ exports.login = async (req, res) => {
         });
 
         await User.update({ refreshToken }, { where: { userId } });
-        // res.cookie("refreshToken", refreshToken, { httpOnly: true, sameSite: "None", secure: true });
-        res.cookie("refreshToken", refreshToken);
+        res.cookie("refreshToken", refreshToken, { httpOnly: true, sameSite: "None", secure: true });
+        // res.cookie("refreshToken", refreshToken);
         return (
           res
             .status(200)
@@ -319,6 +319,10 @@ exports.updatePw = async (req, res) => {
     }
   }
 };
+
+exports.findId = async(req, res) => {
+  
+}
 
 exports.userDelete = async (req, res) => {
   const user = res.locals.user;
