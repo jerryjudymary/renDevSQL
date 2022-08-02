@@ -23,7 +23,7 @@ jobs:
      mysql:
       image: mysql:5.7
       env:
-        MYSQL_ROOT_PASSWORD: root
+        MYSQL_ROOT_PASSWORD: judymary123!
         #username: root
         #password: judymary123!
         #database: rendevSQLtestCode
