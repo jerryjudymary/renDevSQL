@@ -16,20 +16,20 @@ jobs:
 
     runs-on: ubuntu-latest
     
-    container:
-      image:  node:16.16
+    #container:
+      #image:  node:16.16
     
     services:
      mysql:
-      image: mysql:5.7
+      image: mysql:8
       env:
-        #MYSQL_ROOT_PASSWORD: judymary123!
         MYSQL_USER: root
         MYSQL_PASSWORD: judymary123!
+        MYSQL_ROOT_PASSWORD: judymary123!
         MYSQL_DATABASE: rendevSQLtestCode
-        MYSQL_HOST: database-1.cj2tg3os3jkh.ap-northeast-2.rds.amazonaws.com
+        #MYSQL_HOST: database-1.cj2tg3os3jkh.ap-northeast-2.rds.amazonaws.com
       ports:
-      - 3306
+        - 3306:3306
       options:
         --health-cmd="mysqladmin ping"
         --health-interval=10s
