@@ -23,10 +23,11 @@ jobs:
      mysql:
       image: mysql:5.7
       env:
-        username: root
-        password: judymary123!
-        database: rendevSQLtestCode
-        host: database-1.cj2tg3os3jkh.ap-northeast-2.rds.amazonaws.com
+        MYSQL_ROOT_PASSWORD: root
+        #username: root
+        #password: judymary123!
+        #database: rendevSQLtestCode
+        #host: database-1.cj2tg3os3jkh.ap-northeast-2.rds.amazonaws.com
       ports:
       - 3306:3306
       options:
