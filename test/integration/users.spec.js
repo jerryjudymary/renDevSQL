@@ -17,15 +17,27 @@ describe("아이디 중복검사 - 회원가입 - 로그인 - 회원탈퇴 시�
     expect(res.status).toBe(400);
   });
 
+  test("/api/users/signup/checkUserId (아이디 중복검사 / 이메일 인증) 신규 아이디 중복검사 / 이메일 인증 시 status 200이 응답되어야 한다.", async () => {
+    const res = await request(app).post("/api/users/signup/checkUserId").send({
+      userId: "testament@test.com",
+    });
+
+    expect(res.status).toBe(200);
+  });
+
   test("/api/users/signup (회원가입) 회원 가입시 status 200이 응답되어야 한다.", async () => {
+
+    const query = `SELECT code FROM email WHERE userId='testament@test.com'`; // 이메일 인증 코드 불러오기
+    const queryResult = await sequelize.query(query, { type: QueryTypes.SELECT });
+    const code = queryResult[0].code
+
     const res = await request(app).post("/api/users/signup").send({
       userId: "testament@test.com",
       nickname: "testmen",
       password: "iloverendev123!",
       passwordCheck: "iloverendev123!",
-      name: "유랑뎁",
-      birth: "1995-01-11",
       policy: true,
+      code
     });
 
     expect(res.status).toBe(200);
