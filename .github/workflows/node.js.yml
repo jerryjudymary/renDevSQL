@@ -4,17 +4,13 @@
 name: Node.js CI
 
 on:
-  push:
-    branches:
-    - main
-  pull_request:
-    branches:
-    - main
+  pull_request: 
+    branches: [ main ]
 
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     
     #container:
       #image:  node:16.16
@@ -23,9 +19,9 @@ jobs:
      mysql:
       image: mysql:5.7
       env:
-        MYSQL_USER: root
+        #MYSQL_USER: root
         MYSQL_PASSWORD: judymary123!
-        MYSQL_ROOT_PASSWORD: root
+        #MYSQL_ROOT_PASSWORD: root
         MYSQL_DATABASE: rendevSQLtestCode
         #MYSQL_HOST: database-1.cj2tg3os3jkh.ap-northeast-2.rds.amazonaws.com
       ports:
