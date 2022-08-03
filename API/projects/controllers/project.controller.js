@@ -10,6 +10,7 @@ const moment = require("moment");
 const { v4 } = require("uuid");
 const { redisClient, DEFAULT_EXPIRATION } = require("../../../config/redis");
 
+
 // multer - S3 이미지 업로드 설정
 
 const upload = multer({
@@ -93,7 +94,7 @@ exports.project = async (req, res) => {
   }
 };
 
-// 프로젝트 조회
+// 프로젝트 전체 조회
 
 exports.projectInfo = async (req, res) => {
   redisClient.get("projects", async (err, data) => { // 레디스 서버에서 데이터 체크, 레디스에 저장되는 키 값은 projects
@@ -117,6 +118,70 @@ exports.projectInfo = async (req, res) => {
     res.send({ projects });
   });
 };
+
+/**
+ *  프로젝트 전체 조회 (커서 페이징, 프론트 구현 전까지 주석처리)
+
+// 쿼리스트링을 이용하므로, 콜백 함수로 들어갈 Express 메서드 부분은 변경할 필요 없습니다)
+// 주석 해제시 Redis 삭제 부분까지 redis-delete-wildcard 모듈로 패턴 삭제 필수 (면접 예약부분까지))
+// 패턴 삭제부분 코드는 프로젝트 수정 부분에 주석처리 되어 있습니다.
+
+exports.projectInfo = async (req, res) => {
+
+  let query;
+  let pageNumber;
+
+  if (!req.query.project_id) {
+    pageNumber = 0;
+  } else {
+    pageNumber = parseInt(req.query.project_id);
+  };
+  
+  redisClient.get(`projects_main_page:${pageNumber}`, async (err, data) => { // 레디스 서버에서 데이터 체크
+    if (err) console.error(error);
+    if (data) return res.json({ projects: JSON.parse(data) }); // 캐시 적중(cache hit)시 response!
+    
+    if (pageNumber === 0) {
+      query = `
+        SELECT mainQ.*, JSON_ARRAYAGG(skill) AS skills
+          FROM (
+            SELECT project.projectId, nickname, title, subscript, role, start, end, createdAt
+            FROM project
+            ORDER BY projectId DESC
+            LIMIT 2
+          ) mainQ
+        INNER JOIN project_skill
+        ON mainQ.projectId = project_skill.projectId
+        GROUP BY mainQ.projectId
+      `;
+    } else {
+      query = `
+        SELECT mainQ.*, JSON_ARRAYAGG(skill) AS skills
+          FROM(
+            SELECT project.projectId, nickname, title, subscript, role, start, end, createdAt
+            FROM project
+            WHERE projectId < ${pageNumber}
+            ORDER BY projectId DESC
+            LIMIT 2
+          ) mainQ
+        INNER JOIN project_skill
+        ON mainQ.projectId = project_skill.projectId
+        GROUP BY mainQ.projectId
+      `;                          
+    };
+
+    const projects = await sequelize.query(query, { type: QueryTypes.SELECT });
+    if (!projects.length) {
+      return res.status(404).json({ errorMessage: "프로젝트가 존재하지 않습니다." });
+    };
+
+    // 캐시 부적중(cache miss)시 DB에 쿼리 전송, setex 메서드로 설정한 기본 만료시간까지 redis 캐시 저장
+    redisClient.setex(`projects_main_page:${pageNumber}`, DEFAULT_EXPIRATION, JSON.stringify(projects));
+    res.send({ projects });
+  });
+}; 
+
+*/
 
 // 프로젝트 상세 조회
 
@@ -291,8 +356,7 @@ exports.projectUpdate = async (req, res) => {
     const validSchedules = newAvailableApps.map((app) => moment(app.schedule, 'YYYY-MM-DD HH:mm').format("YYYY-MM-DD HH:mm:ss"));
     const existUnavailableSchedules = existUnavailableApps.map((app) => app.schedule);
     const alreadyExistApps = validSchedules.filter((time) => existUnavailableSchedules.includes(time));
-    
-
+   
     // 이미 예약된 스케쥴의 시간과 새로운 스케쥴의 시간이 중복된다면 throw
     if (alreadyExistApps.length) {
       throw res.status(400).json({ errorMessage: "이미 예약된 시간대는 추가할 수 없습니다." });
@@ -300,7 +364,6 @@ exports.projectUpdate = async (req, res) => {
  
     // 예약된 스케쥴을 삭제하고 새로 덮어쓰기 해야 할 경우에서 고려해야 할 예외처리의 반복문을 줄이기 위해,
     // 중복 여부만 검사하여 예약된 스케쥴은 삭제하지 않고, 추가하지 않아 기존 예약 데이터의 영속성 유지와 연산 비용 단축
-
   
     await Application.destroy({ where: { projectId, available: true }, transaction: t });
     for (let i = 0; i < validSchedules.length; i++) {
@@ -331,12 +394,12 @@ exports.projectUpdate = async (req, res) => {
     };
 
     await t.commit();
-
+ 
     // 수정시 해당 프로젝트, 전체조회 캐싱용 Redis 키 삭제
-    redisClient.del(`projects:${projectId}`, `projects`, function (err, response) {
-      if (response == 1) console.log("1 Redis key deleted");
-      if (response == 2) console.log("2 Redis key deleted");
-    });
+    redisClient.del(`projects:${projectId}`, `projects`, function (err, response) {});
+
+    // 커서 페이징 시 주석처리 해제
+    // redisClient.delwild(`projects_main_page:*`, function(error, numberDeletedKeys) {});
 
     return res.status(200).json({
       message: "프로젝트 게시글을 수정했습니다.",
