@@ -17,6 +17,7 @@
     "nodemailer": "^6.7.7",
     "nodemon": "^2.0.19",
     "redis": "^3.1.2",
+    "redis-delete-wildcard": "^0.0.3",
     "sequelize": "^6.21.2",
     "uuid": "^8.3.2",
     "winston": "^3.8.1",

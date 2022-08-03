@@ -1,4 +1,5 @@
 const Redis = require("redis");
+require('redis-delete-wildcard')(Redis); 
 const { development } = require("./redis_modules.js");
 const config = require("./redis_modules.js")[process.env.NODE_ENV];
 
