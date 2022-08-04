@@ -68,7 +68,6 @@
 //     expect(res._getJSONData()).toEqual({ errorMessage: "등록 실패" });
 //   });
 // });
-// // MockDate.reset();
 
 // describe("팀원 찾기 전체 조회 테스트", () => {
 //   beforeEach(() => {
