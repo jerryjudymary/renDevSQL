@@ -14,13 +14,18 @@ jobs:
     
     services:
       mysql:
-        image: sequelize
+        image: mysql:5.7
         env:
-          username: root
-          password: judymary123!
+          MYSQL_USER: test
+          MYSQL_PASSWORD: test
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: TESTCODE
+
+          #username: test
+          #password: judymary123!
           #MYSQL_ROOT_PASSWORD: root
-          database: rendevSQLtestCode
-          host: database-1.cj2tg3os3jkh.ap-northeast-2.rds.amazonaws.com
+          #database: rendevSQLtestCode
+          #host: database-1.cj2tg3os3jkh.ap-northeast-2.rds.amazonaws.com
         ports:
           - 3306
         options:
@@ -29,12 +34,12 @@ jobs:
           --health-timeout=5s
           --health-retries=3
           
-      redis:
-        image: redis
-        ports: 
-          - 6379:6379
-        options:
-          --entrypoint redis-server
+      #redis:
+        #image: redis
+        #ports: 
+          #- 6379:6379
+        #options:
+          #--entrypoint redis-server
     
     strategy:
       matrix:
@@ -42,12 +47,49 @@ jobs:
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v3
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      - name: verify MySQL connection from host
+    
+    run: |
+          mysql --version
+          sudo apt-get install -y mysql-client
+          sudo service mysql start
+          mysql -uroot -proot -e "CREATE DATABASE TESTCODE"
+          mysql -uroot -proot -e "SHOW DATABASES"
+          
+    - name: Make .env file
+      uses: SpicyPizza/create-envfile@v1
       with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-    - run: npm ci
-    - run: npm run build --if-present
-    - run: npm run test
+          AWS_SECRET_ACCESS_KEY: pb4O1ssCSb4RU9IsfeEmry9lqu+OKCXXxIGMARSv
+          AWS_ACCESS_KEY_ID: AKIAXUCWUZI5MNBFFG72
+          JWT_SECRET_KEY: Real_work
+          JWT_SECRET_REFRESH: Real_work_refresh
+          DB_HOST: database-1.cj2tg3os3jkh.ap-northeast-2.rds.amazonaws.com
+          DB_PASSWORD: judymary123!
+          TEST_HOST: database-1.cj2tg3os3jkh.ap-northeast-2.rds.amazonaws.com
+          TEST_PASSWORD: judymary123!
+          NODEMAILER_USER: rendev-notice@naver.com
+          NODEMAILER_PASS: rendev99**
+          REDIS_HOST: jerryAzureRedis.redis.cache.windows.net
+          REDIS_PORT: 6379
+          REDIS_PASSWORD: Sz10L1Z22ljKInBAW10TGdhVuZb8LRKLzAzCaOdfEIU=
+    - name : install node modules && test
+      run: |
+          sudo service mysql restart
+          npm install
+          npm run reset
+          npm test
+      env:
+          CI: true
+          MYSQL_DATABASE: TESTCODE
+          TEST_USERNAME: root
+          TEST_PASSWORD: judymary123!
+          TEST_PORT: database-1.cj2tg3os3jkh.ap-northeast-2.rds.amazonaws.com
+    #- run: npm ci
+    #- run: npm run build --if-present
+    #- run: npm run test
