@@ -26,19 +26,20 @@ jobs:
           cache: 'npm'
       - name: Setting .env
         run: |
-          echo "AWS_SECRET_ACCESS_KEY="pb4O1ssCSb4RU9IsfeEmry9lqu+OKCXXxIGMARSv"
-          echo "AWS_ACCESS_KEY_ID="AKIAXUCWUZI5MNBFFG72"
-          echo "JWT_SECRET_KEY="Real_work"
-          echo "JWT_SECRET_REFRESH="Real_work_refresh"
-          echo "DB_HOST="database-1.cj2tg3os3jkh.ap-northeast-2.rds.amazonaws.com"
-          echo "DB_PASSWORD="judymary123!"
-          echo "TEST_HOST="database-1.cj2tg3os3jkh.ap-northeast-2.rds.amazonaws.com"
-          echo "TEST_PASSWORD="judymary123!"
-          echo "NODEMAILER_USER="rendev-notice@naver.com"
-          echo "NODEMAILER_PASS="rendev99**"
-          echo "REDIS_HOST="jerryAzureRedis.redis.cache.windows.net"
-          echo "REDIS_PORT="6379"
-          echo "REDIS_PASSWORD="Sz10L1Z22ljKInBAW10TGdhVuZb8LRKLzAzCaOdfEIU="
+          echo "AWS_SECRET_ACCESS_KEY="pb4O1ssCSb4RU9IsfeEmry9lqu+OKCXXxIGMARSv" >> .env
+          echo "AWS_ACCESS_KEY_ID="AKIAXUCWUZI5MNBFFG72" >> .env
+          echo "JWT_SECRET_KEY="Real_work" >> .env
+          echo "JWT_SECRET_REFRESH="Real_work_refresh" >> .env
+          echo "DB_HOST="database-1.cj2tg3os3jkh.ap-northeast-2.rds.amazonaws.com" >> .env
+          echo "DB_PASSWORD="judymary123!" >> .env
+          echo "TEST_HOST="database-1.cj2tg3os3jkh.ap-northeast-2.rds.amazonaws.com" >> .env
+          echo "TEST_PASSWORD="judymary123!" >> .env
+          echo "NODEMAILER_USER="rendev-notice@naver.com" >> .env
+          echo "NODEMAILER_PASS="rendev99**" >> .env
+          echo "REDIS_HOST="jerryAzureRedis.redis.cache.windows.net" >> .env
+          echo "REDIS_PORT="6379" >> .env
+          echo "REDIS_PASSWORD="Sz10L1Z22ljKInBAW10TGdhVuZb8LRKLzAzCaOdfEIU=" >> .env
+          cat .env
       - run: npm ci
       - run: npm run build --if-present
       - run: npm run test
