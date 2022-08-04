@@ -181,7 +181,7 @@ renDev에서 마음에 맞는 프로젝트와 팀원을 만나 보세요 🙂
 ![NginX](https://img.shields.io/badge/nginx-green?style=for-the-badge&logo=nginx&logoColor=white) | Proxy 서버
 ![WebRTC](https://img.shields.io/badge/webrtc-333333?style=for-the-badge&logo=webrtc&logoColor=white) ![Socket.io](https://img.shields.io/badge/Socket.io-010101?style=for-the-badge&logo=Socket.io&logoColor=white) | 영상통화, 실시간 채팅 구현
 ![coturn](https://img.shields.io/badge/coturn-333333?style=for-the-badge&logo=coturn&logoColor=white) | 자체 TURN 서버 구축
-![Jest](https://img.shields.io/badge/Jest-C21325?style=for-the-badge&logo=Jest&logoColor=white) | 유닛, 통합테스트
+![Jest](https://img.shields.io/badge/Jest-C21325?style=for-the-badge&logo=Jest&logoColor=white) | 통합테스트 - CI 연계
 
 #### 📚 라이브러리
 
