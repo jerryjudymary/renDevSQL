@@ -16,26 +16,21 @@ jobs:
       #image:  node:16.16
     
     services:
-     mysql:
-      image: mysql
-      env:
-        MYSQL_USER: root
-        MYSQL_PASSWORD: judymary123!
-        MYSQL_ROOT_PASSWORD: root
-        MYSQL_DATABASE: rendevSQLtestCode
-        MYSQL_HOST: database-1.cj2tg3os3jkh.ap-northeast-2.rds.amazonaws.com
-      ports:
-        - 3306:3306
-      options:
-        --health-cmd="mysqladmin ping"
-        --health-interval=10s
-        --health-timeout=5s
-        --health-retries=3
-    
-      redis:
-        image: redis
+      mysql:
+        image: mysql:8.0
+        env:
+          #MYSQL_USER: root
+          #MYSQL_PASSWORD: judymary123!
+          MYSQL_ROOT_PASSWORD: judymary123!
+          MYSQL_DATABASE: rendevSQLtestCode
+          #MYSQL_HOST: database-1.cj2tg3os3jkh.ap-northeast-2.rds.amazonaws.com
         ports:
-          - 6379:6379
+          - 3306
+        options:
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
     
     strategy:
       matrix:
