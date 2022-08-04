@@ -24,19 +24,19 @@ jobs:
           cache: 'npm'
       - name: Setting .env
         run: |
-          echo "AWS_SECRET_ACCESS_KEY=pb4O1ssCSb4RU9IsfeEmry9lqu+OKCXXxIGMARSv" >> .env
-          echo "AWS_ACCESS_KEY_ID=AKIAXUCWUZI5MNBFFG72" >> .env
-          echo "JWT_SECRET_KEY=Real_work" >> .env
-          echo "JWT_SECRET_REFRESH=Real_work_refresh" >> .env
-          echo "DB_HOST=database-1.cj2tg3os3jkh.ap-northeast-2.rds.amazonaws.com" >> .env
-          echo "DB_PASSWORD=judymary123!" >> .env
-          echo "TEST_HOST=database-1.cj2tg3os3jkh.ap-northeast-2.rds.amazonaws.com" >> .env
-          echo "TEST_PASSWORD=judymary123!" >> .env
-          echo "NODEMAILER_USER=rendev-notice@naver.com" >> .env
-          echo "NODEMAILER_PASS=rendev99**" >> .env
-          echo "REDIS_HOST=jerryAzureRedis.redis.cache.windows.net" >> .env
-          echo "REDIS_PORT=6379" >> .env
-          echo "REDIS_PASSWORD=Sz10L1Z22ljKInBAW10TGdhVuZb8LRKLzAzCaOdfEIU=" >> .env
+          echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> .env
+          echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> .env
+          echo "JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}" >> .env
+          echo "JWT_SECRET_REFRESH=${{ secrets.JWT_SECRET_REFRESH }}" >> .env
+          echo "DB_HOST=${{ secrets.DB_HOST }}" >> .env
+          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
+          echo "TEST_HOST=${{ secrets.TEST_HOST }}" >> .env
+          echo "TEST_PASSWORD=${{ secrets.TEST_PASSWORD }}" >> .env
+          echo "NODEMAILER_USER=${{ secrets.NODEMAILER_USER }}" >> .env
+          echo "NODEMAILER_PASS=${{ secrets.NODEMAILER_PASS }}" >> .env
+          echo "REDIS_HOST=${{ secrets.REDIS_HOST }}" >> .env
+          echo "REDIS_PORT=${{ secrets.REDIS_PORT }}" >> .env
+          echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}" >> .env
           cat .env
       - run: npm ci
       - run: npm run build --if-present
