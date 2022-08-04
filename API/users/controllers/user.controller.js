@@ -34,7 +34,7 @@ exports.signUp = async (req, res) => {
   const profileImage = "";
   const refreshToken = "";
 
-  if (userId === "" || nickname === "" || password === "" || passwordCheck === "" || code === "") {
+  if (userId === "" || nickname === "" || password === "" || passwordCheck === "") {
     res.status(400).send({ errorMessage: "작성란을 모두 기입해주세요." });
   }
   
@@ -52,8 +52,12 @@ exports.signUp = async (req, res) => {
 
       const checkEmail = query.map(data => data.code).toString()
 
-      if (code !== checkEmail || code  === undefined || code === null || !code) {
+      if (code  === undefined || code === null || !code) {
         return res.status(400).send({ errorMessage: "인증번호를 입력해 주세요" })
+      }
+
+      if (code !== checkEmail) {
+        return res.status(400).send({ errorMessage: "인증번호를 확인해 주세요"})
       }
 
       if (!idExist && !nickExist) {
@@ -238,7 +242,8 @@ exports.logout = async (req, res) => {
   const refresh = req.cookies.refreshToken
 
   if(refresh){
-    return res.cookie("refreshToken","").send({ message : "로그아웃에 성공 하셨습니다."})
+    return res.cookie("refreshToken","", { httpOnly: true, sameSite: "None", secure: true })
+    .status(200).send({ message : "로그아웃에 성공 하셨습니다."})
   } else {
     return res.status(400).send({ errorMessage: "로그아웃에 실패 했습니다."})
   }
@@ -320,8 +325,73 @@ exports.updatePw = async (req, res) => {
   }
 };
 
-exports.findId = async(req, res) => {
-  
+exports.sendEmailPasswordcode = async(req, res) => {
+  try{
+    const { userId } = req.body;
+
+    if(userId){
+      const sql = `SELECT * FROM user WHERE userId='${userId}'`
+      const query = await sequelize.query(sql, { type: QueryTypes.SELECT })
+      const existId = query.map(data => data.userId)
+      sendMail
+            .sendMail({
+              from: `renDev <${process.env.NODEMAILER_USER}>`,
+              to: existId,
+              subject: 'renDev 인증번호가 도착했습니다.',
+              text: `사람과 미지의 조우 renDev입니다.`,
+              html: `
+              <div style="text-align: center;">
+              <img src=https://desklet.s3.ap-northeast-2.amazonaws.com/renDevvvvvvvvvvvvv.png>
+                <h1 style="color: #ECE0F8"></h1>
+                <br />
+                <h2>이메일 인증번호는 ${emailNum} 입니다.
+                </h2>
+              </div>
+            `,
+            })
+      const sql3 = `SELECT MAX(code) FROM email WHERE userId='${userId}'`
+      const existUser = await sequelize.query(sql3, { type: sequelize.QueryTypes.SELECT})
+      
+      if(existUser){
+        const sql2 = `DELETE FROM email WHERE userId='${existId}'`
+        await sequelize.query(sql2, { type: sequelize.QueryTypes.DELETE })
+        const sql3 = `INSERT INTO email (userId, code) VALUES ('${existId}', '${emailNum}');`;
+        await sequelize.query(sql3, { type: sequelize.QueryTypes.INSERT })}
+        else {
+        const sql4 = `INSERT INTO email (userId, code) VALUES ('${existId}', '${emailNum}');`;
+        await sequelize.query(sql4, { type: sequelize.QueryTypes.INSERT })
+        }
+      return res.status(200).send({ message : "인증번호가 메일로 전송 됐습니다."})
+    } else {
+      return res.status(400).send({ errorMessage: "아이디를 입력해 주세요"})
+    }
+  }catch(err){
+    console.log(err)
+    return res.status(400).send({ errorMessage: "아이디를 입력해 주세요"})
+  }
+}
+
+exports.findPassword = async(req, res) => {
+  try{
+    var { code, userId, findPassword, findPasswordCheck } = req.body;
+
+    const sql = `SELECT * FROM email WHERE userId='${userId}'`;
+    const query = await sequelize.query(sql, { type: QueryTypes.SELECT });
+    const emailCode = query.map(data => data.code);
+
+    if( code === emailCode ){
+      if(findPassword === findPasswordCheck){
+        const hashPassword = bcrypt.hashSync(findPassword, saltRounds)
+        await User.update({ password: hashPassword }, { where: { userId : userId } });
+        return res.status(200).send({ message: "비밀번호가 변경 됐습니다." })
+      }
+    }else {
+      return res.status(400).send({ errorMessage: "인증번호가 일치하지 않습니다." })
+    }
+  }catch(err){
+    console.log(err)
+    return res.status(400).send({ errorMessage: "비밀번호가 일치하는지 확인해 주세요"})
+  }
 }
 
 exports.userDelete = async (req, res) => {
@@ -374,7 +444,8 @@ exports.userDelete = async (req, res) => {
           }
         }
       );
-      return res.cookie("refreshToken","").status(200).send({ message: "정상적으로 회원 탈퇴 됐습니다." });
+      return res.cookie("refreshToken","" , { httpOnly: true, sameSite: "None", secure: true }).
+      status(200).send({ message: "정상적으로 회원 탈퇴 됐습니다." });
     } else {
       return res.status(401).send({ errorMessage: "비밀번호가 일치하지 않습니다." });
     }

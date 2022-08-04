@@ -32,6 +32,10 @@ router.post("/signup/checkEmail", userController.checkEmailNum); // 이메일 �
 
 router.post("/login", userController.login); // 로그인
 
+router.post("/details/:nickname/sendpassword", userController.sendEmailPasswordcode); // 비밀번호 찾기 인증번호 발송
+
+router.post("/details/:nickname/findpassword", userController.findPassword); // 비밀번호 찾기
+
 router.get("/logout", userController.logout); // 로그아웃 시 쿠키 빈값으로 수정
 
 // router.post("/refresh", userController.refresh); // 토큰 재발급
