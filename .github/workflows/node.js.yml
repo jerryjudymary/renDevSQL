@@ -12,18 +12,15 @@ jobs:
 
     runs-on: ubuntu-18.04
     
-    #container:
-      #image:  node:16.16
-    
     services:
       mysql:
         image: mysql:5.7
         env:
-          #MYSQL_USER: root
-          #MYSQL_PASSWORD: judymary123!
+          MYSQL_USER: root
+          MYSQL_PASSWORD: root
           MYSQL_ROOT_PASSWORD: root
           MYSQL_DATABASE: test
-          #MYSQL_HOST: database-1.cj2tg3os3jkh.ap-northeast-2.rds.amazonaws.com
+          MYSQL_HOST: 127.0.0.1
         ports:
           - 3306
         options:
@@ -31,6 +28,7 @@ jobs:
           --health-interval=10s
           --health-timeout=5s
           --health-retries=3
+          
       redis:
         image: redis
         ports: 
@@ -44,6 +42,15 @@ jobs:
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
+    - uses: actions/checkout@v1            
+    - name: Init Database      
+    - run: |        
+        mysql -uroot -h127.0.0.1 -proot -e 'CREATE USER root@localhost IDENTIFIED BY "root"'        
+        mysql -uroot -h127.0.0.1 -proot -e 'CREATE DATABASE test'        
+        mysql -uroot -h127.0.0.1 -proot -e 'CREATE DATABASE testcode'        
+        mysql -uroot -h127.0.0.1 -proot -e 'GRANT ALL PRIVILEGES ON test.* TO test@localhost IDENTIFIED BY "test" WITH GRANT OPTION'        
+        mysql -uroot -h127.0.0.1 -proot -e 'GRANT ALL PRIVILEGES ON testcode.* TO test@localhost IDENTIFIED BY "testcode" WITH GRANT OPTION'
+      
     - uses: actions/checkout@v3
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v3
