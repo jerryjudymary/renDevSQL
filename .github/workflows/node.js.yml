@@ -23,7 +23,23 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
+          
       - name: Setting .env
+        env:
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
+          JWT_SECRET_REFRESH: ${{ secrets.JWT_SECRET_REFRESH }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          TEST_HOST: ${{ secrets.TEST_HOST }}
+          TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
+          NODEMAILER_USER: ${{ secrets.NODEMAILER_USER }}
+          NODEMAILER_PASS: ${{ secrets.NODEMAILER_PASS }}
+          REDIS_HOST: ${{ secrets.REDIS_HOST }}
+          REDIS_PORT: ${{ secrets.REDIS_PORT }}
+          REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+
         run: |
           echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> .env
           echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> .env
@@ -39,6 +55,7 @@ jobs:
           echo "REDIS_PORT=${{ secrets.REDIS_PORT }}" >> .env
           echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}" >> .env
           cat .env
+
       - run: npm ci
       - run: npm run build --if-present
       - run: npm run test
