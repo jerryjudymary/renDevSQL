@@ -239,14 +239,15 @@ exports.login = async (req, res) => {
 };
 
 exports.logout = async (req, res) => {
-  const refresh = req.cookies.refreshToken
-
-  if(refresh){
-    return res.cookie("refreshToken","", { httpOnly: true, sameSite: "None", secure: true })
-    .status(200).send({ message : "로그아웃에 성공 하셨습니다."})
-  } else {
-    return res.status(400).send({ errorMessage: "로그아웃에 실패 했습니다."})
-  }
+  try{
+    return res
+    .cookie("refreshToken","", { httpOnly: true, sameSite: "None", secure: true })
+    .status(200)
+    .send({ message : "로그아웃에 성공 하셨습니다."})
+}catch(err){
+  console.log(err)
+  return res.status(400).send({ errorMessage: "로그아웃에 실패 했습니다."})
+}
 }
 
 
