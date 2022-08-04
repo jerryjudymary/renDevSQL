@@ -17,7 +17,7 @@ jobs:
     
     services:
       mysql:
-        image: mysql:8.0
+        image: mysql:5.7
         env:
           #MYSQL_USER: root
           #MYSQL_PASSWORD: judymary123!
@@ -31,6 +31,12 @@ jobs:
           --health-interval=10s
           --health-timeout=5s
           --health-retries=3
+      redis:
+        image: redis
+        ports: 
+          ['6379:6379']
+        options:
+          --entrypoint redis-server
     
     strategy:
       matrix:
