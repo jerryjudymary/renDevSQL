@@ -21,8 +21,8 @@ jobs:
         env:
           #MYSQL_USER: root
           #MYSQL_PASSWORD: judymary123!
-          MYSQL_ROOT_PASSWORD: judymary123!
-          MYSQL_DATABASE: rendevSQLtestCode
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: test
           #MYSQL_HOST: database-1.cj2tg3os3jkh.ap-northeast-2.rds.amazonaws.com
         ports:
           - 3306
