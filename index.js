@@ -47,7 +47,7 @@ app.use("/api", Router);
 app.use(csrf());
 
 app.use(function (req, res, next) {
-  res.cookie('XSRF-TOKEN', req.csrfToken());
+  res.cookie('XSRF-TOKEN', req.csrfToken(), { sameSite: "None", secure: true});
   res.locals.csrftoken = req.csrfToken();
   next();
 })
