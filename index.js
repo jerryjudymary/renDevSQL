@@ -44,12 +44,10 @@ app.use(helmet({ contentSecurityPolicy: cspOption, crossOriginEmbedderPolicy: fa
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use("/api", Router);
-app.use(csrf());
-
-app.use(function (req, res, next) {
-  res.cookie('XSRF-TOKEN', req.csrfToken(), { httpOnly: true, sameSite: "None", secure: true });
-  res.locals.csrftoken = req.csrfToken();
-  next();
+app.use(csrf({ cookie: { httpOnly: true, sameSite:"None", secure:true }}))
+app.use((req, res, next) => {
+  res.cookie('XSRF-TOKEN', req.csrfToken())
+  next()
 })
 
 module.exports = app;
