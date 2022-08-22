@@ -24,6 +24,26 @@ function skillFilter(inputItems, requiredSkills) {
   return skillFilteredItems;
 }
 
+// function skillFilter(inputItems, requiredSkills) {
+//   let skillFilteredItems = [];
+//   let returnAllSkill;
+//   for(let i=0; i < inputItems.length; i++){
+//     item = inputItems[i]
+//       returnAllSkill = requiredSkills.every((includeSkills) => item["skills"].includes(includeSkills));
+//     if(returnAllSkill) skillFilteredItems.push(item)
+//   }
+//   return skillFilteredItems;
+// }
+
+// function skillFilter(inputItems, requiredSkills) {
+//   let skillFilteredItems = [];
+//   let allSkill;
+//   inputItems.map((item) => {
+//     allSkill = requiredSkills.every((specificSkill) => item["skills"].includes(specificSkill));
+//     if (allSkill) skillFilteredItems.push(item);
+//   });
+//   return skillFilteredItems;
+// }
 // 해설 : 배열 method "every"를 활용한다. every는 대상 배열의 모든 요소가 주어진 조건식을 만족하면 true, 아닐 경우 false를 반환한다.
 // 즉, "요구되는 스킬로 입력받은 배열 requiredSkills의 모든 요소(specificSkill)들이 inputItems(=Project/Resume) 중 특정 item에 포함되어 있다"면,
 // 해당 item에 대한 every 메소드는 true를 반환할 것이며, 요구스킬 조건을 만족한다는 의미이므로 skillFilteredItems에 포함시켜준다(push).
@@ -48,6 +68,36 @@ exports.projectSearch = async (req, res) => {
   // 특히 skills 배열의 데이터 형태를 보기 좋게 가공한다.
   let roleFilteredProjects = [];
   const projectSkills = roleFilter.map((project) => project.ProjectSkills.map((skill) => skill["skill"]));
+  // console.log(projectSkills)
+  // for( let i=0; i < roleFilter.length; i++){
+  //   let project = {};
+  //   project.projectId = roleFilter[i].projectId;
+  //   project.nickname = roleFilter[i].nickname;
+  //   project.title = roleFilter[i].title;
+  //   project.subscript = roleFilter[i].subscript;
+  //   project.role = roleFilter[i].role;
+  //   project.start = roleFilter[i].start;
+  //   project.end = roleFilter[i].end;
+  //   project.skills = projectSkills[i];
+  //   project.createdAt = roleFilter[i].createdAt;
+
+  //   roleFilteredProjects.push(project)
+  // }
+
+  // roleFilter.map((el, idx) => {
+  //   let projectObj = {};
+  //   projectObj.projectId = el.projectId;
+  //   projectObj.nickname = el.nickname;
+  //   projectObj.title = el.title;
+  //   projectObj.subscript = el.subscript;
+  //   projectObj.role = el.role;
+  //   projectObj.start = el.start;
+  //   projectObj.end = el.end;
+  //   projectObj.skill = projectSkills[idx];
+  //   projectObj.createdAt = el.createdAt;
+
+  //   roleFilteredProjects.push(projectObj)
+  // })
 
   roleFilter.forEach((project, index) => {
     let projectObject = {};
